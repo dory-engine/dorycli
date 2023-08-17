@@ -59,7 +59,7 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
       - name: Packaging
         working-directory: .
-        run: tar czvf dorycli-${{ needs.createRelease.outputs.tag_name }}-${{ matrix.goos }}-${{ matrix.goarch }}.tgz dorycli LICENSE README.md README-zh.md
+        run: tar czvf dorycli-${{ needs.createRelease.outputs.tag_name }}-${{ matrix.goos }}-${{ matrix.goarch }}.tgz dorycli LICENSE README.md
       - name: Uploading Release assets
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
