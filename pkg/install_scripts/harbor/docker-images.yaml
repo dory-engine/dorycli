@@ -1,0 +1,81 @@
+dockerImages:
+  - source: busybox:latest
+    target: public/busybox:latest
+    arm64: arm64v8/busybox:latest
+  - source: alpine:3.16.4
+    target: public/alpine:3.16.4-dory
+    dockerFile: Dockerfile-alpine
+    arm64: arm64v8/alpine:3.16.4
+  - source: alpine:3.17.2
+    target: public/alpine:3.17.2-dory
+    dockerFile: Dockerfile-alpine
+    arm64: arm64v8/alpine:3.17.2
+  - source: golang:1.18.10-alpine3.17
+    target: public/golang:1.18.10-alpine3.17-dory
+    dockerFile: Dockerfile-golang
+    arm64: arm64v8/golang:1.18.10-alpine3.17
+  - source: golang:1.20.0-alpine3.17
+    target: public/golang:1.20.0-alpine3.17-dory
+    dockerFile: Dockerfile-golang
+    arm64: arm64v8/golang:1.20.0-alpine3.17
+  - source: gradle:7.6.0-jdk8
+    target: public/gradle:7.6.0-jdk8-dory
+    dockerFile: Dockerfile-gradle
+    arm64: arm64v8/gradle:7.6.0-jdk8
+  - source: gradle:7.6.0-jdk11
+    target: public/gradle:7.6.0-jdk11-dory
+    dockerFile: Dockerfile-gradle
+    arm64: arm64v8/gradle:7.6.0-jdk11
+  - source: gradle:7.6.0-jdk17
+    target: public/gradle:7.6.0-jdk17-dory
+    dockerFile: Dockerfile-gradle
+    arm64: arm64v8/gradle:7.6.0-jdk17
+  - source: maven:3.8.5-openjdk-17
+    target: public/maven:3.8.5-openjdk-17-dory
+    dockerFile: Dockerfile-maven
+    arm64: arm64v8/maven:3.8.5-openjdk-17
+  - source: maven:3.8.6-openjdk-11
+    target: public/maven:3.8.6-openjdk-11-dory
+    dockerFile: Dockerfile-maven
+    arm64: arm64v8/maven:3.8.6-openjdk-11
+  - source: maven:3.8.6-openjdk-8
+    target: public/maven:3.8.6-openjdk-8-dory
+    dockerFile: Dockerfile-maven
+    arm64: arm64v8/maven:3.8.6-openjdk-8
+  - source: python:3.11.2-alpine3.17
+    target: public/python:3.11.2-alpine3.17-dory
+    dockerFile: Dockerfile-python
+    arm64: arm64v8/python:3.11.2-alpine3.17
+  - source: python:3.10.10-alpine3.17
+    target: public/python:3.10.10-alpine3.17-dory
+    dockerFile: Dockerfile-python
+    arm64: arm64v8/python:3.10.10-alpine3.17
+  - source: node:18.14.0-alpine3.17
+    target: hub/node:18.14.0-alpine3.17
+    arm64: arm64v8/node:18.14.0-alpine3.17
+  - source: node:19.6.0-alpine3.17
+    target: hub/node:19.6.0-alpine3.17
+    arm64: arm64v8/node:19.6.0-alpine3.17
+  - source: openjdk:11.0.16-jdk
+    target: hub/openjdk:11.0.16-jdk
+    arm64: arm64v8/openjdk:11.0.16-jdk
+  - source: alpine:3.17.2
+    target: public/ansible:2.12.2-alpine-dory
+    dockerFile: Dockerfile-ansible
+    arm64: arm64v8/alpine:3.17.2
+  - source: doryengine/debug-ubuntu:v1.0.0
+    target: hub/doryengine/debug-ubuntu:v1.0.0
+    arm64: doryengine/debug-ubuntu:v1.0.0-arm64v8
+  - source: sonarsource/sonar-scanner-cli:4.7.0
+    target: public/sonarsource/sonar-scanner-cli:4.7.0
+  - source: liquibase/liquibase:4.17.2
+    target: public/liquibase/liquibase:4.17.2-dory
+    dockerFile: Dockerfile-liquibase
+  - source: egaillardon/jmeter:5.3.0-1.0.1
+    target: public/egaillardon/jmeter:5.3.0-1.0.1-dory
+    dockerFile: Dockerfile-jmeter
+  - source: ppodgorsek/robot-framework:latest
+    dockerFile: Dockerfile-robot
+    target: public/ppodgorsek/robot-framework:dory
+  - source: aquasec/trivy:0.37.2
+    target: public/aquasec/trivy:0.37.2

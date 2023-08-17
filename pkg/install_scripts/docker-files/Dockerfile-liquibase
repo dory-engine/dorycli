@@ -1,0 +1,20 @@
+FROM {{ $.source }}
+
+LABEL maintainer="cookeem"
+LABEL email="cookeem@qq.com"
+LABEL version="4.17.2"
+
+USER root
+RUN usermod -u 1000 liquibase && \
+    groupmod -g 1000 liquibase && \
+    lpm add oracle && \
+    lpm add mysql && \
+    lpm add mongodb && \
+    mv /liquibase/liquibase_libs/*.jar /liquibase/internal/lib && \
+    chown -R 1000:1000 /liquibase/ && \
+    chown -R 1000:1000 /home/liquibase/
+
+USER liquibase
+ENTRYPOINT []
+
+# docker build -t {{ $.target }}{{ if $.isArm64}}-arm64v8{{ end }} -f Dockerfile-liquibase-{{ $.tagName }}{{ if $.isArm64}}-arm64v8{{ end }} .

@@ -1,0 +1,24 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+kubernetesVersion: {{ $.version }}
+{{- if $.imageRepository }}
+imageRepository: {{ $.imageRepository }}
+{{- end }}
+apiServer:
+  certSANs:
+    - {{ $.virtualHostname | quote }}
+    - {{ $.virtualIp | quote }}
+    {{- range $_, $host := $.masterHosts }}
+    - {{ $host.hostname | quote }}
+    - {{ $host.ipAddress | quote }}
+    {{- end }}
+controlPlaneEndpoint: "{{ $.virtualIp }}:{{ $.virtualPort }}"
+{{- if or $.podSubnet $.serviceSubnet }}
+networking:
+  {{- if $.podSubnet }}
+  podSubnet: {{ $.podSubnet | quote }}
+  {{- end }}
+  {{- if $.serviceSubnet }}
+  serviceSubnet: {{ $.serviceSubnet | quote }}
+  {{- end }}
+{{- end }}

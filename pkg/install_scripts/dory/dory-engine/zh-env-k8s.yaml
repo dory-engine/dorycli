@@ -1,0 +1,137 @@
+# kubernetes环境标识
+envName: {{ $.kubernetes.envName | quote }}
+# kubernetes环境描述，用于显示在流水线上的环境名称
+envDesc: {{ $.kubernetes.envDesc | quote }}
+# kubernetes环境的 apiserver 地址
+host: {{ $.kubernetes.host | quote }}
+# kubernetes环境外部访问地址
+viewHost: {{ $.kubernetes.viewHost | quote }}
+# kubernetes环境的 apiserver 端口
+port: {{ $.kubernetes.port }}
+# kubernetes环境的 apiserver token
+token: {{ $.kubernetes.token | quote }}
+# kubernetes环境的 apiserver 的ca证书的base64编码字符串
+caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
+# kubernetes dashboard管理控制台workload的url
+dashboardUrl: {{ $.kubernetes.dashboardUrl | quote }}
+# kubernetes dashboard管理控制台网络策略的url
+dashboardUrlNetworkPolicy: {{ $.kubernetes.dashboardUrlNetworkPolicy | quote }}
+# 环境中istio服务网格部署的名字空间
+istioNamespace: {{ $.kubernetes.istioNamespace | quote }}
+# 环境中ingress controller部署的名字空间
+ingressControllerNamespace: {{ $.kubernetes.ingressControllerNamespace | quote }}
+# 环境所属的时区
+timezone: {{ $.kubernetes.timezone | quote }}
+# 环境是否使用本地路径的/usr/share/zoneinfo
+hostPathZoneInfo: false
+# 环境的架构设置
+archSettings:
+  # 架构名称
+  - arch: amd64
+    # 该架构的节点选择器
+    nodeSelector:
+      kubernetes.io/arch: amd64
+      kubernetes.io/os: linux
+  - arch: arm64v8
+    nodeSelector:
+      kubernetes.io/arch: arm64
+      kubernetes.io/os: linux
+# 用于在集群中创建项目的数据目录的pod配置
+projectDataPod:
+  # pod所在名字空间
+  namespace: {{ $.dory.namespace }}
+  # statefulset名字
+  statefulSetName: project-data-pod
+  # pod中项目共享目录的路径
+  path: /project-data
+
+# 是否使用外部主机和IP设置连接镜像仓库
+imageRepoUseExternal: false
+# 是否使用外部主机和IP设置连接依赖与制品仓库
+artifactRepoUseExternal: false
+
+{{- if $.kubernetes.pvConfigLocal.localPath }}
+# 假如持久化存储使用本地存储情况下请设置，否则请删除以下配置
+pvConfigLocal:
+  # 本地存储路径
+  localPath: {{ $.kubernetes.pvConfigLocal.localPath | quote }}
+{{- else }}
+# # 假如持久化存储使用本地存储情况下请设置，否则请删除以下配置
+# pvConfigLocal:
+#   # 本地存储路径
+#   localPath: "/data/k8s-vols"
+{{- end }}
+
+{{- if $.kubernetes.pvConfigNfs.nfsPath }}
+# 假如持久化存储使用nfs情况下请设置，否则请删除以下配置
+pvConfigNfs:
+  # nfs存储路径
+  nfsPath: {{ $.kubernetes.pvConfigNfs.nfsPath | quote }}
+  # nfs服务器地址
+  nfsServer: {{ $.kubernetes.pvConfigNfs.nfsServer | quote }}
+{{- else }}
+# # 假如持久化存储使用nfs情况下请设置，否则请删除以下配置
+# pvConfigNfs:
+#   # nfs存储路径
+#   nfsPath: "/data/nfs-vols/k8s-vols"
+#   # nfs服务器地址
+#   nfsServer: "10.2.0.10"
+{{- end }}
+
+{{- if $.kubernetes.pvConfigCephfs.cephPath }}
+# 假如持久化存储使用cephfs情况下请设置，否则请删除以下配置
+pvConfigCephfs:
+  # ceph存储路径
+  cephPath: {{ $.kubernetes.pvConfigCephfs.cephPath | quote }}
+  # ceph账号
+  cephUser: {{ $.kubernetes.pvConfigCephfs.cephUser | quote }}
+  # ceph秘钥
+  cephSecret: {{ $.kubernetes.pvConfigCephfs.cephSecret | quote }}
+  # ceph monitor地址
+  cephMonitors:
+  {{ range $_, $cephMonitor := $.kubernetes.pvConfigCephfs.cephMonitors }}
+  - {{ $cephMonitor | quote }}
+  {{ end }}
+{{- else }}
+# # 假如持久化存储使用cephfs情况下请设置，否则请删除以下配置
+# pvConfigCephfs:
+#   # ceph存储路径
+#   cephPath: "/k8s-deploy"
+#   # ceph账号
+#   cephUser: "admin"
+#   # ceph秘钥
+#   cephSecret: "XXXXX"
+#   # ceph monitor地址
+#   cephMonitors:
+#   - "192.168.0.1:6789"
+#   - "192.168.0.2:6789"
+#   - "192.168.0.3:6789"
+{{- end }}
+
+# 项目的deployment选择部署在什么标签的节点上，格式为（labelName: labelValue）
+projectNodeSelector: {}
+
+# kuberentes项目namespace的资源默认限制设置，默认开通项目namespace会按照这个配置设置资源配额
+quotaConfig:
+  # 默认每个Pod的资源配额限制
+  defaultQuota:
+    # 默认每个Pod的请求内存资源设置（100Mi表示100M内存，1Gi表示1G内存）
+    memoryRequest: 20Mi
+    # 默认每个Pod的请求cpu资源设置（100m表示0.1，表示0.1个CPU）
+    cpuRequest: 10m
+    # 默认每个Pod的最大内存资源设置（100Mi表示100M内存，1Gi表示1G内存）
+    memoryLimit: 50Mi
+    # 默认每个Pod的最大cpu资源设置（100m表示0.1，表示0.1个CPU）
+    cpuLimit: 50m
+  # 整个项目的容器云资源配额限制
+  namespaceQuota:
+    # 整个项目所有Pod的请求内存资源总和设置（100Mi表示100M内存，1Gi表示1G内存）
+    memoryRequest: 1Gi
+    # 整个项目所有Pod的请求cpu资源总和设置（100m表示0.1，表示0.1个CPU）
+    cpuRequest: 1000m
+    # 整个项目所有Pod的最大内存资源总和设置（100Mi表示100M内存，1Gi表示1G内存）
+    memoryLimit: 4Gi
+    # 整个项目所有Pod的最大cpu资源总和设置（100m表示0.1，表示0.1个CPU）
+    cpuLimit: 4000m
+    # 整个项目所有Pod的数量总和设置
+    podsLimit: 32

@@ -1,0 +1,248 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $.dory.namespace }}
+  labels:
+    ns: {{ $.dory.namespace }}
+
+{{- $harborDockerConfigJson := printf `{"auths": {"%s": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.imageRepoDomainName $.imageRepoUsername $.imageRepoPassword $.imageRepoEmail (printf "%s:%s" $.imageRepoUsername $.imageRepoPassword | b64enc) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $.imageRepoDomainName }}
+  namespace: {{ $.dory.namespace }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: |
+    {{ $harborDockerConfigJson | b64enc | nindent 4 }}
+
+{{- $nexusDockerhubConfigJson := printf `{"auths": {"%s:%d": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.artifactRepoIp $.artifactRepoPortHub $.artifactRepoPublicUser $.artifactRepoPublicPassword $.artifactRepoPublicEmail (printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nexus-hub
+  namespace: {{ $.dory.namespace }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: |
+    {{ $nexusDockerhubConfigJson | b64enc | nindent 4 }}
+
+{{- $nexusGcrConfigJson := printf `{"auths": {"%s:%d": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.artifactRepoIp $.artifactRepoPortGcr $.artifactRepoPublicUser $.artifactRepoPublicPassword $.artifactRepoPublicEmail (printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nexus-gcr
+  namespace: {{ $.dory.namespace }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: |
+    {{ $nexusGcrConfigJson | b64enc | nindent 4 }}
+
+{{- $nexusQuayConfigJson := printf `{"auths": {"%s:%d": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.artifactRepoIp $.artifactRepoPortQuay $.artifactRepoPublicUser $.artifactRepoPublicPassword $.artifactRepoPublicEmail (printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nexus-quay
+  namespace: {{ $.dory.namespace }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: |
+    {{ $nexusQuayConfigJson | b64enc | nindent 4 }}
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: project-data-timezone-pv
+  labels:
+    app: project-data-timezone
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "project-data-timezone-pv"
+spec:
+  storageClassName: project-data-timezone-pv
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadOnlyMany
+  {{- if $.kubernetes.pvConfigLocal.localPath }}
+  hostPath:
+    path: {{ $.kubernetes.pvConfigLocal.localPath }}/timezone
+    type: DirectoryOrCreate
+  {{- else if $.kubernetes.pvConfigCephfs.cephPath }}
+  cephfs:
+    path: {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone
+    user: {{ $.kubernetes.pvConfigCephfs.cephUser }}
+    monitors:
+    {{- range $_, $monitor := $.kubernetes.pvConfigCephfs.cephMonitors }}
+    - {{ $monitor | quote }}
+    {{- end }}
+    secretRef:
+      name: cephfs-secret
+      namespace: {{ $.dory.namespace }}
+    readOnly: true
+  {{- else if $.kubernetes.pvConfigNfs.nfsServer }}
+  nfs:
+    path: {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone
+    server: {{ $.kubernetes.pvConfigNfs.nfsServer }}
+    readOnly: true
+  {{- end }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: project-data-timezone-pvc
+  namespace: {{ $.dory.namespace }}
+spec:
+  accessModes:
+    - ReadOnlyMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: project-data-timezone-pv
+  selector:
+    matchLabels:
+      app: project-data-timezone
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: project-data-pv
+  labels:
+    app: project-data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "project-data-pv"
+spec:
+  storageClassName: project-data-pv
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteMany
+  {{- if $.kubernetes.pvConfigLocal.localPath }}
+  hostPath:
+    path: {{ $.kubernetes.pvConfigLocal.localPath }}
+    type: DirectoryOrCreate
+  {{- else if $.kubernetes.pvConfigCephfs.cephPath }}
+  cephfs:
+    path: {{ $.kubernetes.pvConfigCephfs.cephPath }}
+    user: {{ $.kubernetes.pvConfigCephfs.cephUser }}
+    monitors:
+    {{- range $_, $monitor := $.kubernetes.pvConfigCephfs.cephMonitors }}
+    - {{ $monitor | quote }}
+    {{- end }}
+    secretRef:
+      name: cephfs-secret
+      namespace: {{ $.dory.namespace }}
+    readOnly: false
+  {{- else if $.kubernetes.pvConfigNfs.nfsServer }}
+  nfs:
+    path: {{ $.kubernetes.pvConfigNfs.nfsPath }}
+    server: {{ $.kubernetes.pvConfigNfs.nfsServer }}
+    readOnly: false
+  {{- end }}
+
+{{- if $.kubernetes.pvConfigCephfs.cephPath }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cephfs-secret
+  namespace: {{ $.dory.namespace }}
+data:
+  key: {{ $.kubernetes.pvConfigCephfs.cephSecret | b64enc }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: project-data-pvc
+  namespace: {{ $.dory.namespace }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 500Gi
+  storageClassName: project-data-pv
+  selector:
+    matchLabels:
+      app: project-data
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-timezone
+  namespace: {{ $.dory.namespace }}
+data:
+  timezone: {{ $.kubernetes.timezone }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: project-data-pod
+  name: project-data-pod
+  namespace: {{ $.dory.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: project-data-pod
+  serviceName: project-data-pod
+  template:
+    metadata:
+      labels:
+        app: project-data-pod
+    spec:
+      containers:
+        - command:
+            - cat
+          tty: true
+          image: {{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory
+          imagePullPolicy: IfNotPresent
+          name: project-data-pod
+          volumeMounts:
+            - mountPath: /etc/timezone
+              name: configmap-timezone
+              readOnly: true
+              subPath: timezone
+            - mountPath: /etc/localtime
+              name: project-data-timezone-pvc
+              readOnly: true
+              subPath: zoneinfo/{{ $.kubernetes.timezone }}
+            - mountPath: /usr/share/zoneinfo
+              name: project-data-timezone-pvc
+              readOnly: true
+              subPath: zoneinfo
+            - mountPath: /project-data
+              name: project-data-pvc
+              subPath: .
+          env:
+            - name: TZ
+              value: {{ $.kubernetes.timezone }}
+      imagePullSecrets:
+        - name: {{ $.imageRepoDomainName }}
+      volumes:
+        - name: configmap-timezone
+          configMap:
+            name: configmap-timezone
+            items:
+              - key: timezone
+                path: timezone
+        - name: project-data-timezone-pvc
+          persistentVolumeClaim:
+            claimName: project-data-timezone-pvc
+        - name: project-data-pvc
+          persistentVolumeClaim:
+            claimName: project-data-pvc

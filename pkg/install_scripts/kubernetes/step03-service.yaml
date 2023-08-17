@@ -1,0 +1,60 @@
+{{- range $_, $deploy := $.deploys }}
+{{- if $deploy.deployNodePort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $deploy.deployName }}
+  namespace: {{ $.dory.namespace }}
+  labels:
+    app: {{ $deploy.deployName }}
+spec:
+  type: NodePort
+  selector:
+    app: {{ $deploy.deployName }}
+  ports:
+  {{- range $_, $deployPort := $deploy.deployNodePort }}
+  - name: port-{{ $deployPort.port }}
+    port: {{ $deployPort.port }}
+    nodePort: {{ $deployPort.nodePort }}
+  {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $deploy.deployName }}-headless
+  namespace: {{ $.dory.namespace }}
+  labels:
+    app: {{ $deploy.deployName }}
+spec:
+  clusterIP: None
+  selector:
+    app: {{ $deploy.deployName }}
+  ports:
+  {{- range $_, $deployPort := $deploy.deployNodePort }}
+  - name: port-{{ $deployPort.port }}
+    port: {{ $deployPort.port }}
+  {{- end }}
+
+{{- else if $deploy.deployLocalPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $deploy.deployName }}
+  namespace: {{ $.dory.namespace }}
+  labels:
+    app: {{ $deploy.deployName }}
+spec:
+  clusterIP: None
+  selector:
+    app: {{ $deploy.deployName }}
+  ports:
+  {{- range $_, $deployPort := $deploy.deployLocalPort }}
+  - name: port-{{ $deployPort.port }}
+    port: {{ $deployPort.port }}
+  {{- end }}
+{{- end }}
+
+{{- end }}

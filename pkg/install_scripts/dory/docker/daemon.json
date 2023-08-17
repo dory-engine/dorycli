@@ -1,0 +1,7 @@
+{
+  "insecure-registries": [
+    "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortHub }}",
+    "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortGcr }}",
+    "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortQuay }}"
+  ]
+}

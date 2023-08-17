@@ -1,0 +1,388 @@
+# installation mode, options: docker, kubernetes
+# docker mode: install dory service with docker-compose
+# kubernetes mode: install dory service in kubernetes cluster
+installMode: {{ $.mode }}
+# all dory components data will write in the root directory (use absolute path)
+# if install mode is docker: use this host local path
+# if install mode is kubernetes: if kubernetes cluster with multiple nodes, please use shared storage (nfs or cephfs), make sure shared storage is mounted in this host path
+{{- if eq $.mode "docker" }}
+rootDir: "/data/docker-vols/dory"
+{{- else if eq $.mode "kubernetes" }}
+rootDir: "/mnt/nfs/k8s-vols/dory"
+{{- end }}
+# this host ip address, dory use this ip address to connect container image repository and build dependency repository
+# if install mode is docker: please use this host ip address, don't use loopback ip address like 127.0.0.1
+# if install mode is kubernetes: please use the kubernetes master node ip address (in single master way) or load balancer ip address / virtual ip address (in multiple masters way)
+{{- if eq $.mode "docker" }}
+hostIP: "10.2.0.10"
+{{- else if eq $.mode "kubernetes" }}
+hostIP: "10.1.0.2"
+{{- end }}
+# all dory services view url, please don't include port
+# use kubernetes node port or docker expose port to access dory services
+viewURL: http://example.com
+# dory services deployment settings
+dory:
+  # which namespace will dory service deploy in
+  # if install mode is docker: it means which subdirectory dory's data store in
+  # if install mode is kubernetes: it means which namespace dory service will deploy in
+  namespace: "dory"
+  {{- if eq $.mode "kubernetes" }}
+  # set which nodes will dory services deploy in, corresponding to kubernetes' nodeSelector settings
+  # example: "type: worker"
+  nodeSelector: {}
+  {{- end }}
+  # dory-engine license key, emtpy means free trial mode
+  licenseKey: ""
+  # git repository settings
+  gitRepo:
+    # git repository type, options: gitea, gitlab
+    # gitea support arm64 cpu architecture
+    # gitlab not support arm64 cpu architecture
+    type: gitea
+    # deploy git repository automatically (internal or external only accept one deploy way)
+    internal:
+      # git repository image name
+      # if git repository type is gitlab, recommend image is gitlab/gitlab-ce:15.11.2-ce.0
+      image: gitea/gitea:1.19.0
+      # gitea repository database image name, if type is gitea this setting required
+      imageDB: mysql:8.0.20
+      # # gitlab repository nginx proxy image name, if type is gitlab this setting required
+      # imageNginx: nginx:1.23.3-alpine
+      # expose service port (kubernetes node port)
+      port: 30001
+    # # use external git repository, do not deploy git repository automatically (internal or external only accept one deploy way)
+    # external:
+    #   # git repository browser access url
+    #   viewUrl: http://192.168.0.1:30001
+    #   # git repository internal access url by dory
+    #   url: http://192.168.0.1:30001
+    #   # git repository admin user name
+    #   username: "PLEASE_INPUT_BY_MANUAL"
+    #   # git repository admin user display name
+    #   name: "PLEASE_INPUT_BY_MANUAL"
+    #   # git repository admin user mail
+    #   mail: "PLEASE_INPUT_BY_MANUAL"
+    #   # git repository admin user password
+    #   password: "PLEASE_INPUT_BY_MANUAL"
+    #   # git repository admin user token
+    #   token: "PLEASE_INPUT_BY_MANUAL"
+    #   # dory URL callback by git repository webhook
+    {{- if eq $.mode "docker" }}
+    #   gitWebhookUrl: "http://10.2.0.10:30010"
+    {{- else if eq $.mode "kubernetes" }}
+    #   gitWebhookUrl: "http://10.1.0.2:30010"
+    {{- end }}
+  # image repository settings, not support arm64 cpu architecture
+  imageRepo:
+    # image repository type, options: harbor
+    type: harbor
+    # deploy image repository automatically (internal or external only accept one deploy way)
+    internal:
+      # image repository domain name, only support https://<hostname> to access image repository now
+      hostname: harbor.example.com
+      # which namespace will image repository deploy in
+      # if install mode is docker: it means which subdirectory image repository's data store in
+      # if install mode is kubernetes: it means which namespace image repository will deploy in
+      namespace: harbor
+      # image repository (harbor) version, support v2.2.x - v2.6.x
+      version: v2.6.0
+      # image repository admin user password, leave it empty to random create one
+      password: ""
+      {{- if eq $.mode "docker" }}
+      # which subdirectory image repository self signed certificates store in
+      # if install mode is docker: required
+      certsDir: certs
+      # which subdirectory image repository data store in
+      # if install mode is docker: required
+      dataDir: data
+      {{- end }}
+    # # use external image repository, do not deploy image repository automatically (internal or external only accept one deploy way)
+    # external:
+    #   # image repository ip address
+    #   ip: 192.168.0.1
+    #   # image repository domain name, only support https://<hostname> to access image repository now
+    #   hostname: harbor.example.com
+    #   # image repository admin username
+    #   username: admin
+    #   # image repository admin password
+    #   password: "PLEASE_INPUT_BY_MANUAL"
+    #   # image repository admin email
+    #   email: "admin@example.com"
+  # artifact and dependency repository settings, not support arm64 cpu architecture
+  artifactRepo:
+    # artifact and dependency repository type, options: nexus
+    type: nexus
+    # deploy artifact and dependency repository automatically (internal or external only accept one deploy way)
+    internal:
+      # artifact and dependency repository image name
+      image: sonatype/nexus3:3.45.0
+      # artifact and dependency repository expose service port (kubernetes node port)
+      port: 30003
+      # docker.io image proxy expose service port (kubernetes node port)
+      portHub: 30004
+      # gcr.io image proxy expose service port (kubernetes node port)
+      portGcr: 30005
+      # quay.io image proxy expose service port (kubernetes node port)
+      portQuay: 30006
+    # # use external artifact and dependency repository, do not deploy artifact and dependency repository automatically (internal or external only accept one deploy way)
+    # # please use https://doryengine.com/attachments/{{ .nexusInitData }} data as basic nexus data
+    # external:
+    #   # artifact and dependency repository browser access url
+    #   viewUrl: http://192.168.0.1:30003
+    #   # artifact and dependency repository access schema, options: http, https
+    #   schema: http
+    #   # artifact and dependency repository hostname or ip address
+    #   hostname: 192.168.0.1
+    #   # artifact and dependency repository admin user name
+    #   username: admin
+    #   # artifact and dependency repository admin user password
+    #   password: "Nexus_Pwd_321"
+    #   # public user role name which can fetch public dependencies
+    #   publicRole: "public-role"
+    #   # public user name which can fetch public dependencies
+    #   publicUser: "public-user"
+    #   # public user password which can fetch public dependencies
+    #   publicPassword: "public-user"
+    #   # public user email which can fetch public dependencies
+    #   publicEmail: "public-user@example.com"
+    #   # artifact and dependency repository service port
+    #   port: 30003
+    #   # docker.io image proxy service port
+    #   portHub: 30004
+    #   # gcr.io image proxy service port
+    #   portGcr: 30005
+    #   # quay.io image proxy service port
+    #   portQuay: 30006
+    #   # artifact and dependency repository proxy settings
+    #   proxyRepo:
+    #     # maven proxy path
+    #     maven: repository/maven-group-public/
+    #     # npm proxy path
+    #     npm: repository/npm-group-public/
+    #     # pypi proxy path
+    #     pip: repository/pypi-group-public/simple
+    #     # gradle proxy path
+    #     gradle: repository/maven-group-public/
+    #     # go proxy path
+    #     go: repository/go-group-public
+    #     # apt proxy settings
+    #     apt:
+    #       # x86 proxy path
+    #       amd64: repository/apt-aliyun-focal/
+    #       # arm64v8 proxy path
+    #       arm64v8: repository/apt-aliyun-focal-arm64/
+  # scan code repository settings
+  scanCodeRepo:
+    # scan code repository type, options: sonarqube
+    type: sonarqube
+    # deploy scan code repository automatically (internal or external only accept one deploy way)
+    internal:
+      # scan code repository image name
+      image: sonarqube:10.1.0-community
+      # scan code repository database image name
+      imageDB: postgres:12.10-alpine3.15
+      # scan code repository expose service port (kubernetes node port)
+      port: 30008
+    # # use external scan code repository, do not deploy scan code repository automatically (internal or external only accept one deploy way)
+    # external:
+    #   # scan code repository browser access url
+    #   viewUrl: http://192.168.0.1:30008
+    #   # scan code repository access url by docker executors
+    #   url: http://192.168.0.1:30008
+    #   # scan code repository admin user token
+    #   token: "PLEASE_INPUT_BY_MANUAL"
+  # openldap account center settings, dory-engine use openldap to store user accounts
+  openldap:
+    # openldap image name
+    image: osixia/openldap:develop-dev
+    # ldapadmin image name, used for manage openldap
+    imageAdmin: osixia/phpldapadmin:stable
+    # ldapadmin expose service port (kubernetes node port)
+    port: 30007
+    # openldap admin password, leave it empty to random create one
+    password: ""
+    # openldap account domain settings
+    domain: "example.com"
+    # openldap baseDN settings
+    baseDN: "dc=example,dc=com"
+    # openldap service name
+    serviceName: "openldap"
+  # dory-engine service deploy settings
+  doryengine:
+    # dory-console expose service port (kubernetes node port)
+    port: 30010
+  # redis cache settings
+  redis:
+    # redis cache image name
+    image: redis:6.2.6-alpine3.15
+    # redis cache password, leave it empty to random create one
+    password: ""
+  # mongodb settings
+  mongo:
+    # mongodb image name
+    image: mongo:5.0.6-focal
+    # mongodb password, leave it empty to random create one
+    password: ""
+  # demo project database settings
+  demoDatabase:
+    # deploy demo project database automatically (internal or external only accept one deploy way)
+    internal:
+      # demo project database deployment service name
+      deployName: demo-mysql
+      # demo project database image name
+      image: mysql:8.0.20
+      # demo project database root password, leave it empty to random create one
+      password: ""
+      # demo project database test user name
+      user: testuser
+      # demo project database name
+      database: testdb
+      # demo project database test user password, leave it empty to random create one
+      userPassword: ""
+      # demo project databasee expose service port (kubernetes node port)
+      port: 30011
+    # # use external demo project database, do not deploy demo project database automatically (internal or external only accept one deploy way)
+    # external:
+    #   # demo project database JDBC connection string
+    #   dbUrl: jdbc:mysql://192.168.0.1:30011/testdb
+    #   # demo project database connection username
+    #   dbUser: testuser
+    #   # demo project database connection password
+    #   dbPassword: "PLEASE_INPUT_BY_MANUAL"
+  # demo project ssh host settings
+  demoHost:
+    # deploy demo project ssh host automatically (internal or external only accept one deploy way)
+    internal:
+      # demo project ssh host deployment service name
+      deployName: demo-host
+      # demo project ssh host image name
+      image: doryengine/sshd-alpine:python3
+      # demo project ssh host root password, leave it empty to random create one
+      password: ""
+      # demo project ssh host ssh service port
+      portSsh: 22
+      # demo project ssh host ssh service expose node port (kubernetes node port)
+      nodePortSsh: 30012
+      # demo project ssh host web service port
+      portWeb: 8000
+      # demo project ssh host web service expose node port (kubernetes node port)
+      nodePortWeb: 30013
+    # # use external demo project ssh host, do not deploy demo project ssh host automatically (internal or external only accept one deploy way)
+    # external:
+    #   # demo project ssh host ip or host name
+    #   hostAddr: 192.168.0.1
+    #   # demo project ssh host ssh service port
+    #   hostPort: 30012
+    #   # demo project ssh host ssh user name
+    #   hostUser: "root"
+    #   # demo project ssh host ssh user password
+    #   hostPassword: "PLEASE_INPUT_BY_MANUAL"
+    #   # demo project ssh host ssh need to sudo or not
+    #   hostBecome: false
+    #   # demo project ssh host ssh sudo user name (option, when hostBecome=true required)
+    #   hostBecomeUser: ""
+    #   # demo project ssh host ssh sudo user password (option, when hostBecome=true required)
+    #   hostBecomePassword: ""
+    #   # demo project ssh host web service expose node port (kubernetes node port)
+    #   nodePortWeb: 30013
+  # docker executors deploy settings
+  docker:
+    # docker executor image name
+    image: docker:20.10.14-dind
+    # service name of docker executor (in docker-compose or kubernetes)
+    dockerName: docker
+    # how many docker executors will deploy in docker-compose or with kubernetes
+    dockerNumber: 2
+
+# dory account settings
+account:
+  # admin user settings
+  adminUser:
+    # admin user name, format like: dory-admin
+    username: dory-admin
+    # admin user display name, format like: DORY-ADMIN
+    name: DORY-ADMIN
+    # admin user mail
+    mail: dory-admin@example.com
+    # admin user mobile phone number
+    mobile: 13812341234
+  # smtp send mail settings
+  mail:
+    # smtp server host
+    host: "smtp.example.com"
+    # smtp port
+    port: 465
+    # smtp user account
+    username: "user@example.com"
+    # smtp password
+    password: "PLEASE_INPUT_BY_MANUAL"
+    # smtp send mode, options: default, tls, start_tls
+    mode: tls
+    # smtp sender display name
+    from: "DORY-ADMIN <user@example.com>"
+
+# kubernetes environment settings, project modules can deploy here
+# kubernetes connection settings can obtained by `dorycli install check` command
+kubernetes:
+  # kubernetes environment name
+  envName: test
+  # kubernetes environment description
+  envDesc: 测试环境
+  # kubernetes environment timezone
+  timezone: Asia/Shanghai
+  # kubernetes cluster container runtime type, options: docker, containerd, crio
+  runtime: {{ $.runtime }}
+  # kubernetes apiserver address
+  host: "10.1.0.2"
+  # kubernetes apiserver address for external access
+  viewHost: "k8s.example.com"
+  # kubernetes apiserver port
+  port: 6443
+  # kubernetes apiserver admin token
+  token: "xxx"
+  # The base64 encoded string of the ca certificate of the apiserver in the kubernetes environment
+  caCrtBase64: "xxx"
+  # kubernetes dashboard workload browser access url
+  dashboardUrl: {{ `https://k8s.example.com:30000/#/workloads?namespace={{ .projectNamespace }}` }}
+  # kubernetes dashboard network policy browser access url
+  dashboardUrlNetworkPolicy: {{ `https://k8s.example.com:30000/#/networkpolicy?namespace={{ .projectNamespace }}` }}
+  # namespace for istio service mesh deployment in kubernetes environment
+  istioNamespace: istio-system
+  # namespace for ingress controller in kubernetes environment
+  ingressControllerNamespace: traefik
+
+  # # if kubernetes cluster persistent volume use local storage, please set it, otherwise remove it
+  # pvConfigLocal:
+  #   # local path (absolute path)
+  {{- if eq $.mode "kubernetes" }}
+  #   # the same as `rootDir` settings
+  {{- end }}
+  #   localPath: "/data/k8s-vols/dory"
+
+  # if kubernetes cluster persistent volume use nfs shared storage, please set it, otherwise remove it
+  pvConfigNfs:
+    # nfs storage path (absolute path)
+      {{- if eq $.mode "kubernetes" }}
+      # this path is the nfs server path, not nfs mount path, relative to `rootDir` settings
+      {{- end }}
+      nfsPath: "/data/nfs-vols/k8s-vols/dory"
+      # nfs server ip address
+      nfsServer: "10.2.0.10"
+
+  # # if kubernetes cluster persistent volume use cephfs shared storage, please set it, otherwise remove it
+  # pvConfigCephfs:
+  #   # cephfs storage path (absolute path)
+  {{- if eq $.mode "kubernetes" }}
+  #   # this path is the cephfs server path, not cephfs mount path, relative to `rootDir` settings
+  {{- end }}
+  #   cephPath: "/k8s-vols/dory"
+  #   # ceph connect account
+  #   cephUser: admin
+  #   # ceph connect secret
+  #   cephSecret: "xxx"
+  #   # ceph monitors ip address
+  #   cephMonitors:
+  #   - "192.168.0.1:6789"
+  #   - "192.168.0.2:6789"
+  #   - "192.168.0.3:6789"

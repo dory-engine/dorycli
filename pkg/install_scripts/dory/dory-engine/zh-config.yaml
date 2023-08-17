@@ -1,0 +1,681 @@
+app:
+  # dory运行数据存储的根目录(相对路径)
+  workDir: dory-data
+  # dory在docker容器运行的目录(绝对路径)
+  dockerParentWorkDir: /dory-engine
+  # 项目定义的版本库存放目录(相对路径)
+  defDir: dory-data/projectDefs
+  # 应用的构建缓存相对路径，相对于dory-engine程序的位置(相对路径)
+  cacheDir: dory-data/caches
+  # trivy-db 镜像扫描漏洞库存放路径，相对于dory-engine程序的位置(相对路径)
+  # 目录下包含 db, fanal, java-db 三个漏洞库目录
+  trivyDbDir: dory-data/trivy
+  # 应用使用什么uid运行
+  userID: 1000
+  # 应用的restful服务端口
+  apiPort: 9000
+  # git代码仓库的webhook调用dory的URL
+  gitWebhookUrl: {{ $.gitWebhookUrl | quote }}
+  # git代码仓库的webhook调用dory的公网访问URL
+  gitWebhookExternalUrl: {{ $.viewURL }}:{{ $.dory.doryengine.port }}
+  # git代码仓库参数文件名，流水线执行过程中会自动读取代码仓库中该文件把该文件的内容作为流水线的输入参数
+  paramGitFileName: .dory-git-var.yaml
+  # 镜像扫描质量门禁默认设置
+  scanImageGate:
+    # 中风险漏洞数量
+    gateMedium: 5
+    # 高风险漏洞数量
+    gateHigh: 0
+    # 关键风险漏洞数量
+    gateCritical: 0
+  # 应用的log level，可选: error, warning, info, debug
+  logLevel: debug
+  # 是否允许CORS(跨源资源共享)
+  cors: false
+  # jwt配置
+  jwt:
+    # jwt签名
+    sign: {{ randAlphaNum 64 | quote }}
+    # jwt有效期，单位(秒)
+    expireSeconds: 3600
+    # jwt刷新时间，必须小于jwt有效期，单位(秒)
+    # jwt最短有效期为 expireSeconds - refreshSeconds
+    refreshSeconds: 60
+    # 允许jwt的issue时间的偏移量，单位秒
+    clockSkewSeconds: 5
+  # 用户密码长度要求
+  passwordLength: 8
+  # 忘记密码有效期，单位(小时)
+  resetTokenExpireHours: 24
+  # 管理用户名，初始化的管理员用户名
+  # 如果openldap中不存在，则自动创建账号，密码位于workDir目录的admin.password
+  # 如果openldap中存在，则自动设置管理员权限
+  adminUser:
+    # 账号名称，格式例如: dory-admin
+    username: {{ $.account.adminUser.username }}
+    # 显示名字，格式例如: DORY-ADMIN
+    name: {{ $.account.adminUser.name }}
+    # 邮箱
+    mail: {{ $.account.adminUser.mail }}
+    # 手机号码
+    mobile: {{ $.account.adminUser.mobile }}
+  # 项目的nodePort可用端口段
+  nodePortRange:
+    # nodePort开始范围
+    nodePortRangeStart: 30100
+    # nodePort结束范围
+    nodePortRangeEnd: 32750
+  # 流水线处于运行状态的周期监控设置，单位(秒)
+  runningWatcherInterval:
+    # 监控时间间隔
+    watcherInterval: 1
+    # 超过多长时间没有更新running状态表示流水线失败，runningExpireInterval必须大于watcherInterval
+    runningExpireInterval: 2
+  # 上传附件的最大尺寸，单位(M)
+  attachmentMaxSize: 4
+  # 附件存放路径，相对于dory-engine程序的位置
+  attachmentDir: dory-data/attachment
+  # 附件查看URI
+  attachmentUri: /attachments
+  # 每间隔多长时间进行一次crontab计划任务检查，单位(秒)
+  crontabCheckInterval: 5
+  # 流水线执行完是否删除流水线工作空间目录
+  clearWorkspace: true
+  # 测试报告存放目录
+  testReportDir: dory-data/testReport
+  # 测试报告查看URI
+  testReportUri: /assets/testReport
+  # 默认头像目录URI
+  avatarDefaultUri: /avatar/default
+  # 默认头像完整路径URI
+  avatarDefaultUriFull: /avatar/default/avatar.png
+  # 用户头像存放目录 (相对路径)
+  avatarDir: dory-data/avatar
+  # 用户头像URI
+  avatarUri: /avatar/user
+  # 用户头像的URL前缀
+  avatarUrlPrefix: ""
+  # 自定义步骤输出文件存放目录
+  customStepOutputDir: dory-data/customStepOutput
+  # 自定义步骤输出文件查看URI
+  customStepOutputUri: /assets/customStepOutput
+  # 接口请求超时设置，单位(秒)
+  requestTimeoutSeconds: 5
+  # 上传下载请求超时设置，单位(秒)
+  uploadDownloadTimeoutSeconds: 180
+  # istio网格发布保留多少个deployment，至少为2，包含default和new部署
+  istioDeploymentKeepCount: 5
+  # deployment检查时间间隔，单位秒
+  deployCheckInterval: 5
+  # deployment检查次数
+  deployCheckCountLimit: 30
+  # 默认环境名，添加环境的时候使用默认环境的配置参数添加环境
+  defaultEnvName: {{ $.kubernetes.envName | quote }}
+  # 是否启用服务网格
+  meshAvailable: true
+  # 允许同时运行的流水线数量，超出的部分将会放到队列中，假如设置为0表示不限制同时运行的流水线数量
+  executeNumber: 0
+  # dory在docker executor中自动生成的输入参数文件路径
+  dockerParamInputFileName: /tmp/dory-param-input
+  # dory从docker executor中读取的输出参数文件路径
+  dockerParamOutputFileName: /tmp/dory-param-output
+  # dory把docker executor中以下路径的文件保存成输出文件
+  dockerOutputFileDir: /tmp/dory-file-output
+  # 项目代码仓库存放目录
+  gitRepoDir: dory-data/gitRepos
+  # 项目组件的代码仓库存放目录
+  gitRepoComponentDir: dory-data/gitRepoComponents
+  # 项目初始化的代码仓库存放目录
+  gitRepoProjectInitDir: dory-data/gitRepoProjectInits
+  # 自定义步骤脚本的代码仓库存放目录
+  gitRepoCustomStepDir: dory-data/gitRepoCustomSteps
+  # 数据库变更脚本文件名
+  databaseChangeLogFileName: changelogs.sql
+  # 数据库变更动作设置文件名
+  databaseActionFileName: action.yaml
+  # api测试用例文件名前缀
+  testCaseFilePrefixApi: "test-"
+  # 性能测试用例文件名前缀
+  testCaseFilePrefixPerformance: "test-"
+  # 界面测试用例文件名前缀
+  testCaseFilePrefixWebui: "test-"
+  # 流水线变量映射为容器中的环境变量的前缀
+  pipelineVarDockerEnvPrefix: "DORY"
+  # 非特权模式下patch路径禁止包含以下内容
+  restrictedPatches:
+    - securityContext
+    - hostNetwork
+    - hostPID
+    - hostIPC
+    - hostPort
+    - nodePort
+    - cephfs
+    - glusterfs
+    - hostPath
+    - nfs
+    - rbd
+  # tls自签名证书配置
+  tlsCertificateSettings:
+    organization: DORY
+    organizationalUnit: DEVOPS
+    country: CN
+    expireYears: 10
+    expireMonths: 0
+    expireDays: 0
+  # 时区文件zoneinfo的所在目录
+  zoneInfoDir: dory-data/zoneinfo
+  # 前端界面的显示名字和logo设置
+  frontend:
+    # 前端显示的图片文件所在目录，如果需要自定义显示的图片，需要把相关图片放在该目录下
+    appFrontendDir: dory-data/frontend
+    # 前端显示的图片文件查看URI
+    appFrontendUri: /assets/frontend/app
+    # 前端显示的默认图片文件查看URI
+    appFrontendDefaultUri: /assets/frontend/default
+    # 前端显示的应用名称，为空表示使用默认设置
+    appName: ""
+    # 前端显示的应用介绍，为空表示使用默认设置
+    appDesc: ""
+    # 前端显示的应用LOGO图片文件名，建议使用svg文件，为空表示使用默认设置
+    appLogo: ""
+    # 前端显示的应用favicon图片文件名，建议使用ico文件，为空表示使用默认设置
+    appFavIcon: ""
+    # 前端显示的登录页面背景图文件名，建议使用jpg文件，为空表示使用默认设置
+    appBackGroundImage: ""
+  # project-data-pod 检查时间间隔，单位秒
+  projectDataPodCheckSeconds: 3
+  # project-data-pod 检查次数
+  projectDataPodCheckCount: 30
+# smtp发送邮件设置
+mail:
+  # smtp服务器地址
+  host: {{ $.account.mail.host | quote }}
+  # smtp端口
+  port: {{ $.account.mail.port }}
+  # smtp账号
+  username: {{ $.account.mail.username | quote }}
+  # smtp密码
+  password: {{ $.account.mail.password | quote }}
+  # smtp发送模式，可选项: default, tls, start_tls
+  mode: {{ $.account.mail.mode }}
+  # 是否开启insecure模式，假如服务端为https，并且使用自签名的tls证书，那么请设置本选项为true
+  insecure: false
+  # 邮件发送人名字
+  from: {{ $.account.mail.from | quote }}
+  # 邮件超时设置，单位秒
+  timeoutSeconds: 15
+  # 邮件中打开的服务器地址
+  url: {{ $.viewURL }}:{{ $.dory.doryengine.port }}/#/reset-password
+  # 触发器邮件附件目录
+  triggerMailDir: dory-data/triggerMail
+  # 触发器邮件附件目录查看URI
+  triggerMailUri: /assets/triggerMail
+# redis设置
+redis:
+  # redis主机
+  host: redis-dory
+  # redis端口
+  port: 6379
+  # redis密码
+  password: {{ $.dory.redis.password | quote }}
+# mongo设置
+mongodb:
+  # mongo主机
+  host: mongo-dory
+  # mongo端口
+  port: 27017
+  # mongo用户名
+  username: root
+  # mongo密码
+  password: {{ $.dory.mongo.password | quote }}
+  # mongo数据库名称
+  database: dorydb
+# docker executor 配置
+docker:
+  {{- if eq $.installMode "kubernetes" }}
+  # 假如 docker executor 自签名证书存放在kubernetes的secret情况下，必须设置
+  kubernetes:
+    # kubernetes环境的 apiserver 地址
+    host: {{ $.kubernetes.host | quote }}
+    # kubernetes环境的 apiserver 端口
+    port: {{ $.kubernetes.port }}
+    # kubernetes环境的 apiserver token
+    token: {{ $.kubernetes.token | quote }}
+    # kubernetes环境的 apiserver 的ca证书的base64编码字符串
+    caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
+    # docker executor 证书存放的名字空间
+    namespace: {{ $.dory.namespace | quote }}
+  {{- else if eq $.installMode "docker" }}
+  # docker executor 的数量，docker executor 部署在docker中请设置(选填)
+  dockerNumber: {{ $.dory.docker.dockerNumber }}
+  {{- end }}
+  # docker executor 的服务名
+  serviceName: {{ $.dory.docker.dockerName | quote }}
+  # docker executor 的端口
+  dockerPort: 2376
+  # docker executor 熔断超时设置，单位：秒
+  breakerTimeout: 5
+  # docker executor 连接重试次数
+  connectRetry: 3
+  # docker container 状态检查周期，单位：毫秒
+  watcherIntervalMilliseconds: 500
+# ldap账号中心配置
+ldap:
+  # LDAP基础域配置
+  baseDN: {{ $.dory.openldap.baseDN | quote}}
+  # LDAP服务器访问地址配置
+  url: "ldap://{{ $.dory.openldap.serviceName }}.{{ $.dory.namespace }}:389"
+  # LDAP服务名
+  serviceName: {{ $.dory.openldap.serviceName }}.{{ $.dory.namespace }}
+  # LDAP管理员账号全称
+  adminCN: "cn=admin,{{ $.dory.openldap.baseDN }}"
+  # LDAP管理员账号密码
+  password: {{ $.dory.openldap.password | quote}}
+# 代码仓库配置，支持gitlab和gitea
+gitRepoConfigs:
+  # 代码仓库类型，选项: gitlab, gitea
+  - kind: {{ $.dory.gitRepo.type }}
+    # 代码仓库名字标识，用于项目配置关联对应代码仓库名字，格式例如: xxx-xxx
+    repoName: {{ $.dory.gitRepo.type }}-dory
+    {{- if $.dory.gitRepo.internal.image }}
+    # 代码仓库浏览器查看url
+    viewUrl: {{ $.viewURL }}:{{ $.dory.gitRepo.internal.port }}
+    # 代码仓库的地址，dory访问该仓库的地址
+    {{- if eq $.dory.gitRepo.type "gitea" }}
+    url: http://gitea:3000
+    {{- else if eq $.dory.gitRepo.type "gitlab" }}
+    url: http://gitlab
+    {{- end }}
+    # 是否开启insecure模式，假如服务端为https，并且使用自签名的tls证书，那么请设置本选项为true
+    insecure: false
+    # 代码仓库管理员账号
+    username: "PLEASE_INPUT_BY_MANUAL"
+    # 代码仓库管理员显示名
+    name: "PLEASE_INPUT_BY_MANUAL"
+    # 代码仓库管理员显示mail
+    mail: "PLEASE_INPUT_BY_MANUAL@example.com"
+    # 代码仓库管理员密码
+    password: "PLEASE_INPUT_BY_MANUAL"
+    # 代码仓库管理员token
+    token: "PLEASE_INPUT_BY_MANUAL"
+    {{- else }}
+    # 代码仓库浏览器查看url
+    viewUrl: {{ $.dory.gitRepo.external.viewUrl }}
+    # 代码仓库的地址，dory访问该仓库的地址
+    url: {{ $.dory.gitRepo.external.url }}
+    # 代码仓库管理员账号
+    username: {{ $.dory.gitRepo.external.username | quote }}
+    # 代码仓库管理员显示名
+    name: {{ $.dory.gitRepo.external.name | quote }}
+    # 代码仓库管理员显示mail
+    mail: {{ $.dory.gitRepo.external.mail | quote }}
+    # 代码仓库管理员密码
+    password: {{ $.dory.gitRepo.external.password | quote }}
+    # 代码仓库管理员token
+    token: {{ $.dory.gitRepo.external.token | quote }}
+    {{- end }}
+# 镜像仓库配置，支持harbor
+imageRepoConfigs:
+  # 镜像仓库类型，选项: harbor
+  - kind: {{ $.dory.imageRepo.type }}
+    # 镜像仓库名字标识，用于项目配置关联对应代码仓库名字，格式例如: xxx-xxx
+    repoName: {{ $.dory.imageRepo.type }}-dory
+    # 镜像仓库的域名，目前只支持 https://<hostname> 方式访问镜像仓库
+    hostname: {{ $.imageRepoDomainName | quote }}
+    # 是否开启insecure模式，假如服务端为https，并且使用自签名的tls证书，那么请设置本选项为true
+    insecure: true
+    # 镜像仓库管理员账号
+    username: {{ $.imageRepoUsername | quote }}
+    # 镜像仓库管理员密码
+    password: {{ $.imageRepoPassword | quote }}
+    # 镜像仓库管理员邮箱
+    email: {{ $.imageRepoEmail | quote }}
+    # 内部访问的IP地址
+    ipInternal: {{ $.imageRepoIp }}
+    # 外部访问的IP地址
+    ipExternal: {{ $.imageRepoIp }}
+# 制品仓库配置，支持nexus
+artifactRepoConfigs:
+  # 制品仓库类型，选项: nexus
+  - kind: {{ $.dory.artifactRepo.type }}
+    # 制品仓库名字标识，用于项目配置关联对应代码仓库名字，格式例如: xxx-xxx
+    repoName: {{ $.dory.artifactRepo.type }}-dory
+    # 制品仓库浏览器查看url
+    viewUrl: {{ $.artifactRepoViewUrl | quote }}
+    # 内部访问的schema，选择项: http, https
+    schemaInternal: {{ $.artifactRepoSchema | quote }}
+    # 外部访问的schema，假如只有唯一的schema，那么schemaExternal和schemaInternal设置为一样即可。选择项: http, https
+    schemaExternal: {{ $.artifactRepoSchema | quote }}
+    # 内部访问的主机名或者IP地址
+    hostnameInternal: {{ $.artifactRepoIp | quote }}
+    # 外部访问的主机名或者IP地址，假如只有唯一的主机名或者IP地址，那么hostnameExternal和hostnameInternal设置为一样即可
+    hostnameExternal: {{ $.artifactRepoIp | quote }}
+    # 是否开启insecure模式，假如服务端为https，并且使用自签名的tls证书，那么请设置本选项为true
+    insecure: false
+    # 制品仓库管理员账号
+    username: {{ $.artifactRepoUsername | quote }}
+    # 制品仓库管理员密码
+    password: {{ $.artifactRepoPassword | quote }}
+    # 制品仓库public role名称
+    publicRole: {{ $.artifactRepoPublicRole | quote }}
+    # 拉取第三方开源依赖的公用账号名称
+    publicUser: {{ $.artifactRepoPublicUser | quote }}
+    # 拉取第三方开源依赖的公用账号密码
+    publicPassword: {{ $.artifactRepoPublicPassword | quote }}
+    # 拉取第三方开源依赖的公用账号邮箱
+    publicEmail: {{ $.artifactRepoPublicEmail | quote }}
+    # 制品仓库服务端口
+    port: {{ $.artifactRepoPort }}
+    # docker.io镜像仓库代理端口
+    portDocker: {{ $.artifactRepoPortHub }}
+    # gcr.io镜像仓库代理端口
+    portGcr: {{ $.artifactRepoPortGcr }}
+    # quay.io镜像仓库代理端口
+    portQuay: {{ $.artifactRepoPortQuay }}
+    {{- if $.artifactRepoInternal }}
+    # 代理仓库设置
+    proxyRepo:
+      # maven第三方开源依赖的仓库相对路径
+      maven: repository/maven-group-public/
+      # npm第三方开源依赖的仓库相对路径
+      npm: repository/npm-group-public/
+      # pypi第三方开源依赖的仓库相对路径
+      pip: repository/pypi-group-public/simple
+      # gradle第三方开源依赖的仓库相对路径
+      gradle: repository/maven-group-public/
+      # go第三方开源依赖的仓库相对路径
+      go: repository/go-group-public
+      # apt 源代理设置
+      apt:
+        # x86代理源
+        amd64: repository/apt-aliyun-focal/
+        # arm64v8代理源
+        arm64v8: repository/apt-aliyun-focal-arm64/
+    {{- else }}
+    # 代理仓库设置
+    proxyRepo:
+      # maven第三方开源依赖的仓库相对路径
+      maven: {{ $.dory.artifactRepo.external.proxyRepo.maven }}
+      # npm第三方开源依赖的仓库相对路径
+      npm: {{ $.dory.artifactRepo.external.proxyRepo.maven }}
+      # pypi第三方开源依赖的仓库相对路径
+      pip: {{ $.dory.artifactRepo.external.proxyRepo.pip }}
+      # gradle第三方开源依赖的仓库相对路径
+      gradle: {{ $.dory.artifactRepo.external.proxyRepo.gradle }}
+      # go第三方开源依赖的仓库相对路径
+      go: {{ $.dory.artifactRepo.external.proxyRepo.go }}
+      # apt 源代理设置
+      apt:
+        {{- range $k, $v := $.dory.artifactRepo.external.proxyRepo.apt }}
+        # {{ $k }}代理源
+        {{ $k }}: {{ $v }}
+        {{- end }}
+    {{- end }}
+# 代码扫描仓库配置，支持sonarqube
+scanCodeRepoConfigs:
+  # 代码扫描仓库类型，选项: sonarqube
+  - kind: {{ $.dory.scanCodeRepo.type }}
+    #代码扫描仓库名字标识，用于项目配置关联对应代码仓库名字，格式例如: xxx-xxx
+    repoName: {{ $.dory.scanCodeRepo.type }}-dory
+    # 代码扫描仓库外部查看url
+    viewUrl: {{ $.scanCodeRepoViewUrl }}
+    # 代码扫描仓库地址，dory访问该仓库的地址
+    url: {{ $.scanCodeRepoUrl }}
+    # 是否开启insecure模式，假如服务端为https，并且使用自签名的tls证书，那么请设置本选项为true
+    insecure: false
+    # 代码扫描仓库管理员token
+    token: {{ $.scanCodeRepoToken | quote }}
+# 公网代理服务器配置
+proxy:
+  # 公网代理地址，例如: http://username:password@192.168.0.1:8080
+  url: ""
+
+# 开通项目的时候，默认会创建对应的分支和流水线配置
+defaultPipeline:
+  # 分支名称
+  branchName: develop
+  # 是否通过push事件的webhook触发流水线
+  webhookPushEvent: true
+  # 默认计划任务设置
+  pipelineCrons: []
+  # 默认触发器设置
+  pipelineTriggers: []
+
+# 演示项目打包镜像设置
+demoProjectImageSettings:
+  springDemoImage: "hub/openjdk:11.0.16-jdk"
+  nodeDemoImage: "hub/node:18.14.0-alpine3.17"
+  pythonDemoImage: "public/python:3.10.10-alpine3.17-dory"
+  goDemoImage: "public/alpine:3.17.2-dory"
+  ginDemoImage: "public/alpine:3.17.2-dory"
+
+# 演示项目数据库设置
+demoProjectDatabaseSettings:
+  # 演示项目数据库名字后缀，生成的演示数据库名字为：${projectName}-${dbNameSuffix}
+  dbNameSuffix: "mysql01"
+  # 演示项目数据库JDBC连接字符串
+  dbUrl: {{ $.demoDatabaseUrl | quote }}
+  # 演示项目数据库连接用户
+  dbUser: {{ $.demoDatabaseUsername | quote }}
+  # 演示项目数据库连接密码
+  dbPassword: {{ $.demoDatabasePassword | quote }}
+
+# 演示项目主机设置
+demoProjectHostSettings:
+  # 演示项目ssh主机配置名后缀，生成的演示主机配置名为：${projectName}-${hostNameSuffix}
+  hostNameSuffix: "node01"
+  # 演示项目ssh主机地址，可以是IP地址或者主机名
+  hostAddr: {{ $.demoHostAddr }}
+  # 演示项目ssh主机ssh连接端口
+  hostPort: {{ $.demoHostPort }}
+  # 演示项目ssh主机ssh连接账号
+  hostUser: {{ $.demoHostUser }}
+  # 演示项目ssh主机ssh连接密码
+  hostPassword: {{ $.demoHostPassword | quote }}
+  # 演示项目ssh主机是否需要切换用户
+  hostBecome: {{ $.demoHostBecome }}
+  # 演示项目ssh主机登录后切换用户名（选填，hostBecome=true时候必填）
+  hostBecomeUser: {{ $.demoHostBecomeUser }}
+  # 演示项目ssh主机登录后切换用户的密码（选填，hostBecome=true时候必填）
+  hostBecomePassword: {{ $.demoHostBecomePassword | quote }}
+  # 演示项目ssh主机相关变量。（选填，如果没有请删除该项目）
+  # 变量名格式例如: backup_dir, service_port
+  variables:
+    base_dir: /app
+    backup_dir: /backup
+    service_port: 8000
+  # 演示项目ssh主机所属默认分组
+  group: group_demo
+
+# 编译环境设置，对应的环境与docker镜像设置
+dockerBuildSettings:
+  # 开通项目的时候，是否使用制品仓库拉取第三方开源依赖
+  artifactRepoDependencyPull: true
+  # 默认第三方开源依赖地址，不启用制品仓库拉取第三方开源依赖情况下的依赖仓库地址设置
+  defaultBuildDependency:
+    # maven第三方开源依赖的仓库设置
+    maven:
+        # ~/.m2/settings.xml的仓库url
+      - url: http://maven.aliyun.com/nexus/content/groups/public/
+        # ~/.m2/settings.xml的仓库id
+        id: nexus
+        # ~/.m2/settings.xml的mirrorOf设置
+        mirrorOf: central
+    # npm第三方开源依赖的仓库设置
+    npm:
+      # ~/.npmrc的仓库url
+      url: https://registry.npm.taobao.org
+    # pypi第三方开源依赖的仓库设置
+    pip:
+      # ~/.pip/pip.conf的仓库url
+      url: https://mirrors.aliyun.com/pypi/simple/
+      # ~/.pip/pip.conf的trusted-host
+      trustedHost: mirrors.aliyun.com
+    # gradle第三方开源依赖的仓库设置
+    gradle:
+        # ~/.gradle/init.gradle的仓库url
+      - url: https://maven.aliyun.com/repository/jcenter
+      - url: https://maven.aliyun.com/repository/google
+      - url: https://maven.aliyun.com/repository/central
+      - url: https://maven.aliyun.com/repository/gradle-plugin
+    # go第三方开源依赖的仓库设置
+    go:
+      # ~/.config/go/env的仓库url
+      url: https://mirrors.aliyun.com/goproxy
+  # 构建docker executor对应的构建用户的home目录
+  dockerHomeDir: "/home/dory"
+  # 构建docker executor环境设置
+  dockerBuildEnvs:
+    # 构建环境名称
+    - buildEnvName: maven-jdk17
+      # 构建环境容器镜像所在的镜像仓库相对路径，当cpu架构为amd64的时候的镜像名字
+      image: "public/maven:3.8.5-openjdk-17-dory"
+      # 构建环境支持哪些cpu架构
+      # 假如cpu架构不为amd64，构建环境的容器镜像名为 <image>-<cpu架构名字>
+      # 例如cpu架构为arm64v8，那么实际构建环境的image名字为 public/maven:3.8.5-openjdk-17-dory-arm64v8
+      buildArches: ["amd64", "arm64v8"]
+      # 是否把caches目录装载到容器的$HOME目录
+      mountHomeDir: true
+      # 是否启用外部代理服务器拉取依赖
+      enableProxy: false
+      # mount构建容器中非$HOME目录之外的构建依赖缓存目录
+      # 例如go语言，需要装载容器中的/go/pkg作为缓存
+      mountExtraCacheDirs: []
+      # 执行构建命令前执行什么命令
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      # 执行检查命令后执行什么命令
+      commandsAfterCheck: []
+    - buildEnvName: maven-jdk11
+      image: "public/maven:3.8.6-openjdk-11-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: maven-jdk8
+      image: "public/maven:3.8.6-openjdk-8-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: npm-node19
+      image: "hub/node:19.6.0-alpine3.17"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: npm-node18
+      image: "hub/node:18.14.0-alpine3.17"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: go-1.20
+      image: "public/golang:1.20.0-alpine3.17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: ["/go/pkg"]
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: go-1.18
+      image: "public/golang:1.18.10-alpine3.17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: ["/go/pkg"]
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: python-3.11
+      image: "public/python:3.11.2-alpine3.17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: python-3.10
+      image: "public/python:3.10.10-alpine3.17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: gradle-jdk17
+      image: "public/gradle:7.6.0-jdk17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: gradle-jdk11
+      image: "public/gradle:7.6.0-jdk11-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: gradle-jdk8
+      image: "public/gradle:7.6.0-jdk8-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: alpine-3.17
+      image: "public/alpine:3.17.2-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: alpine-3.16
+      image: "public/alpine:3.16.4-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: ansible-2.12
+      image: "public/ansible:2.12.2-alpine-dory"
+      buildArches: ["arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+
+# 调试容器docker镜像设置
+componentDebugEnvs:
+  # 调试容器镜像地址
+  debugImage: "hub/doryengine/debug-ubuntu:v1.0.0"
+
+# 流水线各个步骤使用的docker镜像设置
+stepDockerEnvs:
+  # 代码扫描步骤镜像
+  scanCode: "public/sonarsource/sonar-scanner-cli:4.7.0"
+  # 镜像扫描步骤镜像
+  scanImage: "public/aquasec/trivy:0.37.2"
+  # 制品发布步骤镜像
+  deployArtifact: "public/ansible:2.12.2-alpine-dory"
+  # 接口自动化测试步骤镜像
+  testApi: "public/ppodgorsek/robot-framework:dory"
+  # 性能自动化测试步骤镜像
+  testPerformance: "public/egaillardon/jmeter:5.3.0-1.0.1-dory"
+  # 界面自动化测试步骤镜像
+  testWebUi: "public/ppodgorsek/robot-framework:dory"
+  # 数据库脚本执行与回滚步骤镜像
+  databaseScript: "public/liquibase/liquibase:4.17.2-dory"

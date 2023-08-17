@@ -1,0 +1,72 @@
+name: Go
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  createRelease:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.get_tag_name.outputs.tag_name }}
+      upload_url: ${{ steps.get_upload_url.outputs.upload_url }}
+    steps:
+      - uses: actions/checkout@master
+      - id: get_tag_name
+        run: echo "::set-output name=tag_name::${GITHUB_REF#refs/*/}"
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_tag_name.outputs.tag_name }}
+          release_name: dorycli ${{ steps.get_tag_name.outputs.tag_name }}
+          draft: false
+          prerelease: false
+          body_path: CHANGELOGS/CHANGELOG-${{ steps.get_tag_name.outputs.tag_name }}.md
+      - id: get_upload_url
+        run: echo "::set-output name=upload_url::${{ steps.create_release.outputs.upload_url }}"
+
+  build:
+    needs: createRelease
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goarch: amd64
+            goos: linux
+          - goarch: amd64
+            goos: darwin
+          - goarch: arm64
+            goos: linux
+          - goarch: arm64
+            goos: darwin
+          - goarch: amd64
+            goos: windows
+    steps:
+      - uses: actions/checkout@master
+      - name: Set go build environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+      - name: Building dorycli
+        working-directory: .
+        run: go mod tidy && go build -o dorycli
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+      - name: Packaging
+        working-directory: .
+        run: tar czvf dorycli-${{ needs.createRelease.outputs.tag_name }}-${{ matrix.goos }}-${{ matrix.goarch }}.tgz dorycli LICENSE README.md README-zh.md
+      - name: Uploading Release assets
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.createRelease.outputs.upload_url }}
+          asset_path: ./dorycli-${{ needs.createRelease.outputs.tag_name }}-${{ matrix.goos }}-${{ matrix.goarch }}.tgz
+          asset_name: dorycli-${{ needs.createRelease.outputs.tag_name }}-${{ matrix.goos }}-${{ matrix.goarch }}.tgz
+          asset_content_type: application/gzip

@@ -1,0 +1,9 @@
+FROM {{ $.source }}
+
+LABEL maintainer="cookeem"
+LABEL email="cookeem@qq.com"
+LABEL version="5.3.0"
+
+ENTRYPOINT []
+
+# docker build -t {{ $.target }}{{ if $.isArm64}}-arm64v8{{ end }} -f Dockerfile-jmeter-{{ $.tagName }}{{ if $.isArm64}}-arm64v8{{ end }} .

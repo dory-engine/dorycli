@@ -1,0 +1,44 @@
+FROM {{ $.source }}
+
+LABEL maintainer="cookeem"
+LABEL email="cookeem@qq.com"
+LABEL version="2.12.2"
+
+RUN echo "===> Installing sudo to emulate normal OS behavior..."  && \
+    sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+    apk --update add sudo                                         && \
+    echo "===> Adding Python runtime..."  && \
+    apk --update add git curl zip jq tree htop && \
+    apk --update add python3 py3-pip openssl ca-certificates    && \
+    apk --update add --virtual build-dependencies python3-dev libffi-dev openssl-dev build-base cargo && \
+    apk --update add gcc python3-dev musl-dev linux-headers  && \
+    update-ca-certificates && \
+    \
+    mkdir -p ~/.pip/ && \
+    echo '[global]' >> ~/.pip/pip.conf && \
+    echo 'index-url = https://mirrors.aliyun.com/pypi/simple/' >> ~/.pip/pip.conf && \
+    echo '[install]' >> ~/.pip/pip.conf && \
+    echo 'trusted-host=mirrors.aliyun.com' >> ~/.pip/pip.conf && \
+    \
+    pip install --upgrade pip cffi                            && \
+    \
+    echo "===> Installing Ansible..."  && \
+    pip install setuptools_rust        && \
+    pip install ansible==5.3.0                && \
+    \
+    echo "===> Installing handy tools (not absolutely required)..."  && \
+    pip install --upgrade pycrypto pywinrm psutil openstacksdk        && \
+    apk --update add sshpass openssh-client rsync  && \
+    \
+    echo "===> Removing package list..."  && \
+    apk del build-dependencies            && \
+    rm -rf /var/cache/apk/*               && \
+    \
+    echo "===> Adding hosts for convenience..."  && \
+    mkdir -p /etc/ansible                        && \
+    echo 'localhost' > /etc/ansible/hosts && \
+    ansible-playbook --version && \
+    adduser -u 1000 -D -h /home/dory dory
+
+
+# docker build -t {{ $.target }}{{ if $.isArm64}}-arm64v8{{ end }} -f Dockerfile-ansible-{{ $.tagName }}{{ if $.isArm64}}-arm64v8{{ end }} .

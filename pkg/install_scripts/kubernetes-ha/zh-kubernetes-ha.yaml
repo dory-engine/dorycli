@@ -1,0 +1,42 @@
+# 需要安装的kubernetes的版本
+version: "v1.27.3"
+# kubernetes的镜像仓库设置，如果不设置，那么使用官方的默认镜像仓库
+imageRepository: "registry.cn-hangzhou.aliyuncs.com/google_containers"
+# 使用keepalived创建的高可用kubernetes集群的浮动ip地址
+virtualIp: 192.168.0.100
+# 使用nginx映射的高可用kubernetes集群的apiserver映射端口
+virtualPort: 16443
+# 浮动ip地址映射的主机名，请在/etc/hosts配置文件中进行主机名映射设置
+virtualHostname: k8s-vip
+# kubernetes集群的pod子网地址，如果不设置，使用默认的pod子网地址
+podSubnet: "10.244.0.0/24"
+# kubernetes集群的service子网地址，如果不设置，使用默认的service子网地址
+serviceSubnet: "10.96.0.0/16"
+# keepalived的鉴权密码，如果不设置那么使用随机生成的密码
+keepAlivedAuthPass: "input_your_password"
+# kubernetes的controlplane控制平面的主机配置，高可用master节点数量必须为单数并且至少3台
+masterHosts:
+    # master节点的主机名，请在/etc/hosts配置文件中进行主机名映射设置
+  - hostname: k8s-master01
+    # master节点的IP地址
+    ipAddress: 192.168.0.1
+    # master节点互访使用的网卡名字，用于keepalived网卡绑定
+    networkInterface: eth0
+    # keepalived选举优先级，数值越大优先级越高，各个master节点的优先级不能一样
+    keepalivedPriority: 120
+    # master节点的主机名，请在/etc/hosts配置文件中进行主机名映射设置
+  - hostname: k8s-master02
+    # master节点的IP地址
+    ipAddress: 192.168.0.2
+    # master节点互访使用的网卡名字，用于keepalived网卡绑定
+    networkInterface: eth0
+    # keepalived选举优先级，数值越大优先级越高，各个master节点的优先级不能一样
+    keepalivedPriority: 110
+    # master节点的主机名，请在/etc/hosts配置文件中进行主机名映射设置
+  - hostname: k8s-master03
+    # master节点的IP地址
+    ipAddress: 192.168.0.3
+    # master节点互访使用的网卡名字，用于keepalived网卡绑定
+    networkInterface: eth0
+    # keepalived选举优先级，数值越大优先级越高，各个master节点的优先级不能一样
+    keepalivedPriority: 100

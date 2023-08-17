@@ -1,0 +1,388 @@
+# 安装模式，选项: docker, kubernetes
+# docker模式，表示把所有组件使用docker-compose的方式部署
+# kubernetes模式，表示把所有组件部署在kubernetes中
+installMode: {{ $.mode }}
+# 所有dory组件和镜像仓库组件存放的根目录（绝对路径）
+# 如果安装模式为docker，为本机的绝对路径。
+# 如果安装模式为kubernetes，并且kubernetes集群存在多个节点，请保证本机挂装了共享存储(例如nfs、cephfs)，并且目录在共享存储的挂装目录下
+{{- if eq $.mode "docker" }}
+rootDir: "/data/docker-vols/dory"
+{{- else if eq $.mode "kubernetes" }}
+rootDir: "/mnt/nfs/k8s-vols/dory"
+{{- end }}
+# 主机ip地址，通过本ip地址可以访问到部署的镜像仓库和制品依赖仓库。
+# 如果安装模式为docker，表示本机的ip地址，请勿使用127.0.0.1这种loopback地址。
+# 如果安装模式为kubernetes，主机ip为master节点的ip地址（单master节点情况下）或者master节点的浮动ip（多master节点情况下）
+{{- if eq $.mode "docker" }}
+hostIP: "10.2.0.10"
+{{- else if eq $.mode "kubernetes" }}
+hostIP: "10.1.0.2"
+{{- end }}
+# 外部查看本机的url地址，请不要包含端口
+# 使用kubernetes nodePort 或者 docker 暴露的对外端口
+viewURL: http://example.com
+# dory组件部署设置
+dory:
+  # dory组件所在的名字空间
+  # 假如安装模式为kubernetes，表示dory组件所安装的名字空间
+  # 假如安装模式为docker，表示dory组件存放的子目录
+  namespace: "dory"
+  {{- if eq $.mode "kubernetes" }}
+  # 设置dory组件部署在哪些节点上，对应kubernetes的nodeSelector
+  # 例如: "type: worker"
+  nodeSelector: {}
+  {{- end }}
+  # dory-engine license 证书，不填写表示免费试用模式
+  licenseKey: ""
+  # 代码仓库设置
+  gitRepo:
+    # 代码仓库类型，选项: gitea, gitlab
+    # gitea 支持 arm64架构
+    # gitlab 不支持 arm64架构
+    type: gitea
+    # 自动部署代码仓库（internal、external只能选一种部署方式）
+    internal:
+      # 镜像名
+      # 假如类型为gitlab，建议使用镜像 gitlab/gitlab-ce:15.11.2-ce.0
+      image: gitea/gitea:1.19.3
+      # gitea 数据库镜像名，gitea情况下必须填写(选填)
+      imageDB: mysql:8.0.20
+      # # gitlab 代理镜像名，gitlab情况下必须填写(选填)
+      # imageNginx: nginx:1.23.3-alpine
+      # 暴露的服务端口
+      port: 30001
+    # # 使用外部部署代码仓库，不自动部署代码仓库（internal、external只能选一种部署方式）
+    # external:
+    #   # 代码仓库浏览器查看url
+    #   viewUrl: http://192.168.0.1:30001
+    #   # 代码仓库的地址，dory访问该仓库的地址
+    #   url: http://192.168.0.1:30001
+    #   # 代码仓库管理员账号
+    #   username: "PLEASE_INPUT_BY_MANUAL"
+    #   # 代码仓库管理员显示名
+    #   name: "PLEASE_INPUT_BY_MANUAL"
+    #   # 代码仓库管理员显示mail
+    #   mail: "PLEASE_INPUT_BY_MANUAL"
+    #   # 代码仓库管理员密码
+    #   password: "PLEASE_INPUT_BY_MANUAL"
+    #   # 代码仓库管理员token
+    #   token: "PLEASE_INPUT_BY_MANUAL"
+    #   # git代码仓库的webhook调用dory的URL
+    {{- if eq $.mode "docker" }}
+    #   gitWebhookUrl: "http://10.2.0.10:30010"
+    {{- else if eq $.mode "kubernetes" }}
+    #   gitWebhookUrl: "http://10.1.0.2:30010"
+    {{- end }}
+  # 镜像仓库设置，不支持arm64架构
+  imageRepo:
+    # 镜像仓库类型，选项: harbor
+    type: harbor
+    # 自动部署镜像依赖仓库（internal、external只能选一种部署方式）
+    internal:
+      # 镜像仓库的域名，目前只支持 https://<hostname> 方式访问镜像仓库
+      hostname: harbor.example.com
+      # 镜像仓库组件所在的名字空间
+      # 假如安装模式为kubernetes，表示镜像仓库组件所安装的名字空间
+      # 假如安装模式为docker，表示镜像仓库组件存放的子目录
+      namespace: harbor
+      # 镜像仓库版本，harbor版本，支持v2.2.x - v2.6.x
+      version: v2.6.0
+      # 镜像仓库的管理员密码，为空表示自动随机生成
+      password: ""
+      {{- if eq $.mode "docker" }}
+      # 镜像仓库的tls自签名证书存放的相对路径
+      # 安装模式为docker情况下必须填写
+      certsDir: certs
+      # 镜像仓库的数据存放的相对路径
+      # 安装模式为docker情况下必须填写
+      dataDir: data
+      {{- end }}
+    # # 使用外部部署镜像仓库，不自动部署镜像仓库（internal、external只能选一种部署方式）
+    # external:
+    #   # 镜像仓库的IP地址
+    #   ip: 192.168.0.1
+    #   # 镜像仓库的域名，目前只支持 https://<hostname> 方式访问镜像仓库
+    #   hostname: harbor.example.com
+    #   # 镜像仓库管理员账号
+    #   username: admin
+    #   # 镜像仓库管理员密码
+    #   password: "PLEASE_INPUT_BY_MANUAL"
+    #   # 镜像仓库管理员邮箱
+    #   email: "admin@example.com"
+  # 制品依赖仓库设置，不支持arm64架构
+  artifactRepo:
+    # 制品依赖仓库类型，选项: nexus
+    type: nexus
+    # 自动部署制品依赖仓库（internal、external只能选一种部署方式）
+    internal:
+      # 镜像名
+      image: sonatype/nexus3:3.45.0
+      # web服务暴露的服务端口
+      port: 30003
+      # dockerhub镜像代理暴露的服务端口
+      portHub: 30004
+      # gcr镜像代理暴露的服务端口
+      portGcr: 30005
+      # quay镜像代理暴露的服务端口
+      portQuay: 30006
+    # # 使用外部部署制品依赖仓库，不自动部署制品依赖仓库（internal、external只能选一种部署方式）
+    # # 请使用 https://doryengine.com/attachments/{{ .nexusInitData }} 的数据作为nexus的基础数据
+    # external:
+    #   # 制品仓库浏览器查看url
+    #   viewUrl: http://192.168.0.1:30003
+    #   # 访问的schema，选择项: http, https
+    #   schema: http
+    #   # 制品仓库访问的主机名或者IP地址
+    #   hostname: 192.168.0.1
+    #   # 制品仓库管理员账号
+    #   username: admin
+    #   # 制品仓库管理员密码
+    #   password: "Nexus_Pwd_321"
+    #   # 制品仓库public role名称
+    #   publicRole: "public-role"
+    #   # 拉取第三方开源依赖的公用账号名称
+    #   publicUser: "public-user"
+    #   # 拉取第三方开源依赖的公用账号密码
+    #   publicPassword: "public-user"
+    #   # 拉取第三方开源依赖的公用账号邮箱
+    #   publicEmail: "public-user@example.com"
+    #   # web服务暴露的服务端口
+    #   port: 30003
+    #   # dockerhub镜像代理暴露的服务端口
+    #   portHub: 30004
+    #   # gcr镜像代理暴露的服务端口
+    #   portGcr: 30005
+    #   # quay镜像代理暴露的服务端口
+    #   portQuay: 30006
+    #   # 代理仓库设置
+    #   proxyRepo:
+    #     # maven第三方开源依赖的仓库相对路径
+    #     maven: repository/maven-group-public/
+    #     # npm第三方开源依赖的仓库相对路径
+    #     npm: repository/npm-group-public/
+    #     # pypi第三方开源依赖的仓库相对路径
+    #     pip: repository/pypi-group-public/simple
+    #     # gradle第三方开源依赖的仓库相对路径
+    #     gradle: repository/maven-group-public/
+    #     # go第三方开源依赖的仓库相对路径
+    #     go: repository/go-group-public
+    #     # apt 源代理设置
+    #     apt:
+    #       # x86代理源
+    #       amd64: repository/apt-aliyun-focal/
+    #       # arm64v8代理源
+    #       arm64v8: repository/apt-aliyun-focal-arm64/
+  # 代码扫描仓库设置
+  scanCodeRepo:
+    # 代码扫描仓库类型，选项: sonarqube
+    type: sonarqube
+    # 自动部署代码扫描仓库（internal、external只能选一种部署方式）
+    internal:
+      # 镜像名
+      image: sonarqube:10.1.0-community
+      # 数据库镜像名
+      imageDB: postgres:12.10-alpine3.15
+      # web服务暴露的服务端口
+      port: 30008
+    # # 使用外部代码扫描仓库，不自动部署代码扫描仓库（internal、external只能选一种部署方式）
+    # external:
+    #   # 代码扫描仓库外部查看url
+    #   viewUrl: http://192.168.0.1:30008
+    #   # 代码扫描仓库地址，dory访问该仓库的地址
+    #   url: http://192.168.0.1:30008
+    #   # 代码扫描仓库管理员token
+    #   token: "PLEASE_INPUT_BY_MANUAL"
+  # openldap账号中心设置，dory-engine使用openldap存储用户账号
+  openldap:
+    # 镜像名
+    image: osixia/openldap:develop-dev
+    # ldapadmin镜像名
+    imageAdmin: osixia/phpldapadmin:stable
+    # 管理界面暴露的服务端口
+    port: 30007
+    # 管理员密码，为空表示自动随机生成
+    password: ""
+    # 账号中心域设置
+    domain: "example.com"
+    # 账号中心baseDN设置
+    baseDN: "dc=example,dc=com"
+    # LDAP服务名
+    serviceName: "openldap"
+  # doryengine部署设置
+  doryengine:
+    # dashboard暴露的服务端口
+    port: 30010
+  # redis缓存设置
+  redis:
+    # 镜像名
+    image: redis:6.2.6-alpine3.15
+    # 访问密码，为空表示自动随机生成
+    password: ""
+  # mongo数据库设置
+  mongo:
+    # 镜像名
+    image: mongo:5.0.6-focal
+    # 访问密码，为空表示自动随机生成
+    password: ""
+  # 演示项目数据库
+  demoDatabase:
+    # 自动部署演示项目数据库（internal、external只能选一种部署方式）
+    internal:
+      # 演示项目数据库部署名字
+      deployName: demo-mysql
+      # 演示项目数据库镜像名
+      image: mysql:8.0.20
+      # 演示项目数据库管理员密码，为空表示自动随机生成
+      password: ""
+      # 演示项目数据库测试用户
+      user: testuser
+      # 演示项目数据库测试数据库
+      database: testdb
+      # 演示项目数据库测试用户密码，为空表示自动随机生成
+      userPassword: ""
+      # 演示项目数据库外部端口号
+      port: 30011
+    # # 使用外部演示项目数据库，不自动部署演示项目数据库（internal、external只能选一种部署方式）
+    # external:
+    #   # 演示项目数据库连接的JDBC连接串
+    #   dbUrl: jdbc:mysql://192.168.0.1:30011/testdb
+    #   # 演示项目数据库连接用户
+    #   dbUser: testuser
+    #   # 演示项目数据库连接密码
+    #   dbPassword: "PLEASE_INPUT_BY_MANUAL"
+  # 演示项目ssh主机
+  demoHost:
+    # 自动部署演示项目ssh主机（internal、external只能选一种部署方式）
+    internal:
+      # 演示项目ssh主机部署名字
+      deployName: demo-host
+      # 演示项目ssh主机镜像名
+      image: doryengine/sshd-alpine:python3
+      # 演示项目ssh主机root密码，为空表示自动随机生成
+      password: ""
+      # 演示项目ssh主机ssh内部端口
+      portSsh: 22
+      # 演示项目ssh主机ssh外部端口
+      nodePortSsh: 30012
+      # 演示项目ssh主机web服务内部端口
+      portWeb: 8000
+      # 演示项目ssh主机web服务外部端口
+      nodePortWeb: 30013
+    # # 使用外部演示项目ssh主机，不自动部署演示项目ssh主机（internal、external只能选一种部署方式）
+    # external:
+    #   # 演示项目ssh主机地址，可以是IP地址或者主机名
+    #   hostAddr: 192.168.0.1
+    #   # 演示项目ssh主机ssh连接端口
+    #   hostPort: 30012
+    #   # 演示项目ssh主机ssh连接账号
+    #   hostUser: "root"
+    #   # 演示项目ssh主机ssh连接密码
+    #   hostPassword: "PLEASE_INPUT_BY_MANUAL"
+    #   # 演示项目ssh主机是否需要切换用户
+    #   hostBecome: false
+    #   # 演示项目ssh主机登录后切换用户名（选填，hostBecome=true时候必填）
+    #   hostBecomeUser: ""
+    #   # 演示项目ssh主机登录后切换用户的密码（选填，hostBecome=true时候必填）
+    #   hostBecomePassword: ""
+    #   # 演示项目ssh主机web服务外部端口
+    #   nodePortWeb: 30013
+  # docker executor部署设置
+  docker:
+    # 镜像名
+    image: docker:20.10.14-dind
+    # docker executor在docker-compose或者kubernetes中部署的服务名
+    dockerName: docker
+    # 启动多少个docker executor实例
+    dockerNumber: 2
+
+# dory账号设置
+account:
+  # 默认管理员设置，自动在ldap中开通账号
+  adminUser:
+    # 账号名称，格式例如: dory-admin
+    username: dory-admin
+    # 显示名字，格式例如: DORY-ADMIN
+    name: DORY-ADMIN
+    # 邮箱
+    mail: dory-admin@example.com
+    # 手机号码
+    mobile: 13812341234
+  # 发送邮件设置
+  mail:
+    # smtp服务器地址
+    host: "smtp.example.com"
+    # smtp端口
+    port: 465
+    # smtp账号
+    username: "user@example.com"
+    # smtp密码
+    password: "PLEASE_INPUT_BY_MANUAL"
+    # smtp发送模式，可选项: default, tls, start_tls
+    mode: tls
+    # 邮件发送人名字
+    from: "DORY-ADMIN <user@example.com>"
+
+# kubernetes环境配置，项目应用会部署在该环境
+# 相关连接参数可以通过`dorycli install check`命令获取
+kubernetes:
+  # 环境名称
+  envName: test
+  # 环境描述
+  envDesc: 测试环境
+  # 环境时区设置
+  timezone: Asia/Shanghai
+  # kubernetes的容器runtime类型，选项: docker, containerd, crio
+  runtime: {{ $.runtime }}
+  # kubernetes环境的 apiserver 地址
+  host: "10.1.0.2"
+  # kubernetes环境外部访问地址
+  viewHost: "k8s.example.com"
+  # kubernetes环境的 apiserver 端口
+  port: 6443
+  # kubernetes环境的 apiserver 管理权限token
+  token: "xxx"
+  # kubernetes环境的 apiserver 的ca证书的base64编码字符串
+  caCrtBase64: "xxx"
+  # kubernetes dashboard管理控制台workload的url
+  dashboardUrl: {{ `https://k8s.example.com:30000/#/workloads?namespace={{ .projectNamespace }}` }}
+  # kubernetes dashboard管理控制台workload的url
+  dashboardUrlNetworkPolicy: {{ `https://k8s.example.com:30000/#/networkpolicy?namespace={{ .projectNamespace }}` }}
+  # 环境中istio服务网格部署的名字空间
+  istioNamespace: istio-system
+  # 环境中ingress controller部署的名字空间
+  ingressControllerNamespace: traefik
+
+  # # 假如kubernetes集群的持久化存储使用本地存储情况下请设置，否则请删除以下配置
+  # pvConfigLocal:
+  #   # 本地存储路径（绝对路径）
+  {{- if eq $.mode "kubernetes" }}
+  #   # 注意，与前边的`rootDir`设置一致
+  {{- end }}
+  #   localPath: "/data/k8s-vols/dory"
+
+  # 假如kubernetes集群的持久化存储使用nfs情况下请设置，否则请删除以下配置
+  pvConfigNfs:
+    # nfs存储路径（绝对路径）
+      {{- if eq $.mode "kubernetes" }}
+      # 注意，这里是nfs服务器上的nfs目录，对应前边的`rootDir`设置，非本机挂装目录
+      {{- end }}
+      nfsPath: "/data/nfs-vols/k8s-vols/dory"
+      # nfs服务器地址
+      nfsServer: "10.2.0.10"
+
+  # # 假如kubernetes集群的持久化存储使用cephfs情况下请设置，否则请删除以下配置
+  # pvConfigCephfs:
+  #   # ceph存储路径（绝对路径）
+  {{- if eq $.mode "kubernetes" }}
+  #   # 注意，这里是cephfs服务器上的cephfs目录，对应前边的`rootDir`设置，非本机挂装目录
+  {{- end }}
+  #   cephPath: "/k8s-vols/dory"
+  #   # ceph账号
+  #   cephUser: admin
+  #   # ceph秘钥
+  #   cephSecret: "xxx"
+  #   # ceph monitor地址
+  #   cephMonitors:
+  #   - "192.168.0.1:6789"
+  #   - "192.168.0.2:6789"
+  #   - "192.168.0.3:6789"

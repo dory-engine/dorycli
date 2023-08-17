@@ -1,0 +1,8 @@
+.DS_Store
+node_modules
+*.so
+dorycli
+*cli
+xxx*
+.idea
+.vscode

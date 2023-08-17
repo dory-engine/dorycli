@@ -1,0 +1,16 @@
+{
+  "auths": {
+    "{{ $.imageRepoDomainName }}": {
+      "auth": {{ printf "%s:%s" $.imageRepoUsername $.imageRepoPassword | b64enc | quote }}
+    },
+    "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortHub }}": {
+      "auth":  {{ printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc | quote }}
+    },
+    "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortGcr }}": {
+      "auth": {{ printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc | quote }}
+    },
+    "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortQuay }}": {
+      "auth": {{ printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc | quote }}
+    }
+  }
+}

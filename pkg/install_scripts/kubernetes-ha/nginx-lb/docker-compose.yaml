@@ -1,0 +1,10 @@
+version: '3'
+services:
+  nginx-lb:
+    image: nginx:1.25.1-alpine
+    container_name: nginx-lb
+    hostname: nginx-lb
+    volumes:
+      - ./nginx-lb.conf:/etc/nginx/nginx.conf
+    network_mode: host
+    restart: always

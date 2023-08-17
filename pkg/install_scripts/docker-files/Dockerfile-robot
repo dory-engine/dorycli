@@ -1,0 +1,11 @@
+FROM {{ $.source }}
+USER root
+RUN mkdir -p /root/.pip/ && \
+    echo '[global]' >> /root/.pip/pip.conf && \
+    echo 'index-url = https://mirrors.aliyun.com/pypi/simple/' >> /root/.pip/pip.conf && \
+    echo '[install]' >> /root/.pip/pip.conf && \
+    echo 'trusted-host=mirrors.aliyun.com' >> /root/.pip/pip.conf && \
+    pip install robotframework-excellibrary-xwfintech flask pymysql
+USER 1000:1000
+
+# docker build -t {{ $.target }}{{ if $.isArm64}}-arm64v8{{ end }} -f Dockerfile-robot-{{ $.tagName }}{{ if $.isArm64}}-arm64v8{{ end }} .

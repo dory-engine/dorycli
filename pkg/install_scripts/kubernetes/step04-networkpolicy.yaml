@@ -1,0 +1,84 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: docker
+  namespace: {{ $.dory.namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: docker
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $.dory.namespace }}
+          podSelector:
+            matchLabels:
+              app: dory-engine
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: project-data-pod
+  namespace: {{ $.dory.namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: project-data-pod
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $.dory.namespace }}
+          podSelector:
+            matchLabels:
+              app: dory-engine
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mongo-dory
+  namespace: {{ $.dory.namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: mongo-dory
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $.dory.namespace }}
+          podSelector:
+            matchLabels:
+              app: dory-engine
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-dory
+  namespace: {{ $.dory.namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app: redis-dory
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $.dory.namespace }}
+          podSelector:
+            matchLabels:
+              app: dory-engine
+

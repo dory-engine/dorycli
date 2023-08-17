@@ -1,0 +1,14 @@
+version: '3'
+services:
+  keepalived:
+    image: osixia/keepalived:release-2.1.5-dev
+    container_name: keepalived
+    hostname: keepalived
+    volumes:
+      - ./check_apiserver.sh:/container/service/keepalived/assets/check_apiserver.sh
+      - ./keepalived.conf:/container/service/keepalived/assets/keepalived.conf
+    cap_add:
+      - NET_ADMIN
+    command: --copy-service
+    network_mode: host
+    restart: always

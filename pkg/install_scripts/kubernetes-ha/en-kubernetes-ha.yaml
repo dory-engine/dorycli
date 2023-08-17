@@ -1,0 +1,42 @@
+# The version of kubernetes that needs to be installed
+version: "v1.27.3"
+# The kubernete image registry settings, if not set, then use the official default image registry
+imageRepository: "registry.cn-hangzhou.aliyuncs.com/google_containers"
+# The virtual ip address of the highly available kubernetes cluster created using keepalived
+virtualIp: 192.168.0.100
+# Use the apiserver mapping port of the highly available kubernetes cluster mapped by nginx
+virtualPort: 16443
+# The host name of the virtual ip address mapping, please set the host name mapping in the /etc/hosts configuration file
+virtualHostname: k8s-vip
+# The pod subnet address of the kubernetes cluster, if not set, use the default pod subnet address
+podSubnet: "10.244.0.0/24"
+# The service subnet address of the kubernetes cluster, if not set, use the default service subnet address
+serviceSubnet: "10.96.0.0/16"
+# The authentication password of keepalived, if not set then use a randomly generated password
+keepAlivedAuthPass: "input_your_password"
+# The host configuration of the controlplane control plane of kubernetes, the number of highly available master nodes must be singular and at least 3
+masterHosts:
+    # The host name of the master node, please set the host name mapping in the /etc/hosts configuration file
+  - hostname: k8s-master01
+    # The IP address of the master node
+    ipAddress: 192.168.0.1
+    # The name of the network card used by the master node for mutual access, used for keepalived network interface binding
+    networkInterface: eth0
+    # keepalived election priority, the larger the value, the higher the priority, the priority of each master node cannot be the same
+    keepalivedPriority: 120
+    # The host name of the master node, please set the host name mapping in the /etc/hosts configuration file
+  - hostname: k8s-master02
+    # The IP address of the master node
+    ipAddress: 192.168.0.2
+    # The name of the network card used by the master node for mutual access, used for keepalived network interface binding
+    networkInterface: eth0
+    # keepalived election priority, the larger the value, the higher the priority, the priority of each master node cannot be the same
+    keepalivedPriority: 110
+    # The host name of the master node, please set the host name mapping in the /etc/hosts configuration file
+  - hostname: k8s-master03
+    # The IP address of the master node
+    ipAddress: 192.168.0.3
+    # The name of the network card used by the master node for mutual access, used for keepalived network interface binding
+    networkInterface: eth0
+    # keepalived election priority, the larger the value, the higher the priority, the priority of each master node cannot be the same
+    keepalivedPriority: 100

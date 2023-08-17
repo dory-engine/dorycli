@@ -1,0 +1,137 @@
+# kubernetes environment name
+envName: {{ $.kubernetes.envName | quote }}
+# kubernetes environment display name
+envDesc: {{ $.kubernetes.envDesc | quote }}
+# kubernetes api server ip address
+host: {{ $.kubernetes.host | quote }}
+# kubernetes apiserver address for external access
+viewHost: {{ $.kubernetes.viewHost | quote }}
+# kubernetes api server port
+port: {{ $.kubernetes.port }}
+# kubernetes api server admin token
+token: {{ $.kubernetes.token | quote }}
+# The base64 encoded string of the ca certificate of the apiserver in the kubernetes environment
+caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
+# kubernetes dashboard workload browser access url
+dashboardUrl: {{ $.kubernetes.dashboardUrl | quote }}
+# kubernetes dashboard network policy browser access url
+dashboardUrlNetworkPolicy: {{ $.kubernetes.dashboardUrlNetworkPolicy | quote }}
+# namespace for istio service mesh deployment in kubernetes environment
+istioNamespace: {{ $.kubernetes.istioNamespace | quote }}
+# namespace for ingress controller in kubernetes environment
+ingressControllerNamespace: {{ $.kubernetes.ingressControllerNamespace | quote }}
+# kubernetes timezone settings
+timezone: {{ $.kubernetes.timezone | quote }}
+# kubernetes use host path /usr/share/zoneinfo
+hostPathZoneInfo: false
+# cpu architectures settings for the environment
+archSettings:
+  # cpu architecture name
+  - arch: amd64
+    # cpu architecture node selector
+    nodeSelector:
+      kubernetes.io/arch: amd64
+      kubernetes.io/os: linux
+  - arch: arm64v8
+    nodeSelector:
+      kubernetes.io/arch: arm64
+      kubernetes.io/os: linux
+# project data pod is use for create project application directory in persistent volume
+projectDataPod:
+  # pod's namespace
+  namespace: {{ $.dory.namespace }}
+  # statefulset name
+  statefulSetName: project-data-pod
+  # project applications root directory
+  path: /project-data
+
+# use external hostname or ip address to connect image repository
+imageRepoUseExternal: false
+# use external hostname or ip address to connect artifact and dependency repository
+artifactRepoUseExternal: false
+
+{{- if $.kubernetes.pvConfigLocal.localPath }}
+# if persistent volume use local storage, please set it, otherwise remove it
+pvConfigLocal:
+  # local path (absolute path)
+  localPath: {{ $.kubernetes.pvConfigLocal.localPath | quote }}
+{{- else }}
+# # if persistent volume use local storage, please set it, otherwise remove it
+# pvConfigLocal:
+#   # local path (absolute path)
+#   localPath: "/data/k8s-vols"
+{{- end }}
+
+{{- if $.kubernetes.pvConfigNfs.nfsPath }}
+# if persistent volume use nfs shared storage, please set it, otherwise remove it
+pvConfigNfs:
+  # nfs storage path (absolute path)
+  nfsPath: {{ $.kubernetes.pvConfigNfs.nfsPath | quote }}
+  # nfs server ip address
+  nfsServer: {{ $.kubernetes.pvConfigNfs.nfsServer | quote }}
+{{- else }}
+# # if persistent volume use nfs shared storage, please set it, otherwise remove it
+# pvConfigNfs:
+#   # nfs storage path (absolute path)
+#   nfsPath: "/data/nfs-vols/k8s-vols"
+#   # nfs server ip address
+#   nfsServer: "10.2.0.10"
+{{- end }}
+
+{{- if $.kubernetes.pvConfigCephfs.cephPath }}
+# if persistent volume use cephfs shared storage, please set it, otherwise remove it
+pvConfigCephfs:
+  # cephfs storage path
+  cephPath: {{ $.kubernetes.pvConfigCephfs.cephPath | quote }}
+  # ceph connect account
+  cephUser: {{ $.kubernetes.pvConfigCephfs.cephUser | quote }}
+  # ceph connect secret
+  cephSecret: {{ $.kubernetes.pvConfigCephfs.cephSecret | quote }}
+  # ceph monitors ip address
+  cephMonitors:
+  {{ range $_, $cephMonitor := $.kubernetes.pvConfigCephfs.cephMonitors }}
+  - {{ $cephMonitor | quote }}
+  {{ end }}
+{{- else }}
+# # if persistent volume use cephfs shared storage, please set it, otherwise remove it
+# pvConfigCephfs:
+#   # cephfs storage path
+#   cephPath: "/k8s-deploy"
+#   # ceph connect account
+#   cephUser: "admin"
+#   # ceph connect secret
+#   cephSecret: "XXXXX"
+#   # ceph monitors ip address
+#   cephMonitors:
+#   - "192.168.0.1:6789"
+#   - "192.168.0.2:6789"
+#   - "192.168.0.3:6789"
+{{- end }}
+
+# project applications deployment kubernetes node selector, format: (labelName: labelValue)
+projectNodeSelector: {}
+
+# kubernetes project namespace resource quota and pod default resource usage settings
+quotaConfig:
+  # pod default resource usage settings
+  defaultQuota:
+    # pod default memory request setting (100Mi means 100M memory, 1Gi means 1G memory)
+    memoryRequest: 20Mi
+    # pod default cpu request setting (100m means 0.1 core cpu)
+    cpuRequest: 10m
+    # pod default memory max limit setting (100Mi means 100M memory, 1Gi means 1G memory)
+    memoryLimit: 50Mi
+    # pod default cpu max limit setting (100m means 0.1 core cpu)
+    cpuLimit: 50m
+  # project namespace total resource quota settings
+  namespaceQuota:
+    # project namespace total memory request quota (100Mi means 100M memory, 1Gi means 1G memory)
+    memoryRequest: 1Gi
+    # project namespace total cpu request quota (100m means 0.1 core cpu)
+    cpuRequest: 1000m
+    # project namespace total memory max limit quota (100Mi means 100M memory, 1Gi means 1G memory)
+    memoryLimit: 4Gi
+    # project namespace total cpu max limit quota (100m means 0.1 core cpu)
+    cpuLimit: 4000m
+    # project namespace total pods number limit
+    podsLimit: 32

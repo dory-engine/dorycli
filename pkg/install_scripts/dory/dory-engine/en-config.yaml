@@ -1,0 +1,681 @@
+app:
+  # dory data directory (relative path)
+  workDir: dory-data
+  # dory run in which docker's directory (absolute path)
+  dockerParentWorkDir: /dory-engine
+  # project definition version control files directory (relative path)
+  defDir: dory-data/projectDefs
+  # project build caches directory (relative path)
+  cacheDir: dory-data/caches
+  # trivy-db image scan vulnerability library storage path, relative to the location of the dory-engine program (relative path)
+  # The directory contains three vulnerability library directories: db, fanal, java-db
+  trivyDbDir: dory-data/trivy
+  # system UID dory run with
+  userID: 1000
+  # restful api service port
+  apiPort: 9000
+  # dory URL callback by git repository webhook
+  gitWebhookUrl: {{ $.gitWebhookUrl | quote }}
+  # dory external URL callback by git repository webhook
+  gitWebhookExternalUrl: {{ $.viewURL }}:{{ $.dory.doryengine.port }}
+  # git repo input param file name, when run a pipeline it will read this file in git repo to pipeline runtime variables
+  paramGitFileName: .dory-git-var.yaml
+  # image scan quality gate settings
+  scanImageGate:
+    # Number of medium risk vulnerabilities
+    gateMedium: 5
+    # Number of high risk vulnerabilities
+    gateHigh: 0
+    # Number of critical risk vulnerabilities
+    gateCritical: 0
+  # log output level, options: error, warning, info, debug
+  logLevel: debug
+  # CORS(Cross-Origin Resource Sharing) enable
+  cors: false
+  # jwt settings
+  jwt:
+    # jwt sign
+    sign: {{ randAlphaNum 64 | quote }}
+    # jwt expire seconds
+    expireSeconds: 3600
+    # jwt refresh seconds, must less than expireSeconds
+    # jwt token minimum validity period equal: expireSeconds - refreshSeconds
+    refreshSeconds: 60
+    # Allowable offset of jwt's issue time, in seconds
+    clockSkewSeconds: 5
+  # user password minimum length
+  passwordLength: 8
+  # forget password reset token validity period hours
+  resetTokenExpireHours: 24
+  # initial admin user settings
+  # if user not exists in openldap, it will create automatically
+  # if user exists in openldap, set user to be admin
+  adminUser:
+    # admin user name, format like: dory-admin
+    username: {{ $.account.adminUser.username }}
+    # admin user display name, format like: DORY-ADMIN
+    name: {{ $.account.adminUser.name }}
+    # admin user mail
+    mail: {{ $.account.adminUser.mail }}
+    # admin user mobile phone number
+    mobile: {{ $.account.adminUser.mobile }}
+  # which node port range project applications can use
+  nodePortRange:
+    # node port range start
+    nodePortRangeStart: 30100
+    # node port range end
+    nodePortRangeEnd: 32750
+  # pipeline running status watcher settings (seconds)
+  runningWatcherInterval:
+    # watcher check interval (seconds)
+    watcherInterval: 1
+    # running status expire interval, must greater than watcherInterval (seconds)
+    runningExpireInterval: 2
+  # attachment maximum size (M)
+  attachmentMaxSize: 4
+  # attachment directory (relative path)
+  attachmentDir: dory-data/attachment
+  # attachment view path
+  attachmentUri: /attachments
+  # crontab pipeline job check interval (seconds)
+  crontabCheckInterval: 5
+  # clear work space after pipeline run finish
+  clearWorkspace: true
+  # test report directory (relative path)
+  testReportDir: dory-data/testReport
+  # test report view path
+  testReportUri: /assets/testReport
+  # default avatar view path
+  avatarDefaultUri: /avatar/default
+  # default avatar full view path
+  avatarDefaultUriFull: /avatar/default/avatar.png
+  # user avatar directory (relative path)
+  avatarDir: dory-data/avatar
+  # user avatar view path
+  avatarUri: /avatar/user
+  # user avatar url prefix
+  avatarUrlPrefix: ""
+  # custom step output files directory (relative path)
+  customStepOutputDir: dory-data/customStepOutput
+  # custom step output files view path
+  customStepOutputUri: /assets/customStepOutput
+  # request timeout seconds
+  requestTimeoutSeconds: 5
+  # upload and download request timeout settings (seconds)
+  uploadDownloadTimeoutSeconds: 180
+  # how many deployments istio mesh keep, at least 2, included default and new deployment
+  istioDeploymentKeepCount: 5
+  # deploy check interval (seconds)
+  deployCheckInterval: 5
+  # deploy check maximum times
+  deployCheckCountLimit: 30
+  # default kubernetes environment name
+  defaultEnvName: {{ $.kubernetes.envName | quote }}
+  # service mesh feature available
+  meshAvailable: true
+  # how many pipeline runs execute at the same time, exceed runs will wait in queue, set 0 means unlimited
+  executeNumber: 0
+  # dory will create input param file in this path of docker executor
+  dockerParamInputFileName: /tmp/dory-param-input
+  # dory will read output param file in this path of docker executor
+  dockerParamOutputFileName: /tmp/dory-param-output
+  # dory will save output files in this path of docker executor
+  dockerOutputFileDir: /tmp/dory-file-output
+  # project git repository files directory (relative path)
+  gitRepoDir: dory-data/gitRepos
+  #  project components git repository files directory (relative path)
+  gitRepoComponentDir: dory-data/gitRepoComponents
+  #  project initial git repository files directory (relative path)
+  gitRepoProjectInitDir: dory-data/gitRepoProjectInits
+  #  project custom step git repository files directory (relative path)
+  gitRepoCustomStepDir: dory-data/gitRepoCustomSteps
+  # database changelog filename
+  databaseChangeLogFileName: changelogs.sql
+  # database change action settings filename
+  databaseActionFileName: action.yaml
+  # api test case file name prefix
+  testCaseFilePrefixApi: "test-"
+  # performance test case file name prefix
+  testCaseFilePrefixPerformance: "test-"
+  # webui test case file name prefix
+  testCaseFilePrefixWebui: "test-"
+  # pipeline variables are mapped to the prefix of the environment variables in the container
+  pipelineVarDockerEnvPrefix: "DORY"
+  # in non-privileged mode, the patch path must not contain the following content
+  restrictedPatches:
+    - securityContext
+    - hostNetwork
+    - hostPID
+    - hostIPC
+    - hostPort
+    - nodePort
+    - cephfs
+    - glusterfs
+    - hostPath
+    - nfs
+    - rbd
+  # tls self-signed certificates settings
+  tlsCertificateSettings:
+    organization: DORY
+    organizationalUnit: DEVOPS
+    country: CN
+    expireYears: 10
+    expireMonths: 0
+    expireDays: 0
+  # timezone files zoneinfo directory
+  zoneInfoDir: dory-data/zoneinfo
+  # frontend display title and logo settings
+  frontend:
+    # frontend display images directory, if you need to customize the displayed pictures, you need to put the relevant pictures in this directory
+    appFrontendDir: dory-data/frontend
+    # frontend display images view path
+    appFrontendUri: /assets/frontend/app
+    # frontend default images view path
+    appFrontendDefaultUri: /assets/frontend/default
+    # frontend display title, empty means to use the default settings
+    appName: ""
+    # frontend display description, empty means to use the default settings
+    appDesc: ""
+    # frontend logo image file name, it is recommended to use svg file, empty means to use the default settings
+    appLogo: ""
+    # frontend logo favicon file name, it is recommended to use ico file, empty means to use the default settings
+    appFavIcon: ""
+    # frontend background image file name, it is recommended to use jpeg file, empty means to use the default settings
+    appBackGroundImage: ""
+  # project-data-pod check interval (seconds)
+  projectDataPodCheckSeconds: 3
+  # project-data-pod check times
+  projectDataPodCheckCount: 30
+# smtp send mail settings
+mail:
+  # smtp server host
+  host: {{ $.account.mail.host | quote }}
+  # smtp port
+  port: {{ $.account.mail.port }}
+  # smtp user account
+  username: {{ $.account.mail.username | quote }}
+  # smtp password
+  password: {{ $.account.mail.password | quote }}
+  # smtp send mode, options: default, tls, start_tls
+  mode: {{ $.account.mail.mode }}
+  # whether to enable insecure mode, if the server is https and uses a self-signed tls certificate, then please set this option to true
+  insecure: false
+  # smtp sender display name
+  from: {{ $.account.mail.from | quote }}
+  # smtp mail sender timeout settings (seconds)
+  timeoutSeconds: 15
+  # reset password view url in mail
+  url: {{ $.viewURL }}:{{ $.dory.doryengine.port }}/#/reset-password
+  # trigger mail directory
+  triggerMailDir: dory-data/triggerMail
+  # trigger mail view path
+  triggerMailUri: /assets/triggerMail
+# redis cache settings
+redis:
+  # redis host
+  host: redis-dory
+  # redis port
+  port: 6379
+  # redis password
+  password: {{ $.dory.redis.password | quote }}
+# mongodb settings
+mongodb:
+  # mongo host
+  host: mongo-dory
+  # mongo port
+  port: 27017
+  # mongo user name
+  username: root
+  # mongo password
+  password: {{ $.dory.mongo.password | quote }}
+  # mongo database name
+  database: dorydb
+# docker executor settings
+docker:
+  {{- if eq $.installMode "kubernetes" }}
+  # if docker executors self signed certificates in kubernetes secret, these settings required
+  kubernetes:
+    # kubernetes api server ip address
+    host: {{ $.kubernetes.host | quote }}
+    # kubernetes api server port
+    port: {{ $.kubernetes.port }}
+    # kubernetes api server admin token
+    token: {{ $.kubernetes.token | quote }}
+    # The base64 encoded string of the ca certificate of the apiserver in the kubernetes environment
+    caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
+    # docker executors self signed certificates secret in which kubernetes namespace
+    namespace: {{ $.dory.namespace | quote }}
+  {{- else if eq $.installMode "docker" }}
+  # docker executors number, if docker executors run in docker required
+  dockerNumber: {{ $.dory.docker.dockerNumber }}
+  {{- end }}
+  # docker executor service name
+  serviceName: {{ $.dory.docker.dockerName | quote }}
+  # docker executor port
+  dockerPort: 2376
+  # docker executor circuit breaker timeout settings, unit: seconds
+  breakerTimeout: 5
+  # docker executor connection retry times
+  connectRetry: 3
+  # docker container stats check interval (milliseconds)
+  watcherIntervalMilliseconds: 500
+# ldap account center settings
+ldap:
+  # LDAP base DN setting
+  baseDN: {{ $.dory.openldap.baseDN | quote}}
+  # LDAP server connect url
+  url: "ldap://{{ $.dory.openldap.serviceName }}.{{ $.dory.namespace }}:389"
+  # LDAP service name
+  serviceName: {{ $.dory.openldap.serviceName }}.{{ $.dory.namespace }}
+  # LDAP admin user
+  adminCN: "cn=admin,{{ $.dory.openldap.baseDN }}"
+  # LDAP admin password
+  password: {{ $.dory.openldap.password | quote}}
+# git repository settings, support gitlab and gitea
+gitRepoConfigs:
+  # git repository type, options: gitlab, gitea
+  - kind: {{ $.dory.gitRepo.type }}
+    # git repository id name, format like: xxx-xxx
+    repoName: {{ $.dory.gitRepo.type }}-dory
+    {{- if $.dory.gitRepo.internal.image }}
+    # git repository browser access url
+    viewUrl: {{ $.viewURL }}:{{ $.dory.gitRepo.internal.port }}
+    # git repository internal access url by dory
+    {{- if eq $.dory.gitRepo.type "gitea" }}
+    url: http://gitea:3000
+    {{- else if eq $.dory.gitRepo.type "gitlab" }}
+    url: http://gitlab
+    {{- end }}
+    # whether to enable insecure mode, if the server is https and uses a self-signed tls certificate, then please set this option to true
+    insecure: false
+    # git repository admin user name
+    username: "PLEASE_INPUT_BY_MANUAL"
+    # git repository admin user display name
+    name: "PLEASE_INPUT_BY_MANUAL"
+    # git repository admin user mail
+    mail: "PLEASE_INPUT_BY_MANUAL@example.com"
+    # git repository admin user password
+    password: "PLEASE_INPUT_BY_MANUAL"
+    # git repository admin user token
+    token: "PLEASE_INPUT_BY_MANUAL"
+    {{- else }}
+    # git repository browser access url
+    viewUrl: {{ $.dory.gitRepo.external.viewUrl }}
+    # git repository internal access url by dory
+    url: {{ $.dory.gitRepo.external.url }}
+    # git repository admin user name
+    username: {{ $.dory.gitRepo.external.username | quote }}
+    # git repository admin user display name
+    name: {{ $.dory.gitRepo.external.name | quote }}
+    # git repository admin user mail
+    mail: {{ $.dory.gitRepo.external.mail | quote }}
+    # git repository admin user password
+    password: {{ $.dory.gitRepo.external.password | quote }}
+    # git repository admin user token
+    token: {{ $.dory.gitRepo.external.token | quote }}
+    {{- end }}
+# image repository settings, support harbor
+imageRepoConfigs:
+  # image repository type, options: harbor
+  - kind: {{ $.dory.imageRepo.type }}
+    # image repository id name, format like: xxx-xxx
+    repoName: {{ $.dory.imageRepo.type }}-dory
+    # image repository domain name, only support https://<hostname> to access image repository now
+    hostname: {{ $.imageRepoDomainName | quote }}
+    # whether to enable insecure mode, if the server is https and uses a self-signed tls certificate, then please set this option to true
+    insecure: true
+    # image repository admin username
+    username: {{ $.imageRepoUsername | quote }}
+    # image repository admin password
+    password: {{ $.imageRepoPassword | quote }}
+    # image repository admin email
+    email: {{ $.imageRepoEmail | quote }}
+    # image repository internal access ip address
+    ipInternal: {{ $.imageRepoIp }}
+    # image repository external access ip address
+    ipExternal: {{ $.imageRepoIp }}
+# artifact and dependency repository settings, support nexus
+artifactRepoConfigs:
+  # artifact and dependency repository type, options: nexus
+  - kind: {{ $.dory.artifactRepo.type }}
+    # artifact and dependency repository id name, format like: xxx-xxx
+    repoName: {{ $.dory.artifactRepo.type }}-dory
+    # artifact and dependency repository browser access url
+    viewUrl: {{ $.artifactRepoViewUrl | quote }}
+    # artifact and dependency repository internal access schema, options: http, https
+    schemaInternal: {{ $.artifactRepoSchema | quote }}
+    # artifact and dependency repository external access schema, options: http, https
+    schemaExternal: {{ $.artifactRepoSchema | quote }}
+    # artifact and dependency repository internal hostname or ip address
+    hostnameInternal: {{ $.artifactRepoIp | quote }}
+    # artifact and dependency repository external hostname or ip address
+    hostnameExternal: {{ $.artifactRepoIp | quote }}
+    # whether to enable insecure mode, if the server is https and uses a self-signed tls certificate, then please set this option to true
+    insecure: false
+    # artifact and dependency repository admin username
+    username: {{ $.artifactRepoUsername | quote }}
+    # artifact and dependency repository admin password
+    password: {{ $.artifactRepoPassword | quote }}
+    # artifact and dependency repository public user role name
+    publicRole: {{ $.artifactRepoPublicRole | quote }}
+    # artifact and dependency repository public username
+    publicUser: {{ $.artifactRepoPublicUser | quote }}
+    # artifact and dependency repository public password
+    publicPassword: {{ $.artifactRepoPublicPassword | quote }}
+    # artifact and dependency repository public email
+    publicEmail: {{ $.artifactRepoPublicEmail | quote }}
+    # artifact and dependency repository service port
+    port: {{ $.artifactRepoPort }}
+    # docker.io image proxy service port
+    portDocker: {{ $.artifactRepoPortHub }}
+    # gcr.io image proxy service port
+    portGcr: {{ $.artifactRepoPortGcr }}
+    # quay.io image proxy service port
+    portQuay: {{ $.artifactRepoPortQuay }}
+    {{- if $.artifactRepoInternal }}
+    # artifact and dependency repository proxy settings
+    proxyRepo:
+      # maven proxy path
+      maven: repository/maven-group-public/
+      # npm proxy path
+      npm: repository/npm-group-public/
+      # pypi proxy path
+      pip: repository/pypi-group-public/simple
+      # gradle proxy path
+      gradle: repository/maven-group-public/
+      # go proxy path
+      go: repository/go-group-public
+      # apt proxy settings
+      apt:
+        # x86 proxy path
+        amd64: repository/apt-aliyun-focal/
+        # arm64v8 proxy path
+        arm64v8: repository/apt-aliyun-focal-arm64/
+    {{- else }}
+    # artifact and dependency repository proxy settings
+    proxyRepo:
+      # maven proxy path
+      maven: repository/maven-group-public/
+      # npm proxy path
+      npm: repository/npm-group-public/
+      # pypi proxy path
+      pip: repository/pypi-group-public/simple
+      # gradle proxy path
+      gradle: repository/maven-group-public/
+      # go proxy path
+      go: repository/go-group-public
+      # apt proxy settings
+      apt:
+        {{- range $k, $v := $.dory.artifactRepo.external.proxyRepo.apt }}
+        # {{ $k }} proxy path
+        {{ $k }}: {{ $v }}
+        {{- end }}
+    {{- end }}
+# scan code repository settings, support sonarqube
+scanCodeRepoConfigs:
+  # scan code repository type, options: sonarqube
+  - kind: {{ $.dory.scanCodeRepo.type }}
+    # scan code repository id name, format like: xxx-xxx
+    repoName: {{ $.dory.scanCodeRepo.type }}-dory
+    # scan code repository browser access url
+    viewUrl: {{ $.scanCodeRepoViewUrl }}
+    # scan code repository access url by docker executors
+    url: {{ $.scanCodeRepoUrl }}
+    # whether to enable insecure mode, if the server is https and uses a self-signed tls certificate, then please set this option to true
+    insecure: false
+    # scan code repository admin user token
+    token: {{ $.scanCodeRepoToken | quote }}
+# internet proxy settings
+proxy:
+  # internet proxy url, example: http://username:password@192.168.0.1:8080
+  url: ""
+
+# default pipeline settings, when create new project dory will use these settings to create default pipeline
+defaultPipeline:
+  # branch name
+  branchName: develop
+  # push event trigger web hook to run pipeline enable
+  webhookPushEvent: true
+  # default pipeline crontab settings
+  pipelineCrons: []
+  # default pipeline trigger settings
+  pipelineTriggers: []
+
+# demo project package source image settings
+demoProjectImageSettings:
+  springDemoImage: "hub/openjdk:11.0.16-jdk"
+  nodeDemoImage: "hub/node:18.14.0-alpine3.17"
+  pythonDemoImage: "public/python:3.10.10-alpine3.17-dory"
+  goDemoImage: "public/alpine:3.17.2-dory"
+  ginDemoImage: "public/alpine:3.17.2-dory"
+
+# demo project database settings
+demoProjectDatabaseSettings:
+  # database name suffix, the demo databases name is: ${projectName}-${dbNameSuffix}
+  dbNameSuffix: "mysql01"
+  # demo project database JDBC connection string
+  dbUrl: {{ $.demoDatabaseUrl | quote }}
+  # demo project database connection username
+  dbUser: {{ $.demoDatabaseUsername | quote }}
+  # demo project database connection password
+  dbPassword: {{ $.demoDatabasePassword | quote }}
+
+# demo project remote host settings
+demoProjectHostSettings:
+  # remote host name suffix, the demo remote host name is: ${projectName}-${hostNameSuffix}
+  hostNameSuffix: "node01"
+  # remote host ip or host name
+  hostAddr: {{ $.demoHostAddr }}
+  # remote host ssh port
+  hostPort: {{ $.demoHostPort }}
+  # remote host ssh user name
+  hostUser: {{ $.demoHostUser }}
+  # remote host ssh user password
+  hostPassword: {{ $.demoHostPassword | quote }}
+  # remote host ssh need to sudo
+  hostBecome: {{ $.demoHostBecome }}
+  # remote host ssh sudo user name (option, when hostBecome=true required)
+  hostBecomeUser: {{ $.demoHostBecomeUser }}
+  # remote host ssh sudo user password (option, when hostBecome=true required)
+  hostBecomePassword: {{ $.demoHostBecomePassword | quote }}
+  # remote host ansible environment variables. (option)
+  # ansible environment variable example: backup_dir, service_port
+  variables:
+    base_dir: /app
+    backup_dir: /backup
+    service_port: 8000
+  # remote host related host group
+  group: group_demo
+
+# build step languages and docker image settings
+dockerBuildSettings:
+  # fetch build dependencies from artifact and dependency repository enable
+  artifactRepoDependencyPull: true
+  # default build dependencies settings, if not fetch build dependencies from artifact and dependency repository
+  defaultBuildDependency:
+    # maven build dependencies settings
+    maven:
+        # ~/.m2/settings.xml repository url
+      - url: http://maven.aliyun.com/nexus/content/groups/public/
+        # ~/.m2/settings.xml repository id
+        id: nexus
+        # ~/.m2/settings.xml mirrorOf setting
+        mirrorOf: central
+    # npm build dependencies settings
+    npm:
+      # ~/.npmrc repository url
+      url: https://registry.npm.taobao.org
+    # pypi build dependencies settings
+    pip:
+      # ~/.pip/pip.conf repository url
+      url: https://mirrors.aliyun.com/pypi/simple/
+      # ~/.pip/pip.conf trusted-host setting
+      trustedHost: mirrors.aliyun.com
+    # gradle build dependencies settings
+    gradle:
+        # ~/.gradle/init.gradle repository url
+      - url: https://maven.aliyun.com/repository/jcenter
+      - url: https://maven.aliyun.com/repository/google
+      - url: https://maven.aliyun.com/repository/central
+      - url: https://maven.aliyun.com/repository/gradle-plugin
+    # go build dependencies settings
+    go:
+      # ~/.config/go/env repository url
+      url: https://mirrors.aliyun.com/goproxy
+  # docker executor for build user home directory
+  dockerHomeDir: "/home/dory"
+  # docker executor for build environment settings
+  dockerBuildEnvs:
+    # build environment name
+    - buildEnvName: maven-jdk17
+      # build environment docker image, relative path in image repository, image name when the cpu architecture is amd64
+      image: "public/maven:3.8.5-openjdk-17-dory"
+      # which cpu architectures are supported by the build environment
+      # if the cpu architecture is not amd64, the container image name of the build environment is <image>-<cpu architecture name>
+      # for example, the cpu architecture is arm64v8, then the image name of the actual build environment is public/maven:3.8.5-openjdk-17-dory-arm64v8
+      buildArches: ["amd64", "arm64v8"]
+      # mount build caches to build docker executor's $HOME directory
+      mountHomeDir: true
+      # use internet proxy to fetch build dependencies
+      enableProxy: false
+      # mount extra build caches to build docker executor, if build caches not in $HOME directory
+      # for example: go language build cache is in /go/pkg, not in $HOME directory
+      mountExtraCacheDirs: []
+      # commands run before build
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      # commands run after build
+      commandsAfterCheck: []
+    - buildEnvName: maven-jdk11
+      image: "public/maven:3.8.6-openjdk-11-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: maven-jdk8
+      image: "public/maven:3.8.6-openjdk-8-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: npm-node19
+      image: "hub/node:19.6.0-alpine3.17"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: npm-node18
+      image: "hub/node:18.14.0-alpine3.17"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: go-1.20
+      image: "public/golang:1.20.0-alpine3.17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: ["/go/pkg"]
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: go-1.18
+      image: "public/golang:1.18.10-alpine3.17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: ["/go/pkg"]
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: python-3.11
+      image: "public/python:3.11.2-alpine3.17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: python-3.10
+      image: "public/python:3.10.10-alpine3.17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: gradle-jdk17
+      image: "public/gradle:7.6.0-jdk17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: gradle-jdk11
+      image: "public/gradle:7.6.0-jdk11-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: gradle-jdk8
+      image: "public/gradle:7.6.0-jdk8-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: alpine-3.17
+      image: "public/alpine:3.17.2-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: alpine-3.16
+      image: "public/alpine:3.16.4-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+    - buildEnvName: ansible-2.12
+      image: "public/ansible:2.12.2-alpine-dory"
+      buildArches: ["arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
+
+# debug component docker images settings
+componentDebugEnvs:
+  # debug component docker image, relative path in image repository
+  debugImage: "hub/doryengine/debug-ubuntu:v1.0.0"
+
+# docker images used by pipeline step settings
+stepDockerEnvs:
+  # scan code step docker image
+  scanCode: "public/sonarsource/sonar-scanner-cli:4.7.0"
+  #  scan image step docker image
+  scanImage: "public/aquasec/trivy:0.37.2"
+  # deploy artifact step docker image
+  deployArtifact: "public/ansible:2.12.2-alpine-dory"
+  # api test step docker image
+  testApi: "public/ppodgorsek/robot-framework:dory"
+  # performance test step docker image
+  testPerformance: "public/egaillardon/jmeter:5.3.0-1.0.1-dory"
+  # webui test step docker image
+  testWebUi: "public/ppodgorsek/robot-framework:dory"
+  # database script execute and rollback step docker image
+  databaseScript: "public/liquibase/liquibase:4.17.2-dory"

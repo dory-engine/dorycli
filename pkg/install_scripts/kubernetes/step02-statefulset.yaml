@@ -1,0 +1,232 @@
+{{- range $_, $deploy := $.deploys }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $deploy.deployName }}
+  namespace: {{ $.dory.namespace }}
+  labels:
+    app: {{ $deploy.deployName }}
+    {{- if $deploy.deployLabels }}
+    {{- range $key, $val := $deploy.deployLabels }}
+    {{ $key }}: {{ $val }}
+    {{- end }}
+    {{- end }}
+spec:
+  serviceName: {{ $deploy.deployName }}{{- if $deploy.deployNodePort }}-headless{{- end }}
+  replicas: {{ $deploy.deployReplicas }}
+  selector:
+    matchLabels:
+      app: {{ $deploy.deployName }}
+      {{- if $deploy.deployLabels }}
+      {{- range $key, $val := $deploy.deployLabels }}
+      {{ $key }}: {{ $val }}
+      {{- end }}
+      {{- end }}
+  {{- if $deploy.podManagementPolicy }}
+  podManagementPolicy: {{ $deploy.podManagementPolicy }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        app: {{ $deploy.deployName }}
+        {{- if $deploy.deployLabels }}
+        {{- range $key, $val := $deploy.deployLabels }}
+        {{ $key }}: {{ $val }}
+        {{- end }}
+        {{- end }}
+    spec:
+      volumes:
+      - name: configmap-timezone
+        configMap:
+          name: configmap-timezone
+          items:
+          - key: timezone
+            path: timezone
+      - name: {{ $.dory.namespace }}-timezone-pvc
+        persistentVolumeClaim:
+          claimName: {{ $.dory.namespace }}-timezone-pvc
+      {{ $vps := list }}
+      {{- range $_, $volume := $deploy.deployVolumes }}
+      {{ $vps = append $vps $volume.pvc | uniq }}
+      {{- end }}
+
+      {{- range $_, $v := $vps }}
+      {{- if $v }}
+      - name: {{ $v }}
+        persistentVolumeClaim:
+          claimName: {{ $v }}
+      {{- end }}
+      {{- end }}
+
+      {{- range $_, $volume := $deploy.deployVolumes }}
+      {{- if $volume.secret }}
+      {{ $secretName := "" }}
+      {{- range $sk, $sv := $volume.secret }}{{- if eq $sk "secretName" }}{{ $secretName = $sv }}{{- end }}{{- end }}
+      - name: {{ $secretName }}
+        secret:
+          {{- range $sk, $sv := $volume.secret }}
+          {{- if eq $sk "items" }}
+          {{ $sk }}:
+          {{- range $_, $svv := $sv }}
+          -
+            {{- range $svvk, $svvv := $svv }}
+            {{ $svvk }}: {{ $svvv }}
+            {{- end }}
+          {{- end }}
+          {{- else }}
+          {{ $sk }}: {{ $sv }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+
+      - name: {{ $.dory.namespace }}-pvc
+        persistentVolumeClaim:
+          claimName: {{ $.dory.namespace }}-pvc
+
+      imagePullSecrets:
+        - name: {{ $.imageRepoDomainName }}
+      {{- if $deploy.nodeSelector }}
+      nodeSelector:
+        {{- range $key, $val := $deploy.nodeSelector }}
+        {{ $key }}: {{ $val }}
+        {{- end }}
+      {{- end }}
+      {{- if $deploy.hostAliases }}
+      hostAliases:
+      {{- range $_, $host := $deploy.hostAliases }}
+      - ip: {{ $host.ip }}
+        hostnames:
+        {{- range $_, $hostname := $host.hostnames }}
+        - {{ $hostname }}
+        {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- if $deploy.dependServices }}
+      initContainers:
+      {{- range $_, $depend := $deploy.dependServices }}
+      - name: init-{{ $depend.dependName }}
+        image: {{ $.imageRepoDomainName }}/public/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ['sh', '-c', 'until nc -z -w 5 -v {{- if eq $depend.dependType "UDP" }} -u {{- end }} {{ $depend.dependName }} {{ $depend.dependPort }}; do echo waiting for {{ $depend.dependName }} ready; done;']
+      {{- end }}
+      {{- end }}
+      {{- if $deploy.hostNetwork }}
+      hostNetwork: {{ $deploy.hostNetwork }}
+      {{- end }}
+      containers:
+        - name: {{ $deploy.deployName }}
+          image: {{ $deploy.deployImage }}
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+          - mountPath: /etc/timezone
+            name: configmap-timezone
+            readOnly: true
+            subPath: timezone
+          - mountPath: /etc/localtime
+            name: {{ $.dory.namespace }}-timezone-pvc
+            readOnly: true
+            subPath: zoneinfo/{{ $.kubernetes.timezone }}
+          - mountPath: /usr/share/zoneinfo
+            name: {{ $.dory.namespace }}-timezone-pvc
+            readOnly: true
+            subPath: zoneinfo
+          {{- range $_, $volume := $deploy.deployVolumes }}
+          {{- if $volume.pvc }}
+          - name: {{ $volume.pvc }}
+            mountPath: {{ $volume.mountPath }}
+            subPath: {{ $volume.subPath }}
+          {{- else if $volume.secret }}
+          -
+            {{- range $sk, $sv := $volume.secret }}
+            {{- if eq $sk "secretName" }}
+            name: {{ $sv }}
+            {{- end }}
+            {{- end }}
+            mountPath: {{ $volume.mountPath }}
+            {{- if $volume.subPath }}
+            subPath: {{ $volume.subPath }}
+            {{- end }}
+          {{- else }}
+          - name: {{ $.dory.namespace }}-pvc
+            mountPath: {{ $volume.mountPath }}
+            subPath: {{ $volume.subPath }}
+          {{- end }}
+          {{- end }}
+          env:
+          - name: TZ
+            value: {{ $.kubernetes.timezone }}
+          {{- range $_, $env := $deploy.deployEnvs }}
+          - name: {{ $env.name }}
+            value: {{ $env.value | quote }}
+          {{- end }}
+          {{- if $deploy.deployCmd }}
+          command:
+          {{- range $_, $cmd := $deploy.deployCmd }}
+          - {{ $cmd }}
+          {{- end }}
+          {{- end }}
+          {{- if $deploy.deployArgs }}
+          args:
+          {{- range $_, $arg := $deploy.deployArgs }}
+          - {{ $arg }}
+          {{- end }}
+          {{- end }}
+          {{- if $deploy.deployLocalPort }}
+          ports:
+          {{- range $_, $port := $deploy.deployLocalPort }}
+          - containerPort: {{ $port.port }}
+          {{- end }}
+          {{- else if $deploy.deployNodePort }}
+          ports:
+          {{- range $_, $port := $deploy.deployNodePort }}
+          - containerPort: {{ $port.port }}
+          {{- end }}
+          {{- end }}
+          {{- if $deploy.deployHealthCheck }}
+          {{- if and $deploy.deployHealthCheck.checkPort $deploy.deployHealthCheck.readinessDelaySeconds $deploy.deployHealthCheck.readinessPeriodSeconds }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ $deploy.deployHealthCheck.checkPort }}
+            initialDelaySeconds: {{ $deploy.deployHealthCheck.readinessDelaySeconds }}
+            periodSeconds: {{ $deploy.deployHealthCheck.readinessPeriodSeconds }}
+          {{- end }}
+          {{- end }}
+          {{- if $deploy.deployHealthCheck }}
+          {{- if and $deploy.deployHealthCheck.checkPort $deploy.deployHealthCheck.livenessDelaySeconds $deploy.deployHealthCheck.livenessPeriodSeconds }}
+          livenessProbe:
+            tcpSocket:
+              port: {{ $deploy.deployHealthCheck.checkPort }}
+            initialDelaySeconds: {{ $deploy.deployHealthCheck.livenessDelaySeconds }}
+            periodSeconds: {{ $deploy.deployHealthCheck.livenessPeriodSeconds }}
+          {{- end }}
+          {{- end }}
+          {{- if $deploy.deployResources }}
+          resources:
+            {{- if or $deploy.deployResources.cpuRequest $deploy.deployResources.memoryRequest}}
+            requests:
+              {{- if $deploy.deployResources.cpuRequest }}
+              cpu: {{ $deploy.deployResources.cpuRequest | quote}}
+              {{- end }}
+              {{- if $deploy.deployResources.memoryRequest }}
+              memory: {{ $deploy.deployResources.memoryRequest | quote }}
+              {{- end }}
+            {{- end }}
+            {{- if or $deploy.deployResources.cpuLimit $deploy.deployResources.memoryLimit}}
+            limits:
+              {{- if $deploy.deployResources.cpuLimit }}
+              cpu: {{ $deploy.deployResources.cpuLimit | quote }}
+              {{- end }}
+              {{- if $deploy.deployResources.memoryLimit }}
+              memory: {{ $deploy.deployResources.memoryLimit | quote }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if $deploy.securityContext }}
+          securityContext:
+            {{- range $k, $v := $deploy.securityContext }}
+            {{ $k }}: {{ $v }}
+            {{- end }}
+          {{- end }}
+{{- end }}
