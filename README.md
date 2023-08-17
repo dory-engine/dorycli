@@ -83,3 +83,10 @@ mv dorycli /usr/local/bin/
 
 [🚀🚀🚀 使用dorycli安装部署Dory-Engine (短视频介绍)](https://www.bilibili.com/video/BV1x94y167T5/)
 
+## Dory-Engine的使用演示
+
+[🚀🚀🚀 Dory-Engine多云环境部署应用 (短视频介绍)](https://www.bilibili.com/video/BV1Qg4y1F7y7/)
+
+[🚀🚀🚀 Dory-Engine异构环境部署应用 (短视频介绍)](https://www.bilibili.com/video/BV1vk4y1x7qX/)
+
+[🚀🚀🚀 Dory-Engine混合灰度发布 (短视频介绍)](https://www.bilibili.com/video/BV1o14y1B74U/)
