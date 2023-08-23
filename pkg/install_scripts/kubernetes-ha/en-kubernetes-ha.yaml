@@ -8,6 +8,11 @@ virtualIp: 192.168.0.100
 virtualPort: 16443
 # The host name of the virtual ip address mapping, please set the host name mapping in the /etc/hosts configuration file
 virtualHostname: k8s-vip
+# kubernetes container runtime socket
+# In the case of docker: unix:///var/run/cri-dockerd.sock
+# In the case of containerd: unix:///var/run/containerd/containerd.sock
+# In case of cri-o: unix:///var/run/crio/crio.sock
+criSocket: unix:///var/run/cri-dockerd.sock
 # The pod subnet address of the kubernetes cluster, if not set, use the default pod subnet address
 podSubnet: "10.244.0.0/24"
 # The service subnet address of the kubernetes cluster, if not set, use the default service subnet address

@@ -1452,6 +1452,7 @@ type KubernetesHaCluster struct {
 	VirtualIp          string `yaml:"virtualIp" json:"virtualIp" bson:"virtualIp" validate:"required"`
 	VirtualPort        int    `yaml:"virtualPort" json:"virtualPort" bson:"virtualPort" validate:"required"`
 	VirtualHostname    string `yaml:"virtualHostname" json:"virtualHostname" bson:"virtualHostname" validate:"required"`
+	CriSocket          string `yaml:"criSocket" json:"criSocket" bson:"criSocket" validate:"required"`
 	PodSubnet          string `yaml:"podSubnet" json:"podSubnet" bson:"podSubnet" validate:""`
 	ServiceSubnet      string `yaml:"serviceSubnet" json:"serviceSubnet" bson:"serviceSubnet" validate:""`
 	KeepAlivedAuthPass string `yaml:"keepAlivedAuthPass" json:"keepAlivedAuthPass" bson:"keepAlivedAuthPass" validate:""`

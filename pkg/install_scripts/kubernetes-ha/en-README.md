@@ -1,6 +1,6 @@
 # High availability kubernetes cluster deployment
 
-- Please refer to the documentation for installation details: https://github.com/cookeem/kubeadm-ha
+- Please refer to the documentation for installation details: [https://github.com/cookeem/kubeadm-ha](https://github.com/cookeem/kubeadm-ha/blob/master/README-EN.md)
 
 ## The directory structure is as follows
 
@@ -24,16 +24,16 @@
 # Set the path of the kubernetes high-availability cluster load balancer of each master node
 export LB_DIR=/data/k8s-lb
 {{ range $i, $host := $.masterHosts }}
-# Start load balancer on {{ $host.hostname }} node
+# Copy the load balancer configuration file to {{ $host.hostname }} node
 ssh {{ $host.hostname }} mkdir -p ${LB_DIR}
-scp -r {{ $host.hostname }}/nginx-lb root@{{ $host.hostname }}:${LB_DIR}
-scp -r {{ $host.hostname }}/keepalived/ root@{{ $host.hostname }}:${LB_DIR}
+scp -r {{ $host.hostname }}/nginx-lb {{ $host.hostname }}/keepalived root@{{ $host.hostname }}:${LB_DIR}
+
+# Start load balancer on {{ $host.hostname }} node
 ssh {{ $host.hostname }} "cd ${LB_DIR}/keepalived/ && docker-compose stop && docker-compose rm -f && docker-compose up -d"
 ssh {{ $host.hostname }} "cd ${LB_DIR}/nginx-lb/ && docker-compose stop && docker-compose rm -f && docker-compose up -d"
 {{ end }}
 {{ $firstHost := first $.masterHosts }}
-# Copy kubeadm-config.yaml to the first master node
-scp kubeadm-config.yaml root@{{ $firstHost.hostname }}:/root/
-# Execute kubernetes controlplane initialization on the first master node
-ssh {{ $firstHost.hostname }} "kubeadm init --config=/root/kubeadm-config.yaml --upload-certs"
+
+# Execute kubernetes controll-plane initialization on the first master node
+ssh {{ $firstHost.hostname }} "kubeadm init --config=kubeadm-config.yaml --upload-certs"
 ```
