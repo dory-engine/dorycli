@@ -54,7 +54,7 @@ func NewCmdPipelineExecute() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVarP(&o.Batch, "batch", "b", "", "send input in run automatically, input values split with ::, example: develop::inputCheckDeploy::tp1-gin-demo,tp1-go-demo")
+	cmd.Flags().StringVarP(&o.Batch, "batch", "b", "", "send input in run automatically, input values split with ::, example: develop::test::inputCheckDeploy::tp1-gin-demo,tp1-go-demo")
 	cmd.Flags().StringSliceVar(&o.Params, "params", []string{}, "pipeline input params, example: varName=varValue")
 	CheckError(o.Complete(cmd))
 	return cmd
