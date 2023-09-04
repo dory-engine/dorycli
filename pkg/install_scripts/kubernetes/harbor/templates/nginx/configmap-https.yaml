@@ -56,15 +56,19 @@ data:
 
       {{- if .Values.notary.enabled }}
       server {
+        {{- if .Values.ipFamily.ipv4.enabled }}
         listen 4443 ssl;
+        {{- end}}
+        {{- if .Values.ipFamily.ipv6.enabled}}
         listen [::]:4443 ssl;
+        {{- end }}
         server_tokens off;
         # ssl
         ssl_certificate /etc/nginx/cert/tls.crt;
         ssl_certificate_key /etc/nginx/cert/tls.key;
 
         # recommendations from https://raymii.org/s/tutorials/strong_ssl_security_on_nginx.html
-        ssl_protocols tlsv1.1 tlsv1.2;
+        ssl_protocols tlsv1.2;
         ssl_ciphers '!aNULL:kECDH+AESGCM:ECDH+AESGCM:RSA+AESGCM:kECDH+AES:ECDH+AES:RSA+AES:';
         ssl_prefer_server_ciphers on;
         ssl_session_cache shared:ssl:10m;
@@ -84,13 +88,20 @@ data:
 
           proxy_buffering off;
           proxy_request_buffering off;
+
+          proxy_send_timeout 900;
+          proxy_read_timeout 900;
         }
       }
       {{- end }}
 
       server {
+        {{- if .Values.ipFamily.ipv4.enabled }}
         listen 8443 ssl;
+        {{- end}}
+        {{- if .Values.ipFamily.ipv6.enabled }}
         listen [::]:8443 ssl;
+        {{- end }}
     #    server_name harbordomain.com;
         server_tokens off;
         # SSL
@@ -98,7 +109,7 @@ data:
         ssl_certificate_key /etc/nginx/cert/tls.key;
 
         # Recommendations from https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html
-        ssl_protocols TLSv1.1 TLSv1.2;
+        ssl_protocols TLSv1.2;
         ssl_ciphers '!aNULL:kECDH+AESGCM:ECDH+AESGCM:RSA+AESGCM:kECDH+AES:ECDH+AES:RSA+AES:';
         ssl_prefer_server_ciphers on;
         ssl_session_cache shared:SSL:10m;
@@ -206,8 +217,12 @@ data:
         }
       }
         server {
+          {{- if .Values.ipFamily.ipv4.enabled }}
           listen 8080;
+          {{- end}}
+          {{- if .Values.ipFamily.ipv6.enabled }}
           listen [::]:8080;
+          {{- end}}
           #server_name harbordomain.com;
           return 301 https://$host$request_uri;
       }

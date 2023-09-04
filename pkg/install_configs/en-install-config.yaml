@@ -85,8 +85,8 @@ dory:
       # if install mode is docker: it means which subdirectory image repository's data store in
       # if install mode is kubernetes: it means which namespace image repository will deploy in
       namespace: harbor
-      # image repository (harbor) version, support v2.2.x - v2.6.x
-      version: v2.6.0
+      # image repository (harbor) version, support v2.6.x - v2.8.x
+      version: v2.8.4
       # image repository admin user password, leave it empty to random create one
       password: ""
       {{- if eq $.mode "docker" }}

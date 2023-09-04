@@ -8,6 +8,8 @@
 
 - 支持租户管理员管理相关配置的权限
 
+- harbor从v2.6.0升级到v2.8.4
+
 - dory-frontend 更名为 dory-console
 
 - dory-cli 更名为 dorycli

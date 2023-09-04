@@ -4,6 +4,3 @@ node_modules
 dorycli
 *cli
 xxx*
-.idea
-.vscode
-build.sh

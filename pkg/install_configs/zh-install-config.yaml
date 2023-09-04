@@ -85,8 +85,8 @@ dory:
       # 假如安装模式为kubernetes，表示镜像仓库组件所安装的名字空间
       # 假如安装模式为docker，表示镜像仓库组件存放的子目录
       namespace: harbor
-      # 镜像仓库版本，harbor版本，支持v2.2.x - v2.6.x
-      version: v2.6.0
+      # 镜像仓库版本，harbor版本，支持v2.6.x - v2.8.x
+      version: v2.8.4
       # 镜像仓库的管理员密码，为空表示自动随机生成
       password: ""
       {{- if eq $.mode "docker" }}

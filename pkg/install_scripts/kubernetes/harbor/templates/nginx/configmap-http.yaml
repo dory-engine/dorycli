@@ -49,8 +49,12 @@ data:
       }
 
       server {
+        {{- if .Values.ipFamily.ipv4.enabled}}
         listen 8080;
+        {{- end}}
+        {{- if .Values.ipFamily.ipv6.enabled }}
         listen [::]:8080;
+        {{- end }}
         server_tokens off;
         # disable any limits to avoid HTTP 413 for large image uploads
         client_max_body_size 0;
@@ -123,6 +127,8 @@ data:
           proxy_set_header X-Forwarded-Proto $x_forwarded_proto;
           proxy_buffering off;
           proxy_request_buffering off;
+          proxy_send_timeout 900;
+          proxy_read_timeout 900;
         }
 
         location /service/ {
