@@ -50,12 +50,14 @@ dockerImages:
     target: public/python:3.10.10-alpine3.17-dory
     dockerFile: Dockerfile-python
     arm64: arm64v8/python:3.10.10-alpine3.17
-  - source: node:18.14.0-alpine3.17
-    target: hub/node:18.14.0-alpine3.17
-    arm64: arm64v8/node:18.14.0-alpine3.17
-  - source: node:19.6.0-alpine3.17
-    target: hub/node:19.6.0-alpine3.17
-    arm64: arm64v8/node:19.6.0-alpine3.17
+  - source: node:18.17.1-alpine3.18
+    target: public/node:18.17.1-alpine3.18-dory
+    dockerFile: Dockerfile-node
+    arm64: arm64v8/node:18.17.1-alpine3.18
+  - source: node:20.5.1-alpine3.18
+    target: public/node:20.5.1-alpine3.18-dory
+    dockerFile: Dockerfile-node
+    arm64: arm64v8/node:20.5.1-alpine3.18
   - source: openjdk:11.0.16-jdk
     target: hub/openjdk:11.0.16-jdk
     arm64: arm64v8/openjdk:11.0.16-jdk
