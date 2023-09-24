@@ -25,19 +25,11 @@ func NewOptionsAdminDelete() *OptionsAdminDelete {
 func NewCmdAdminDelete() *cobra.Command {
 	o := NewOptionsAdminDelete()
 
-	adminCmdKinds := []string{}
-	for k, v := range pkg.AdminCmdKinds {
-		if v != "" {
-			adminCmdKinds = append(adminCmdKinds, k)
-		}
-	}
-
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`delete [kind] [itemName1] [itemName2]...
-# kind options: %s`, strings.Join(adminCmdKinds, " / "))
+	msgUse := fmt.Sprintf(`delete [kind] [itemName1] [itemName2]...`)
 	msgShort := fmt.Sprintf("delete configurations, admin permission required")
 	msgLong := fmt.Sprintf(`delete configurations in dory-engine server, admin permission required`)
-	msgExample := fmt.Sprintf(`kind: %s
+	msgExample := fmt.Sprintf(`kind: all, %s
 
   # delete users, admin permission required
   %s admin delete %s test-user01 test-user02

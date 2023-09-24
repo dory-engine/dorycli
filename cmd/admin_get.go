@@ -31,17 +31,11 @@ func NewOptionsAdminGet() *OptionsAdminGet {
 func NewCmdAdminGet() *cobra.Command {
 	o := NewOptionsAdminGet()
 
-	adminCmdKinds := []string{}
-	for k, _ := range pkg.AdminCmdKinds {
-		adminCmdKinds = append(adminCmdKinds, k)
-	}
-
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`get [kind],[kind]... [itemName1] [itemName2]... [--output=json|yaml]
-  # kind options: %s`, strings.Join(adminCmdKinds, " / "))
+	msgUse := fmt.Sprintf(`get [kind],[kind]... [itemName1] [itemName2]... [--output=json|yaml]`)
 	msgShort := fmt.Sprintf("get configurations, admin permission required")
 	msgLong := fmt.Sprintf(`get users, custom steps, kubernetes environments and component templates configurations in dory-engine server, admin permission required`)
-	msgExample := fmt.Sprintf(`kind: %s
+	msgExample := fmt.Sprintf(`kind: all, %s
 
   # get all configurations, admin permission required
   %s admin get %s --output=yaml
