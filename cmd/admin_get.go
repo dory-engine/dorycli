@@ -41,22 +41,22 @@ func NewCmdAdminGet() *cobra.Command {
   # kind options: %s`, strings.Join(adminCmdKinds, " / "))
 	msgShort := fmt.Sprintf("get configurations, admin permission required")
 	msgLong := fmt.Sprintf(`get users, custom steps, kubernetes environments and component templates configurations in dory-engine server, admin permission required`)
-	msgExample := fmt.Sprintf(`kind: ct(component templates), env(kubernetes environments), step(custom steps), user(users), dbe(docker build environments), grc(git repository configs), irc(image repository configs), arc(artifact repository configs), scrc(scan code repository configs)
+	msgExample := fmt.Sprintf(`kind: %s
 
   # get all configurations, admin permission required
-  %s admin get all --output=yaml
+  %s admin get %s --output=yaml
 
   # get all configurations, and show in full version, admin permission required
-  %s admin get all --output=yaml --full
+  %s admin get %s --output=yaml --full
 
   # get custom steps and component templates configurations, admin permission required
-  %s admin get step,ct
+  %s admin get %s,%s
 
   # get users configurations, and filter by userNames, admin permission required
-  %s admin get user test-user1 test-user2
+  %s admin get %s test-user1 test-user2
 
   # get kubernetes environments configurations, and filter by envNames, admin permission required
-  %s admin get env test uat prod`, baseName, baseName, baseName, baseName, baseName)
+  %s admin get %s test uat prod`, strings.Join(pkg.AdminKinds, ", "), baseName, pkg.AdminKindAll, baseName, pkg.AdminKindAll, baseName, pkg.AdminKindCustomStep, pkg.AdminKindComponentTemplate, baseName, pkg.AdminKindUser, baseName, pkg.AdminKindEnvK8s)
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -98,7 +98,7 @@ func (o *OptionsAdminGet) Complete(cmd *cobra.Command) error {
 			var isAllKind bool
 			kinds := strings.Split(kindStr, ",")
 			for _, kind := range kinds {
-				if kind == "all" {
+				if kind == pkg.AdminKindAll {
 					isAllKind = true
 				}
 			}
@@ -106,26 +106,26 @@ func (o *OptionsAdminGet) Complete(cmd *cobra.Command) error {
 				kind := kinds[0]
 				itemNames := []string{}
 				switch kind {
-				case "user":
+				case pkg.AdminKindUser:
 					itemNames, _ = o.GetUserNames()
-				case "step":
+				case pkg.AdminKindCustomStep:
 					itemNames, _ = o.GetStepNames()
-				case "env":
+				case pkg.AdminKindEnvK8s:
 					itemNames, _ = o.GetEnvNames()
-				case "ct":
+				case pkg.AdminKindComponentTemplate:
 					itemNames, _ = o.GetComponentTemplateNames()
-				case "dbe":
+				case pkg.AdminKindDockerBuildEnv:
 					itemNames, _ = o.GetBuildEnvNames()
-				case "grc":
+				case pkg.AdminKindGitRepoConfig:
 					repoNames, _ := o.GetRepoNames()
 					itemNames = repoNames.GitRepoNames
-				case "irc":
+				case pkg.AdminKindImageRepoConfig:
 					repoNames, _ := o.GetRepoNames()
 					itemNames = repoNames.ImageRepoNames
-				case "arc":
+				case pkg.AdminKindArtifactRepoConfig:
 					repoNames, _ := o.GetRepoNames()
 					itemNames = repoNames.ArtifactRepoNames
-				case "scrc":
+				case pkg.AdminKindScanCodeRepoConfig:
 					repoNames, _ := o.GetRepoNames()
 					itemNames = repoNames.ScanCodeRepoNames
 				default:
@@ -190,7 +190,7 @@ func (o *OptionsAdminGet) Validate(args []string) error {
 			err = fmt.Errorf("kind %s format error: not correct, options: %s", kind, strings.Join(adminCmdKinds, " / "))
 			return err
 		}
-		if kind == "all" {
+		if kind == pkg.AdminKindAll {
 			foundAll = true
 		}
 		kindParams = append(kindParams, pkg.AdminCmdKinds[kind])
@@ -225,7 +225,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	for _, kind := range o.Param.Kinds {
 		if foundKindUser {
 			break
-		} else if kind == pkg.AdminCmdKinds["user"] {
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindUser] {
 			foundKindUser = true
 			break
 		}
@@ -236,7 +236,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	for _, kind := range o.Param.Kinds {
 		if foundKindStep {
 			break
-		} else if kind == pkg.AdminCmdKinds["step"] {
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindCustomStep] {
 			foundKindStep = true
 			break
 		}
@@ -247,7 +247,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	for _, kind := range o.Param.Kinds {
 		if foundKindEnv {
 			break
-		} else if kind == pkg.AdminCmdKinds["env"] {
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindEnvK8s] {
 			foundKindEnv = true
 			break
 		}
@@ -258,7 +258,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	for _, kind := range o.Param.Kinds {
 		if foundKindCt {
 			break
-		} else if kind == pkg.AdminCmdKinds["ct"] {
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate] {
 			foundKindCt = true
 			break
 		}
@@ -269,7 +269,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	for _, kind := range o.Param.Kinds {
 		if foundKindDbe {
 			break
-		} else if kind == pkg.AdminCmdKinds["dbe"] {
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv] {
 			foundKindDbe = true
 			break
 		}
@@ -280,7 +280,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	for _, kind := range o.Param.Kinds {
 		if foundKindGrc {
 			break
-		} else if kind == pkg.AdminCmdKinds["grc"] {
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig] {
 			foundKindGrc = true
 			break
 		}
@@ -291,7 +291,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	for _, kind := range o.Param.Kinds {
 		if foundKindIrc {
 			break
-		} else if kind == pkg.AdminCmdKinds["irc"] {
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig] {
 			foundKindIrc = true
 			break
 		}
@@ -302,7 +302,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	for _, kind := range o.Param.Kinds {
 		if foundKindArc {
 			break
-		} else if kind == pkg.AdminCmdKinds["arc"] {
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig] {
 			foundKindArc = true
 			break
 		}
@@ -313,7 +313,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	for _, kind := range o.Param.Kinds {
 		if foundKindScrc {
 			break
-		} else if kind == pkg.AdminCmdKinds["scrc"] {
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig] {
 			foundKindScrc = true
 			break
 		}
@@ -359,7 +359,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		}
 		for _, user := range userFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = "user"
+			adminKind.Kind = pkg.AdminKindUser
 			adminKind.Metadata.Name = user.Username
 			var userProjects []string
 			for _, up := range user.UserProjects {

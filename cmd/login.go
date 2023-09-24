@@ -36,16 +36,16 @@ func NewCmdLogin() *cobra.Command {
 	msgShort := fmt.Sprintf("login to dory-engine server")
 	msgLong := fmt.Sprintf("login first before use %s to control your dory-engine server, it will save dory-engine server settings in %s config file", baseName, baseName)
 	msgExample := fmt.Sprintf(`  # login with username and password input prompt
-  %s login --serverURL http://dory.example.com:8080
+  %s login --server-url http://dory.example.com:8080
 
   # login without password input prompt
-  %s login --serverURL http://dory.example.com:8080 --username test-user
+  %s login --server-url http://dory.example.com:8080 --username test-user
 
   # login without input prompt
-  %s login --serverURL http://dory.example.com:8080 --username test-user --password xxx
+  %s login --server-url http://dory.example.com:8080 --username test-user --password xxx
 
   # login with access token
-  %s login --serverURL http://dory.example.com:8080 --token xxx`, baseName, baseName, baseName, baseName)
+  %s login --server-url http://dory.example.com:8080 --token xxx`, baseName, baseName, baseName, baseName)
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -60,7 +60,7 @@ func NewCmdLogin() *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&o.Username, "username", "U", "", "dory-engine server username")
 	cmd.Flags().StringVarP(&o.Password, "password", "P", "", "dory-engine server password")
-	cmd.Flags().IntVar(&o.ExpireDays, "expireDays", 90, "dory-engine server token expires days")
+	cmd.Flags().IntVar(&o.ExpireDays, "expire-days", 90, "dory-engine server token expires days")
 
 	CheckError(o.Complete(cmd))
 	return cmd
@@ -90,15 +90,15 @@ func (o *OptionsLogin) Validate(args []string) error {
 		return err
 	}
 	if o.ServerURL == "" {
-		err = fmt.Errorf("--serverURL required")
+		err = fmt.Errorf("--server-url required")
 		return err
 	}
 	if !strings.HasPrefix(o.ServerURL, "http://") && strings.HasPrefix(o.ServerURL, "https://") {
-		err = fmt.Errorf("--serverURL must start with http:// or https://")
+		err = fmt.Errorf("--server-url must start with http:// or https://")
 		return err
 	}
 	if o.ExpireDays < 0 {
-		err = fmt.Errorf("--expireDays can not less than 0")
+		err = fmt.Errorf("--expire-days can not less than 0")
 		return err
 	}
 

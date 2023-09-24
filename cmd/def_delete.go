@@ -33,15 +33,15 @@ func NewCmdDefDelete() *cobra.Command {
 	o := NewOptionsDefDelete()
 
 	defCmdKinds := []string{
-		"build",
-		"package",
-		"artifact",
-		"deploy",
-		"setup",
-		"istio",
-		"ops",
-		"batch",
-		"step",
+		pkg.DefKindBuild,
+		pkg.DefKindPackage,
+		pkg.DefKindArtifact,
+		pkg.DefKindDeployContainer,
+		pkg.DefKindDeployArtifact,
+		pkg.DefKindIstio,
+		pkg.DefKindCustomOps,
+		pkg.DefKindOpsBatch,
+		pkg.DefKindCustomStep,
 	}
 
 	baseName := pkg.GetCmdBaseName()
@@ -50,16 +50,16 @@ func NewCmdDefDelete() *cobra.Command {
 	msgShort := fmt.Sprintf("delete modules from project definitions")
 	msgLong := fmt.Sprintf(`delete modules from project definitions in dory-engine server`)
 	msgExample := fmt.Sprintf(`  # delete modules from project build definitions
-  %s def delete test-project1 build --modules=tp1-gin-demo,tp1-node-demo
+  %s def delete test-project1 %s --modules=tp1-gin-demo,tp1-node-demo
 
   # delete modules from project deploy definitions in envNames
-  %s def delete test-project1 deploy --modules=tp1-gin-demo,tp1-node-demo --envs=test
+  %s def delete test-project1 %s --modules=tp1-gin-demo,tp1-node-demo --envs=test
 
   # delete modules from project step definitions in stepNames
-  %s def delete test-project1 step --modules=tp1-gin-demo,tp1-node-demo --steps=customStepName1
+  %s def delete test-project1 %s --modules=tp1-gin-demo,tp1-node-demo --steps=customStepName1
 
   # delete modules from project step definitions in envNames and stepNames
-  %s def delete test-project1 step --modules=tp1-gin-demo,tp1-node-demo --envs=test --steps=customStepName1`, baseName, baseName, baseName, baseName)
+  %s def delete test-project1 %s --modules=tp1-gin-demo,tp1-node-demo --envs=test --steps=customStepName1`, baseName, pkg.DefKindBuild, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindCustomStep, baseName, pkg.DefKindCustomStep)
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -73,8 +73,8 @@ func NewCmdDefDelete() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, "moduleNames to delete")
-	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, "filter project definitions in envNames, required if kind is deploy / setup / istio")
-	cmd.Flags().StringSliceVar(&o.StepNames, "steps", []string{}, "filter project definitions in stepNames, required if kind is step")
+	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, fmt.Sprintf("filter project definitions in envNames, required if kind is %s / %s / %s", pkg.DefKindDeployContainer, pkg.DefKindDeployArtifact, pkg.DefKindIstio))
+	cmd.Flags().StringSliceVar(&o.StepNames, "steps", []string{}, fmt.Sprintf("filter project definitions in stepNames, required if kind is %s", pkg.DefKindCustomStep))
 	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
 	cmd.Flags().BoolVar(&o.Full, "full", false, "output project definitions in full version, use with --output option")
 	cmd.Flags().BoolVar(&o.Try, "try", false, "try to check input project definitions only, not apply to dory-engine server, use with --output option")
@@ -92,15 +92,15 @@ func (o *OptionsDefDelete) Complete(cmd *cobra.Command) error {
 	}
 
 	defCmdKinds := []string{
-		"build",
-		"package",
-		"artifact",
-		"deploy",
-		"setup",
-		"istio",
-		"ops",
-		"batch",
-		"step",
+		pkg.DefKindBuild,
+		pkg.DefKindPackage,
+		pkg.DefKindArtifact,
+		pkg.DefKindDeployContainer,
+		pkg.DefKindDeployArtifact,
+		pkg.DefKindIstio,
+		pkg.DefKindCustomOps,
+		pkg.DefKindOpsBatch,
+		pkg.DefKindCustomStep,
 	}
 
 	cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -160,19 +160,19 @@ func (o *OptionsDefDelete) Complete(cmd *cobra.Command) error {
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 		switch kind {
-		case "build":
+		case pkg.DefKindBuild:
 			for _, def := range project.ProjectDef.BuildDefs {
 				moduleNames = append(moduleNames, def.BuildName)
 			}
-		case "package":
+		case pkg.DefKindPackage:
 			for _, def := range project.ProjectDef.PackageDefs {
 				moduleNames = append(moduleNames, def.PackageName)
 			}
-		case "artifact":
+		case pkg.DefKindArtifact:
 			for _, def := range project.ProjectDef.ArtifactDefs {
 				moduleNames = append(moduleNames, def.ArtifactName)
 			}
-		case "deploy":
+		case pkg.DefKindDeployContainer:
 			m := map[string]string{}
 			if len(envs) == 0 {
 				for _, pae := range project.ProjectAvailableEnvs {
@@ -202,7 +202,7 @@ func (o *OptionsDefDelete) Complete(cmd *cobra.Command) error {
 					moduleNames = append(moduleNames, k)
 				}
 			}
-		case "setup":
+		case pkg.DefKindDeployArtifact:
 			m := map[string]string{}
 			if len(envs) == 0 {
 				for _, pae := range project.ProjectAvailableEnvs {
@@ -232,7 +232,7 @@ func (o *OptionsDefDelete) Complete(cmd *cobra.Command) error {
 					moduleNames = append(moduleNames, k)
 				}
 			}
-		case "istio":
+		case pkg.DefKindIstio:
 			m := map[string]string{}
 			if len(envs) == 0 {
 				for _, pae := range project.ProjectAvailableEnvs {
@@ -262,15 +262,15 @@ func (o *OptionsDefDelete) Complete(cmd *cobra.Command) error {
 					moduleNames = append(moduleNames, k)
 				}
 			}
-		case "ops":
+		case pkg.DefKindCustomOps:
 			for _, def := range project.ProjectDef.CustomOpsDefs {
 				moduleNames = append(moduleNames, def.CustomOpsName)
 			}
-		case "batch":
+		case pkg.DefKindOpsBatch:
 			for _, def := range project.ProjectDef.OpsBatchDefs {
 				moduleNames = append(moduleNames, def.OpsBatchName)
 			}
-		case "step":
+		case pkg.DefKindCustomStep:
 			if step != "" {
 				if len(envs) == 0 {
 					for stepName, csd := range project.ProjectDef.CustomStepDefs {
@@ -359,15 +359,15 @@ func (o *OptionsDefDelete) Validate(args []string) error {
 	o.Param.ProjectName = projectName
 
 	defCmdKinds := []string{
-		"build",
-		"package",
-		"artifact",
-		"deploy",
-		"setup",
-		"istio",
-		"ops",
-		"batch",
-		"step",
+		pkg.DefKindBuild,
+		pkg.DefKindPackage,
+		pkg.DefKindArtifact,
+		pkg.DefKindDeployContainer,
+		pkg.DefKindDeployArtifact,
+		pkg.DefKindIstio,
+		pkg.DefKindCustomOps,
+		pkg.DefKindOpsBatch,
+		pkg.DefKindCustomStep,
 	}
 	var found bool
 	for _, cmdKind := range defCmdKinds {
@@ -387,20 +387,20 @@ func (o *OptionsDefDelete) Validate(args []string) error {
 		return err
 	}
 
-	if o.Param.Kind == "deploy" && len(o.EnvNames) == 0 {
-		err = fmt.Errorf("kind is deploy, --envs required")
+	if o.Param.Kind == pkg.DefKindDeployContainer && len(o.EnvNames) == 0 {
+		err = fmt.Errorf("kind is %s, --envs required", pkg.DefKindDeployContainer)
 		return err
 	}
-	if o.Param.Kind == "setup" && len(o.EnvNames) == 0 {
-		err = fmt.Errorf("kind is setup, --envs required")
+	if o.Param.Kind == pkg.DefKindDeployArtifact && len(o.EnvNames) == 0 {
+		err = fmt.Errorf("kind is %s, --envs required", pkg.DefKindDeployArtifact)
 		return err
 	}
-	if o.Param.Kind == "istio" && len(o.EnvNames) == 0 {
-		err = fmt.Errorf("kind is istio, --envs required")
+	if o.Param.Kind == pkg.DefKindIstio && len(o.EnvNames) == 0 {
+		err = fmt.Errorf("kind is %s, --envs required", pkg.DefKindIstio)
 		return err
 	}
-	if o.Param.Kind == "step" && len(o.StepNames) == 0 {
-		err = fmt.Errorf("kind is step, --steps required")
+	if o.Param.Kind == pkg.DefKindCustomStep && len(o.StepNames) == 0 {
+		err = fmt.Errorf("kind is %s, --steps required", pkg.DefKindCustomStep)
 		return err
 	}
 
@@ -439,7 +439,7 @@ func (o *OptionsDefDelete) Run(args []string) error {
 	}
 
 	switch o.Param.Kind {
-	case "build":
+	case pkg.DefKindBuild:
 		defKind := defKindProject
 		defKind.Kind = pkg.DefCmdKinds[o.Param.Kind]
 		ids := []int{}
@@ -475,7 +475,7 @@ func (o *OptionsDefDelete) Run(args []string) error {
 			Def:         defKind.Items,
 		}
 		defUpdates = append(defUpdates, defUpdate)
-	case "package":
+	case pkg.DefKindPackage:
 		defKind := defKindProject
 		defKind.Kind = pkg.DefCmdKinds[o.Param.Kind]
 		defKind.Status.ErrMsg = project.ProjectDef.ErrMsgPackageDefs
@@ -512,7 +512,7 @@ func (o *OptionsDefDelete) Run(args []string) error {
 			Def:         defKind.Items,
 		}
 		defUpdates = append(defUpdates, defUpdate)
-	case "artifact":
+	case pkg.DefKindArtifact:
 		defKind := defKindProject
 		defKind.Kind = pkg.DefCmdKinds[o.Param.Kind]
 		defKind.Status.ErrMsg = project.ProjectDef.ErrMsgArtifactDefs
@@ -549,7 +549,7 @@ func (o *OptionsDefDelete) Run(args []string) error {
 			Def:         defKind.Items,
 		}
 		defUpdates = append(defUpdates, defUpdate)
-	case "deploy":
+	case pkg.DefKindDeployContainer:
 		paes := []pkg.ProjectAvailableEnv{}
 		for _, pae := range project.ProjectAvailableEnvs {
 			for _, envName := range o.EnvNames {
@@ -604,7 +604,7 @@ func (o *OptionsDefDelete) Run(args []string) error {
 				defUpdates = append(defUpdates, defUpdate)
 			}
 		}
-	case "setup":
+	case pkg.DefKindDeployArtifact:
 		paes := []pkg.ProjectAvailableEnv{}
 		for _, pae := range project.ProjectAvailableEnvs {
 			for _, envName := range o.EnvNames {
@@ -659,7 +659,7 @@ func (o *OptionsDefDelete) Run(args []string) error {
 				defUpdates = append(defUpdates, defUpdate)
 			}
 		}
-	case "istio":
+	case pkg.DefKindIstio:
 		paes := []pkg.ProjectAvailableEnv{}
 		for _, pae := range project.ProjectAvailableEnvs {
 			for _, envName := range o.EnvNames {
@@ -714,7 +714,7 @@ func (o *OptionsDefDelete) Run(args []string) error {
 				defUpdates = append(defUpdates, defUpdate)
 			}
 		}
-	case "ops":
+	case pkg.DefKindCustomOps:
 		defKind := defKindProject
 		defKind.Kind = pkg.DefCmdKinds[o.Param.Kind]
 		ids := []int{}
@@ -750,7 +750,7 @@ func (o *OptionsDefDelete) Run(args []string) error {
 			Def:         defKind.Items,
 		}
 		defUpdates = append(defUpdates, defUpdate)
-	case "batch":
+	case pkg.DefKindOpsBatch:
 		defKind := defKindProject
 		defKind.Kind = pkg.DefCmdKinds[o.Param.Kind]
 		ids := []int{}
@@ -786,7 +786,7 @@ func (o *OptionsDefDelete) Run(args []string) error {
 			Def:         defKind.Items,
 		}
 		defUpdates = append(defUpdates, defUpdate)
-	case "step":
+	case pkg.DefKindCustomStep:
 		if len(o.EnvNames) > 0 {
 			paes := []pkg.ProjectAvailableEnv{}
 			for _, pae := range project.ProjectAvailableEnvs {

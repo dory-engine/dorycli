@@ -49,22 +49,22 @@ func NewCmdDefGet() *cobra.Command {
   %s def get test-project1
 
   # get project all definitions
-  %s def get test-project1 all --output=yaml
+  %s def get test-project1 %s --output=yaml
 
   # get project all definitions, and show in full version
-  %s def get test-project1 all --output=yaml --full
+  %s def get test-project1 %s --output=yaml --full
 
   # get project build and package modules definitions
-  %s def get test-project1 build,package
+  %s def get test-project1 %s,%s
 
   # get project deploy modules definitions, and filter by moduleNames and envNames
-  %s def get test-project1 deploy --modules=tp1-go-demo,tp1-gin-demo --envs=test
+  %s def get test-project1 %s --modules=tp1-go-demo,tp1-gin-demo --envs=test
 
   # get project pipeline definitions, and filter by branchNames
-  %s def get test-project1 pipeline --branches=develop,release
+  %s def get test-project1 %s --branches=develop,release
 
   # get project custom step modules definitions, and filter by envNames and stepNames
-  %s def get test-project1 step --envs=test --steps=customStepName2`, baseName, baseName, baseName, baseName, baseName, baseName, baseName)
+  %s def get test-project1 %s --envs=test --steps=customStepName2`, baseName, baseName, pkg.DefKindAll, baseName, pkg.DefKindAll, baseName, pkg.DefKindBuild, pkg.DefKindPackage, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindCustomStep)
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -171,7 +171,7 @@ func (o *OptionsDefGet) Complete(cmd *cobra.Command) error {
 		var isAllKind bool
 		kinds := strings.Split(kindStr, ",")
 		for _, kind := range kinds {
-			if kind == "all" {
+			if kind == pkg.DefKindAll {
 				isAllKind = true
 			}
 		}
@@ -184,35 +184,35 @@ func (o *OptionsDefGet) Complete(cmd *cobra.Command) error {
 
 		m := map[string]string{}
 		for _, kind := range kinds {
-			if kind == "build" || isAllKind {
+			if kind == pkg.DefKindBuild || isAllKind {
 				for _, def := range project.ProjectDef.BuildDefs {
 					m[def.BuildName] = ""
 				}
 			}
-			if kind == "package" || isAllKind {
+			if kind == pkg.DefKindPackage || isAllKind {
 				for _, def := range project.ProjectDef.PackageDefs {
 					m[def.PackageName] = ""
 				}
 			}
-			if kind == "artifact" || isAllKind {
+			if kind == pkg.DefKindArtifact || isAllKind {
 				for _, def := range project.ProjectDef.ArtifactDefs {
 					m[def.ArtifactName] = ""
 				}
 			}
-			if kind == "deploy" || kind == "setup" || kind == "istio" || isAllKind {
+			if kind == pkg.DefKindDeployContainer || kind == pkg.DefKindDeployArtifact || kind == pkg.DefKindIstio || isAllKind {
 				if len(envs) == 0 {
 					for _, pae := range project.ProjectAvailableEnvs {
-						if kind == "deploy" || isAllKind {
+						if kind == pkg.DefKindDeployContainer || isAllKind {
 							for _, def := range pae.DeployContainerDefs {
 								m[def.DeployName] = ""
 							}
 						}
-						if kind == "setup" || isAllKind {
+						if kind == pkg.DefKindDeployArtifact || isAllKind {
 							for _, def := range pae.DeployArtifactDefs {
 								m[def.DeployArtifactName] = ""
 							}
 						}
-						if kind == "istio" || isAllKind {
+						if kind == pkg.DefKindIstio || isAllKind {
 							for _, def := range pae.IstioDefs {
 								m[def.DeployName] = ""
 							}
@@ -229,17 +229,17 @@ func (o *OptionsDefGet) Complete(cmd *cobra.Command) error {
 						}
 					}
 					for _, pae := range paes {
-						if kind == "deploy" || isAllKind {
+						if kind == pkg.DefKindDeployContainer || isAllKind {
 							for _, def := range pae.DeployContainerDefs {
 								m[def.DeployName] = ""
 							}
 						}
-						if kind == "setup" || isAllKind {
+						if kind == pkg.DefKindDeployArtifact || isAllKind {
 							for _, def := range pae.DeployArtifactDefs {
 								m[def.DeployArtifactName] = ""
 							}
 						}
-						if kind == "istio" || isAllKind {
+						if kind == pkg.DefKindIstio || isAllKind {
 							for _, def := range pae.IstioDefs {
 								m[def.DeployName] = ""
 							}
@@ -247,17 +247,17 @@ func (o *OptionsDefGet) Complete(cmd *cobra.Command) error {
 					}
 				}
 			}
-			if kind == "ops" || isAllKind {
+			if kind == pkg.DefKindCustomOps || isAllKind {
 				for _, def := range project.ProjectDef.CustomOpsDefs {
 					m[def.CustomOpsName] = ""
 				}
 			}
-			if kind == "batch" || isAllKind {
+			if kind == pkg.DefKindOpsBatch || isAllKind {
 				for _, def := range project.ProjectDef.OpsBatchDefs {
 					m[def.OpsBatchName] = ""
 				}
 			}
-			if kind == "step" || isAllKind {
+			if kind == pkg.DefKindCustomStep || isAllKind {
 				if len(steps) > 0 {
 					if len(envs) == 0 {
 						for stepName, csd := range project.ProjectDef.CustomStepDefs {
@@ -360,7 +360,7 @@ func (o *OptionsDefGet) Validate(args []string) error {
 				err = fmt.Errorf("kind %s format error: not correct, options: %s", kind, strings.Join(defCmdKinds, " / "))
 				return err
 			}
-			if kind == "all" {
+			if kind == pkg.DefKindAll {
 				foundAll = true
 			}
 			kindParams = append(kindParams, pkg.DefCmdKinds[kind])
@@ -431,7 +431,6 @@ func (o *OptionsDefGet) Run(args []string) error {
 			ArtifactNames:   project.ArtifactNames,
 			BranchNames:     branchNames,
 			EnvNames:        envNames,
-			NodePorts:       project.NodePorts,
 		}
 		defKind.Items = append(defKind.Items, def)
 		defKinds = append(defKinds, defKind)
@@ -920,15 +919,10 @@ func (o *OptionsDefGet) Run(args []string) error {
 						s := fmt.Sprintf("%s%s", conf.CustomStepName, isEnvDiff)
 						customSteps = append(customSteps, s)
 					}
-					var nodePorts []string
-					for _, port := range item.NodePorts {
-						s := fmt.Sprintf("%d", port)
-						nodePorts = append(nodePorts, s)
-					}
-					dataRow := []string{defKind.Kind, strings.Join(item.BuildNames, "\n"), strings.Join(item.PackageNames, "\n"), strings.Join(item.ArtifactNames, "\n"), strings.Join(customSteps, "\n"), strings.Join(item.BranchNames, "\n"), strings.Join(item.EnvNames, "\n"), strings.Join(nodePorts, "\n")}
+					dataRow := []string{defKind.Kind, strings.Join(item.BuildNames, "\n"), strings.Join(item.PackageNames, "\n"), strings.Join(item.ArtifactNames, "\n"), strings.Join(customSteps, "\n"), strings.Join(item.BranchNames, "\n"), strings.Join(item.EnvNames, "\n")}
 					dataRows = append(dataRows, dataRow)
 				}
-				dataHeader = []string{"kind", "Builds", "Packages", "Artifacts", "CustomSteps", "Branches", "Envs", "NodePorts"}
+				dataHeader = []string{"kind", "Builds", "Packages", "Artifacts", "CustomSteps", "Branches", "Envs"}
 			case "buildDefs":
 				items := []pkg.BuildDef{}
 				_ = json.Unmarshal(bs, &items)

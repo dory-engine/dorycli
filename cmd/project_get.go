@@ -165,27 +165,21 @@ func (o *OptionsProjectGet) Run(args []string) error {
 				projectName := project.ProjectInfo.ProjectName
 				projectShortName := project.ProjectInfo.ProjectShortName
 				projectEnvs := []string{}
-				for _, pae := range project.ProjectAvailableEnvs {
-					projectEnvs = append(projectEnvs, pae.EnvName)
+				for _, pnp := range project.ProjectNodePorts {
+					projectEnvs = append(projectEnvs, pnp.EnvName)
 				}
 				projectEnvNames := strings.Join(projectEnvs, ",")
-				projectNodePorts := []string{}
-				for _, pnp := range project.ProjectNodePorts {
-					np := fmt.Sprintf("%d-%d", pnp.NodePortStart, pnp.NodePortEnd)
-					projectNodePorts = append(projectNodePorts, np)
-				}
-				projectNodePortNames := strings.Join(projectNodePorts, ",")
 				pipelines := []string{}
 				for _, pp := range project.Pipelines {
 					pipelines = append(pipelines, pp.PipelineName)
 				}
 				pipelineNames := strings.Join(pipelines, ",")
 
-				data = append(data, []string{projectName, projectShortName, projectEnvNames, projectNodePortNames, pipelineNames})
+				data = append(data, []string{projectName, projectShortName, projectEnvNames, pipelineNames})
 			}
 
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Name", "ShortName", "EnvNames", "NodePorts", "Pipelines"})
+			table.SetHeader([]string{"Name", "ShortName", "EnvNames", "Pipelines"})
 			table.SetAutoWrapText(false)
 			table.SetAutoFormatHeaders(true)
 			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)

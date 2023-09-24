@@ -3,9 +3,9 @@ package pkg
 import "embed"
 
 const (
-	VersionDoryCli      = "v1.5.0"
-	VersionDoryEngine   = "v2.5.0"
-	VersionDoryFrontend = "v2.5.0"
+	VersionDoryCli      = "v1.5.1"
+	VersionDoryEngine   = "v2.5.1"
+	VersionDoryFrontend = "v2.5.1"
 
 	TrivyDb       = "trivy-db-20230718.tar.gz"
 	NexusInitData = "nexus-data-init.tar.gz"
@@ -38,33 +38,71 @@ var (
 	//go:embed install_configs/*
 	FsInstallConfigs embed.FS
 
+	DefKindAll             = "all"
+	DefKindBuild           = "build"
+	DefKindPackage         = "package"
+	DefKindArtifact        = "artifact"
+	DefKindDeployContainer = "deploy-container"
+	DefKindDeployArtifact  = "deploy-artifact"
+	DefKindIstio           = "istio"
+	DefKindIstioGateway    = "istio-gateway"
+	DefKindCustomStep      = "custom-step"
+	DefKindPipeline        = "pipeline"
+	DefKindCustomOps       = "custom-ops"
+	DefKindOpsBatch        = "ops-batch"
+	DefKindDockerIgnore    = "docker-ignore"
+
 	DefCmdKinds = map[string]string{
-		"all":      "",
-		"build":    "buildDefs",
-		"package":  "packageDefs",
-		"artifact": "artifactDefs",
-		"deploy":   "deployContainerDefs",
-		"setup":    "deployArtifactDefs",
-		"istio":    "istioDefs",
-		"gateway":  "istioGatewayDef",
-		"step":     "customStepDef",
-		"pipeline": "pipelineDef",
-		"ops":      "customOpsDefs",
-		"batch":    "opsBatchDefs",
-		"ignore":   "dockerIgnoreDefs",
+		DefKindAll:             "",
+		DefKindBuild:           "buildDefs",
+		DefKindPackage:         "packageDefs",
+		DefKindArtifact:        "artifactDefs",
+		DefKindDeployContainer: "deployContainerDefs",
+		DefKindDeployArtifact:  "deployArtifactDefs",
+		DefKindIstio:           "istioDefs",
+		DefKindIstioGateway:    "istioGatewayDef",
+		DefKindCustomStep:      "customStepDef",
+		DefKindPipeline:        "pipelineDef",
+		DefKindCustomOps:       "customOpsDefs",
+		DefKindOpsBatch:        "opsBatchDefs",
+		DefKindDockerIgnore:    "dockerIgnoreDefs",
 	}
 
+	AdminKindAll                = "all"
+	AdminKindComponentTemplate  = "component-template"
+	AdminKindEnvK8s             = "env-k8s"
+	AdminKindCustomStep         = "custom-step"
+	AdminKindUser               = "user"
+	AdminKindDockerBuildEnv     = "docker-build-env"
+	AdminKindGitRepoConfig      = "git-repo-config"
+	AdminKindImageRepoConfig    = "image-repo-config"
+	AdminKindArtifactRepoConfig = "artifact-repo-config"
+	AdminKindScanCodeRepoConfig = "scan-code-repo-config"
+
+	AdminKinds = []string{
+		AdminKindComponentTemplate,
+		AdminKindEnvK8s,
+		AdminKindCustomStep,
+		AdminKindUser,
+		AdminKindDockerBuildEnv,
+		AdminKindGitRepoConfig,
+		AdminKindImageRepoConfig,
+		AdminKindArtifactRepoConfig,
+		AdminKindScanCodeRepoConfig,
+	}
+
+	//  "scrc": "scanCodeRepoConfig",
 	AdminCmdKinds = map[string]string{
-		"all":  "",
-		"user": "user",
-		"step": "customStepConf",
-		"env":  "envK8s",
-		"ct":   "componentTemplate",
-		"dbe":  "dockerBuildEnv",
-		"grc":  "gitRepoConfig",
-		"irc":  "imageRepoConfig",
-		"arc":  "artifactRepoConfig",
-		"scrc": "scanCodeRepoConfig",
+		AdminKindAll:                "",
+		AdminKindUser:               "user",
+		AdminKindCustomStep:         "customStepConf",
+		AdminKindEnvK8s:             "envK8s",
+		AdminKindComponentTemplate:  "componentTemplate",
+		AdminKindDockerBuildEnv:     "dockerBuildEnv",
+		AdminKindGitRepoConfig:      "gitRepoConfig",
+		AdminKindImageRepoConfig:    "imageRepoConfig",
+		AdminKindArtifactRepoConfig: "artifactRepoConfig",
+		AdminKindScanCodeRepoConfig: "scanCodeRepoConfig",
 	}
 
 	AccessLevelMaintainer = "maintainer"

@@ -37,19 +37,19 @@ func NewCmdAdminDelete() *cobra.Command {
 # kind options: %s`, strings.Join(adminCmdKinds, " / "))
 	msgShort := fmt.Sprintf("delete configurations, admin permission required")
 	msgLong := fmt.Sprintf(`delete configurations in dory-engine server, admin permission required`)
-	msgExample := fmt.Sprintf(`kind: ct(component templates), env(kubernetes environments), step(custom steps), user(users), dbe(docker build environments), grc(git repository configs), irc(image repository configs), arc(artifact repository configs), scrc(scan code repository configs)
+	msgExample := fmt.Sprintf(`kind: %s
 
   # delete users, admin permission required
-  %s admin delete user test-user01 test-user02
+  %s admin delete %s test-user01 test-user02
 
   # delete custom step configurations, admin permission required
-  %s admin delete step customStepName1 customStepName2
+  %s admin delete %s customStepName1 customStepName2
 
   # delete kubernetes environment configurations, admin permission required
-  %s admin delete env test uat
+  %s admin delete %s test uat
 
   # delete component template configurations, admin permission required
-  %s admin delete ct mysql-v8`, baseName, baseName, baseName, baseName)
+  %s admin delete %s mysql-v8`, strings.Join(pkg.AdminKinds, ", "), baseName, pkg.AdminKindUser, baseName, pkg.AdminKindCustomStep, baseName, pkg.AdminKindEnvK8s, baseName, pkg.AdminKindComponentTemplate)
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -90,26 +90,26 @@ func (o *OptionsAdminDelete) Complete(cmd *cobra.Command) error {
 			kind := args[0]
 			itemNames := []string{}
 			switch kind {
-			case "user":
+			case pkg.AdminKindUser:
 				itemNames, _ = o.GetUserNames()
-			case "step":
+			case pkg.AdminKindCustomStep:
 				itemNames, _ = o.GetStepNames()
-			case "env":
+			case pkg.AdminKindEnvK8s:
 				itemNames, _ = o.GetEnvNames()
-			case "ct":
+			case pkg.AdminKindComponentTemplate:
 				itemNames, _ = o.GetComponentTemplateNames()
-			case "dbe":
+			case pkg.AdminKindDockerBuildEnv:
 				itemNames, _ = o.GetBuildEnvNames()
-			case "grc":
+			case pkg.AdminKindGitRepoConfig:
 				repoNames, _ := o.GetRepoNames()
 				itemNames = repoNames.GitRepoNames
-			case "irc":
+			case pkg.AdminKindImageRepoConfig:
 				repoNames, _ := o.GetRepoNames()
 				itemNames = repoNames.ImageRepoNames
-			case "arc":
+			case pkg.AdminKindArtifactRepoConfig:
 				repoNames, _ := o.GetRepoNames()
 				itemNames = repoNames.ArtifactRepoNames
-			case "scrc":
+			case pkg.AdminKindScanCodeRepoConfig:
 				repoNames, _ := o.GetRepoNames()
 				itemNames = repoNames.ScanCodeRepoNames
 			default:
@@ -176,7 +176,7 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 	for _, itemName := range o.Param.ItemNames {
 		logHeader := fmt.Sprintf("delete %s/%s", pkg.AdminCmdKinds[o.Param.Kind], itemName)
 		switch o.Param.Kind {
-		case "user":
+		case pkg.AdminKindUser:
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/user/%s", itemName), http.MethodDelete, "", param, false)
 			if err != nil {
@@ -184,7 +184,7 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 			}
 			msg := result.Get("msg").String()
 			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
-		case "step":
+		case pkg.AdminKindCustomStep:
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/customStepConf/%s", itemName), http.MethodDelete, "", param, false)
 			if err != nil {
@@ -192,7 +192,7 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 			}
 			msg := result.Get("msg").String()
 			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
-		case "env":
+		case pkg.AdminKindEnvK8s:
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/env/%s", itemName), http.MethodDelete, "", param, false)
 			if err != nil {
@@ -200,7 +200,7 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 			}
 			msg := result.Get("msg").String()
 			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
-		case "ct":
+		case pkg.AdminKindComponentTemplate:
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/componentTemplate/%s", itemName), http.MethodDelete, "", param, false)
 			if err != nil {
@@ -208,7 +208,7 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 			}
 			msg := result.Get("msg").String()
 			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
-		case "dbe":
+		case pkg.AdminKindDockerBuildEnv:
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/dockerBuildEnv/%s", itemName), http.MethodDelete, "", param, false)
 			if err != nil {
@@ -216,7 +216,7 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 			}
 			msg := result.Get("msg").String()
 			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
-		case "grc":
+		case pkg.AdminKindGitRepoConfig:
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/gitRepoConfig/%s", itemName), http.MethodDelete, "", param, false)
 			if err != nil {
@@ -224,7 +224,7 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 			}
 			msg := result.Get("msg").String()
 			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
-		case "irc":
+		case pkg.AdminKindImageRepoConfig:
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/imageRepoConfig/%s", itemName), http.MethodDelete, "", param, false)
 			if err != nil {
@@ -232,7 +232,7 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 			}
 			msg := result.Get("msg").String()
 			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
-		case "arc":
+		case pkg.AdminKindArtifactRepoConfig:
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/artifactRepoConfig/%s", itemName), http.MethodDelete, "", param, false)
 			if err != nil {
@@ -240,7 +240,7 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 			}
 			msg := result.Get("msg").String()
 			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
-		case "scrc":
+		case pkg.AdminKindScanCodeRepoConfig:
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/scanCodeRepoConfig/%s", itemName), http.MethodDelete, "", param, false)
 			if err != nil {

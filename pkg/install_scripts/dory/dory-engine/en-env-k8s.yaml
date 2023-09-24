@@ -24,6 +24,12 @@ ingressControllerNamespace: {{ $.kubernetes.ingressControllerNamespace | quote }
 timezone: {{ $.kubernetes.timezone | quote }}
 # kubernetes use host path /usr/share/zoneinfo
 hostPathZoneInfo: false
+# the range of nodePort available ports that the kubernetes environment can assign to the project
+nodePortRange:
+  # available nodePort start port
+  nodePortRangeStart: 30100
+  # available nodePort end port
+  nodePortRangeEnd: 32767
 # cpu architectures settings for the environment
 archSettings:
   # cpu architecture name

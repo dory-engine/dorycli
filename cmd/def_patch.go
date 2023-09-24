@@ -45,17 +45,17 @@ func NewCmdDefPatch() *cobra.Command {
 	o := NewOptionsDefPatch()
 
 	defCmdKinds := []string{
-		"build",
-		"package",
-		"artifact",
-		"deploy",
-		"setup",
-		"istio",
-		"gateway",
-		"ops",
-		"batch",
-		"step",
-		"pipeline",
+		pkg.DefKindBuild,
+		pkg.DefKindPackage,
+		pkg.DefKindArtifact,
+		pkg.DefKindDeployContainer,
+		pkg.DefKindDeployArtifact,
+		pkg.DefKindIstio,
+		pkg.DefKindIstioGateway,
+		pkg.DefKindCustomOps,
+		pkg.DefKindOpsBatch,
+		pkg.DefKindCustomStep,
+		pkg.DefKindPipeline,
 	}
 
 	baseName := pkg.GetCmdBaseName()
@@ -64,31 +64,31 @@ func NewCmdDefPatch() *cobra.Command {
 	msgShort := fmt.Sprintf("patch project definitions")
 	msgLong := fmt.Sprintf(`patch project definitions in dory-engine server`)
 	msgExample := fmt.Sprintf(`  # print current project build modules definitions for patched
-  %s def patch test-project1 build --modules=tp1-go-demo,tp1-gin-demo -o yaml
+  %s def patch test-project1 %s --modules=tp1-go-demo,tp1-gin-demo -o yaml
 
   # patch project build modules definitions, update tp1-gin-demo,tp1-go-demo buildChecks commands
-  %s def patch test-project1 build --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'
+  %s def patch test-project1 %s --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'
 
   # patch project deploy modules definitions, delete test environment tp1-go-demo,tp1-gin-demo deployResources settings
-  %s def patch test-project1 deploy --modules=tp1-go-demo,tp1-gin-demo --envs=test --patch='[{"action": "delete", "path": "deployResources"}]'
+  %s def patch test-project1 %s --modules=tp1-go-demo,tp1-gin-demo --envs=test --patch='[{"action": "delete", "path": "deployResources"}]'
 
   # patch project deploy modules definitions, delete test environment tp1-gin-demo deployNodePorts.0.nodePort to 30109
-  %s def patch test-project1 deploy --modules=tp1-gin-demo --envs=test --patch='[{"action": "update", "path": "deployNodePorts.0.nodePort", "value": 30109}]'
+  %s def patch test-project1 %s --modules=tp1-gin-demo --envs=test --patch='[{"action": "update", "path": "deployNodePorts.0.nodePort", "value": 30109}]'
 
   # patch project pipeline definitions, update builds dp1-gin-demo run setting to true 
-  %s def patch test-project1 pipeline --branches=develop,release --patch='[{"action": "update", "path": "builds.#(name==\"dp1-gin-demo\").run", "value": true}]'
+  %s def patch test-project1 %s --branches=develop,release --patch='[{"action": "update", "path": "builds.#(name==\"dp1-gin-demo\").run", "value": true}]'
 
   # patch project pipeline definitions, update builds dp1-gin-demo,dp1-go-demo run setting to true 
-  %s def patch test-project1 pipeline --branches=develop,release --runs=dp1-gin-demo,dp1-go-demo
+  %s def patch test-project1 %s --branches=develop,release --runs=dp1-gin-demo,dp1-go-demo
 
   # patch project pipeline definitions, update builds dp1-gin-demo,dp1-go-demo run setting to false 
-  %s def patch test-project1 pipeline --branches=develop,release --no-runs=dp1-gin-demo,dp1-go-demo
+  %s def patch test-project1 %s --branches=develop,release --no-runs=dp1-gin-demo,dp1-go-demo
 
   # patch project custom step modules definitions, update customStepName2 step in test environment tp1-gin-demo paramInputYaml
-  %s def patch test-project1 step --envs=test --step=customStepName2 --modules=tp1-gin-demo --patch='[{"action": "update", "path": "paramInputYaml", "value": "path: Tests"}]'
+  %s def patch test-project1 %s --envs=test --step=customStepName2 --modules=tp1-gin-demo --patch='[{"action": "update", "path": "paramInputYaml", "value": "path: Tests"}]'
 
   # patch project pipeline definitions from stdin, support JSON and YAML
-  cat << EOF | %s def patch test-project1 pipeline --branches=develop,release -f -
+  cat << EOF | %s def patch test-project1 %s --branches=develop,release -f -
   - action: update
     path: builds
     value:
@@ -104,7 +104,7 @@ func NewCmdDefPatch() *cobra.Command {
   EOF
 
   # patch project pipeline definitions from file, support JSON and YAML
-  %s def patch test-project1 pipeline --branches=develop,release -f patch.yaml`, baseName, baseName, baseName, baseName, baseName, baseName, baseName, baseName, baseName, baseName)
+  %s def patch test-project1 %s --branches=develop,release -f patch.yaml`, baseName, pkg.DefKindBuild, baseName, pkg.DefKindBuild, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindCustomStep, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindPipeline)
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -118,13 +118,13 @@ func NewCmdDefPatch() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, "filter moduleNames to patch")
-	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, "filter envNames to patch, required if kind is deploy / setup / istio / gateway")
-	cmd.Flags().StringSliceVar(&o.BranchNames, "branches", []string{}, "filter branchNames to patch, required if kind is pipeline")
-	cmd.Flags().StringVar(&o.StepName, "step", "", "filter stepName to patch, required if kind is step")
+	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, fmt.Sprintf("filter envNames to patch, required if kind is %s / %s / %s / %s", pkg.DefKindDeployContainer, pkg.DefKindDeployArtifact, pkg.DefKindIstio, pkg.DefKindIstioGateway))
+	cmd.Flags().StringSliceVar(&o.BranchNames, "branches", []string{}, fmt.Sprintf("filter branchNames to patch, required if kind is %s", pkg.DefKindPipeline))
+	cmd.Flags().StringVar(&o.StepName, "step", "", fmt.Sprintf("filter stepName to patch, required if kind is %s", pkg.DefKindCustomStep))
 	cmd.Flags().StringVarP(&o.Patch, "patch", "p", "", "patch actions in JSON format")
 	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", "project definitions file name or directory, support *.json and *.yaml and *.yml file")
-	cmd.Flags().StringSliceVar(&o.Runs, "runs", []string{}, "set pipeline which build modules enable run, only uses with kind is pipeline")
-	cmd.Flags().StringSliceVar(&o.NoRuns, "no-runs", []string{}, "set pipeline which build modules disable run, only uses with kind is pipeline")
+	cmd.Flags().StringSliceVar(&o.Runs, "runs", []string{}, fmt.Sprintf("set pipeline which build modules enable run, only uses with kind is %s", pkg.DefKindPipeline))
+	cmd.Flags().StringSliceVar(&o.NoRuns, "no-runs", []string{}, fmt.Sprintf("set pipeline which build modules disable run, only uses with kind is %s", pkg.DefKindPipeline))
 	cmd.Flags().BoolVar(&o.Try, "try", false, "try to check input project definitions only, not apply to dory-engine server, use with --output option")
 	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
 	cmd.Flags().BoolVar(&o.Full, "full", false, "output project definitions in full version, use with --output option")
@@ -142,17 +142,17 @@ func (o *OptionsDefPatch) Complete(cmd *cobra.Command) error {
 	}
 
 	defCmdKinds := []string{
-		"build",
-		"package",
-		"artifact",
-		"deploy",
-		"setup",
-		"istio",
-		"gateway",
-		"ops",
-		"batch",
-		"step",
-		"pipeline",
+		pkg.DefKindBuild,
+		pkg.DefKindPackage,
+		pkg.DefKindArtifact,
+		pkg.DefKindDeployContainer,
+		pkg.DefKindDeployArtifact,
+		pkg.DefKindIstio,
+		pkg.DefKindIstioGateway,
+		pkg.DefKindCustomOps,
+		pkg.DefKindOpsBatch,
+		pkg.DefKindCustomStep,
+		pkg.DefKindPipeline,
 	}
 
 	cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -239,19 +239,19 @@ func (o *OptionsDefPatch) Complete(cmd *cobra.Command) error {
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 		switch kind {
-		case "build":
+		case pkg.DefKindBuild:
 			for _, def := range project.ProjectDef.BuildDefs {
 				moduleNames = append(moduleNames, def.BuildName)
 			}
-		case "package":
+		case pkg.DefKindPackage:
 			for _, def := range project.ProjectDef.PackageDefs {
 				moduleNames = append(moduleNames, def.PackageName)
 			}
-		case "artifact":
+		case pkg.DefKindArtifact:
 			for _, def := range project.ProjectDef.ArtifactDefs {
 				moduleNames = append(moduleNames, def.ArtifactName)
 			}
-		case "deploy":
+		case pkg.DefKindDeployContainer:
 			m := map[string]string{}
 			if len(envs) == 0 {
 				for _, pae := range project.ProjectAvailableEnvs {
@@ -281,7 +281,7 @@ func (o *OptionsDefPatch) Complete(cmd *cobra.Command) error {
 					moduleNames = append(moduleNames, k)
 				}
 			}
-		case "setup":
+		case pkg.DefKindDeployArtifact:
 			m := map[string]string{}
 			if len(envs) == 0 {
 				for _, pae := range project.ProjectAvailableEnvs {
@@ -311,7 +311,7 @@ func (o *OptionsDefPatch) Complete(cmd *cobra.Command) error {
 					moduleNames = append(moduleNames, k)
 				}
 			}
-		case "istio":
+		case pkg.DefKindIstio:
 			m := map[string]string{}
 			if len(envs) == 0 {
 				for _, pae := range project.ProjectAvailableEnvs {
@@ -341,15 +341,15 @@ func (o *OptionsDefPatch) Complete(cmd *cobra.Command) error {
 					moduleNames = append(moduleNames, k)
 				}
 			}
-		case "ops":
+		case pkg.DefKindCustomOps:
 			for _, def := range project.ProjectDef.CustomOpsDefs {
 				moduleNames = append(moduleNames, def.CustomOpsName)
 			}
-		case "batch":
+		case pkg.DefKindOpsBatch:
 			for _, def := range project.ProjectDef.OpsBatchDefs {
 				moduleNames = append(moduleNames, def.OpsBatchName)
 			}
-		case "step":
+		case pkg.DefKindCustomStep:
 			if step != "" {
 				if len(envs) == 0 {
 					for stepName, csd := range project.ProjectDef.CustomStepDefs {
@@ -457,17 +457,17 @@ func (o *OptionsDefPatch) Validate(args []string) error {
 	kind = args[1]
 
 	defCmdKinds := []string{
-		"build",
-		"package",
-		"artifact",
-		"deploy",
-		"setup",
-		"istio",
-		"gateway",
-		"ops",
-		"batch",
-		"step",
-		"pipeline",
+		pkg.DefKindBuild,
+		pkg.DefKindPackage,
+		pkg.DefKindArtifact,
+		pkg.DefKindDeployContainer,
+		pkg.DefKindDeployArtifact,
+		pkg.DefKindIstio,
+		pkg.DefKindIstioGateway,
+		pkg.DefKindCustomOps,
+		pkg.DefKindOpsBatch,
+		pkg.DefKindCustomStep,
+		pkg.DefKindPipeline,
 	}
 
 	var found bool
@@ -490,32 +490,32 @@ func (o *OptionsDefPatch) Validate(args []string) error {
 	}
 	o.Param.ProjectName = projectName
 
-	if kind != "pipeline" && kind != "gateway" && len(o.ModuleNames) == 0 {
+	if kind != pkg.DefKindPipeline && kind != pkg.DefKindIstioGateway && len(o.ModuleNames) == 0 {
 		err = fmt.Errorf("--modules required")
 		return err
 	}
-	if kind == "pipeline" && len(o.BranchNames) == 0 {
-		err = fmt.Errorf("kind is pipeline, --branches required")
+	if kind == pkg.DefKindPipeline && len(o.BranchNames) == 0 {
+		err = fmt.Errorf("kind is %s, --branches required", pkg.DefKindPipeline)
 		return err
 	}
-	if kind == "deploy" && len(o.EnvNames) == 0 {
-		err = fmt.Errorf("kind is deploy, --envs required")
+	if kind == pkg.DefKindDeployContainer && len(o.EnvNames) == 0 {
+		err = fmt.Errorf("kind is %s, --envs required", pkg.DefKindDeployContainer)
 		return err
 	}
-	if kind == "setup" && len(o.EnvNames) == 0 {
-		err = fmt.Errorf("kind is setup, --envs required")
+	if kind == pkg.DefKindDeployArtifact && len(o.EnvNames) == 0 {
+		err = fmt.Errorf("kind is %s, --envs required", pkg.DefKindDeployArtifact)
 		return err
 	}
-	if kind == "istio" && len(o.EnvNames) == 0 {
-		err = fmt.Errorf("kind is istio, --envs required")
+	if kind == pkg.DefKindIstio && len(o.EnvNames) == 0 {
+		err = fmt.Errorf("kind is %s, --envs required", pkg.DefKindIstio)
 		return err
 	}
-	if kind == "gateway" && len(o.EnvNames) == 0 {
-		err = fmt.Errorf("kind is gateway, --envs required")
+	if kind == pkg.DefKindIstioGateway && len(o.EnvNames) == 0 {
+		err = fmt.Errorf("kind is %s, --envs required", pkg.DefKindIstioGateway)
 		return err
 	}
-	if kind == "step" && o.StepName == "" {
-		err = fmt.Errorf("kind is step, --step required")
+	if kind == pkg.DefKindCustomStep && o.StepName == "" {
+		err = fmt.Errorf("kind is %s, --step required", pkg.DefKindCustomStep)
 		return err
 	}
 
@@ -552,7 +552,7 @@ func (o *OptionsDefPatch) Validate(args []string) error {
 			return err
 		}
 		if len(bs) == 0 {
-			err = fmt.Errorf("--file - required os.stdin\n example: echo 'xxx' | %s def patch test-project1 build --modules=tp1-gin-demo -f -", baseName)
+			err = fmt.Errorf("--file - required os.stdin\n example: echo 'xxx' | %s def patch test-project1 %s --modules=tp1-gin-demo -f -", baseName, pkg.DefKindBuild)
 			return err
 		}
 		err = json.Unmarshal(bs, &pas)
@@ -638,7 +638,7 @@ func (o *OptionsDefPatch) Validate(args []string) error {
 		o.Param.PatchActions = append(o.Param.PatchActions, patchAction)
 	}
 
-	if kind == "pipeline" && len(o.Runs) > 0 {
+	if kind == pkg.DefKindPipeline && len(o.Runs) > 0 {
 		for _, name := range o.Runs {
 			patchAction := pkg.PatchAction{
 				Action: "update",
@@ -649,7 +649,7 @@ func (o *OptionsDefPatch) Validate(args []string) error {
 			o.Param.PatchActions = append(o.Param.PatchActions, patchAction)
 		}
 	}
-	if kind == "pipeline" && len(o.NoRuns) > 0 {
+	if kind == pkg.DefKindPipeline && len(o.NoRuns) > 0 {
 		for _, name := range o.NoRuns {
 			patchAction := pkg.PatchAction{
 				Action: "update",
@@ -754,7 +754,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 	defUpdateFilters := []pkg.DefUpdate{}
 
 	switch o.Param.Kind {
-	case "build":
+	case pkg.DefKindBuild:
 		sort.SliceStable(project.ProjectDef.BuildDefs, func(i, j int) bool {
 			return project.ProjectDef.BuildDefs[i].BuildName < project.ProjectDef.BuildDefs[j].BuildName
 		})
@@ -797,7 +797,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 		defUpdateFilter := defUpdate
 		defUpdateFilter.Def = ds
 		defUpdateFilters = append(defUpdateFilters, defUpdateFilter)
-	case "package":
+	case pkg.DefKindPackage:
 		sort.SliceStable(project.ProjectDef.PackageDefs, func(i, j int) bool {
 			return project.ProjectDef.PackageDefs[i].PackageName < project.ProjectDef.PackageDefs[j].PackageName
 		})
@@ -839,7 +839,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 		defUpdateFilter := defUpdate
 		defUpdateFilter.Def = ds
 		defUpdateFilters = append(defUpdateFilters, defUpdateFilter)
-	case "artifact":
+	case pkg.DefKindArtifact:
 		sort.SliceStable(project.ProjectDef.ArtifactDefs, func(i, j int) bool {
 			return project.ProjectDef.ArtifactDefs[i].ArtifactName < project.ProjectDef.ArtifactDefs[j].ArtifactName
 		})
@@ -881,7 +881,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 		defUpdateFilter := defUpdate
 		defUpdateFilter.Def = ds
 		defUpdateFilters = append(defUpdateFilters, defUpdateFilter)
-	case "deploy":
+	case pkg.DefKindDeployContainer:
 		for _, pae := range project.ProjectAvailableEnvs {
 			var found bool
 			for _, envName := range o.EnvNames {
@@ -935,7 +935,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defUpdateFilters = append(defUpdateFilters, defUpdateFilter)
 			}
 		}
-	case "setup":
+	case pkg.DefKindDeployArtifact:
 		for _, pae := range project.ProjectAvailableEnvs {
 			var found bool
 			for _, envName := range o.EnvNames {
@@ -989,7 +989,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defUpdateFilters = append(defUpdateFilters, defUpdateFilter)
 			}
 		}
-	case "istio":
+	case pkg.DefKindIstio:
 		for _, pae := range project.ProjectAvailableEnvs {
 			var found bool
 			for _, envName := range o.EnvNames {
@@ -1043,7 +1043,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defUpdateFilters = append(defUpdateFilters, defUpdateFilter)
 			}
 		}
-	case "gateway":
+	case pkg.DefKindIstioGateway:
 		for _, pae := range project.ProjectAvailableEnvs {
 			var found bool
 			for _, envName := range o.EnvNames {
@@ -1064,7 +1064,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defUpdateFilters = append(defUpdateFilters, defUpdateFilter)
 			}
 		}
-	case "step":
+	case pkg.DefKindCustomStep:
 		if len(o.EnvNames) == 0 {
 			for stepName, csd := range project.ProjectDef.CustomStepDefs {
 				if stepName == o.StepName {
@@ -1175,7 +1175,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				}
 			}
 		}
-	case "pipeline":
+	case pkg.DefKindPipeline:
 		for _, pp := range project.ProjectPipelines {
 			var found bool
 			for _, branchName := range o.BranchNames {
@@ -1196,7 +1196,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defUpdateFilters = append(defUpdateFilters, defUpdateFilter)
 			}
 		}
-	case "ops":
+	case pkg.DefKindCustomOps:
 		sort.SliceStable(project.ProjectDef.CustomOpsDefs, func(i, j int) bool {
 			return project.ProjectDef.CustomOpsDefs[i].CustomOpsName < project.ProjectDef.CustomOpsDefs[j].CustomOpsName
 		})
@@ -1238,7 +1238,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 		defUpdateFilter := defUpdate
 		defUpdateFilter.Def = ds
 		defUpdateFilters = append(defUpdateFilters, defUpdateFilter)
-	case "batch":
+	case pkg.DefKindOpsBatch:
 		sort.SliceStable(project.ProjectDef.OpsBatchDefs, func(i, j int) bool {
 			return project.ProjectDef.OpsBatchDefs[i].OpsBatchName < project.ProjectDef.OpsBatchDefs[j].OpsBatchName
 		})

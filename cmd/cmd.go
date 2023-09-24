@@ -168,7 +168,7 @@ func NewCmdRoot() *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringVarP(&o.ConfigFile, "config", "c", "", fmt.Sprintf("%s config.yaml config file, it can set by system environment variable %s (default is $HOME/%s/%s)", baseName, pkg.EnvVarConfigFile, pkg.ConfigDirDefault, pkg.ConfigFileDefault))
-	cmd.PersistentFlags().StringVarP(&o.ServerURL, "serverURL", "s", "", "dory-engine server URL, example: https://dory.example.com:8080")
+	cmd.PersistentFlags().StringVarP(&o.ServerURL, "server-url", "s", "", "dory-engine server URL, example: https://dory.example.com:8080")
 	cmd.PersistentFlags().BoolVar(&o.Insecure, "insecure", false, "if true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
 	cmd.PersistentFlags().IntVar(&o.Timeout, "timeout", pkg.TimeoutDefault, "dory-engine server connection timeout seconds settings")
 	cmd.PersistentFlags().StringVar(&o.AccessToken, "token", "", fmt.Sprintf("dory-engine server access token"))
@@ -339,7 +339,7 @@ func (o *OptionsCommon) QueryAPI(url, method, userToken string, param map[string
 		return result, xUserToken, err
 	}
 	if o.ServerURL == "" {
-		err = fmt.Errorf("--serverURL required")
+		err = fmt.Errorf("--server-url required")
 		return result, xUserToken, err
 	}
 	url = fmt.Sprintf("%s/%s", o.ServerURL, url)

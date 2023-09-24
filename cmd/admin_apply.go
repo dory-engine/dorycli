@@ -77,12 +77,12 @@ func NewCmdAdminApply() *cobra.Command {
 func CheckAdminKind(item pkg.AdminKind) error {
 	var err error
 	switch item.Kind {
-	case "user":
+	case pkg.AdminKindUser:
 		var spec pkg.User
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is user, but spec parse error: %s\n%s", err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", pkg.AdminKindUser, err.Error(), string(bs))
 			return err
 		}
 	case "customStepConf":
@@ -294,12 +294,12 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			return items, err
 		}
 		switch item.Kind {
-		case "user":
+		case pkg.AdminKindUser:
 			var spec pkg.User
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is user, but spec parse error: %s\n%s", err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", pkg.AdminKindUser, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
@@ -575,7 +575,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 			logHeader := fmt.Sprintf("%s/%s", item.Kind, item.Metadata.Name)
 
 			switch item.Kind {
-			case "user":
+			case pkg.AdminKindUser:
 				var user pkg.User
 				switch v := item.Spec.(type) {
 				case pkg.User:

@@ -34,10 +34,10 @@ func NewCmdDefClone() *cobra.Command {
 	o := NewOptionsDefClone()
 
 	defCmdKinds := []string{
-		"deploy",
-		"setup",
-		"istio",
-		"step",
+		pkg.DefKindDeployContainer,
+		pkg.DefKindDeployArtifact,
+		pkg.DefKindIstio,
+		pkg.DefKindCustomStep,
 	}
 
 	baseName := pkg.GetCmdBaseName()
@@ -46,10 +46,10 @@ func NewCmdDefClone() *cobra.Command {
 	msgShort := fmt.Sprintf("clone project definitions modules to another environments")
 	msgLong := fmt.Sprintf(`clone project definitions modules to another environments in dory-engine server`)
 	msgExample := fmt.Sprintf(`  # clone project definitions deploy modules to another environments
-  %s def clone test-project1 deploy --from-env=test --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod
+  %s def clone test-project1 %s --from-env=test --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod
 
   # clone project definitions step modules to another environments
-  %s def clone test-project1 deploy --from-env=test --step=customStepName2 --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod`, baseName, baseName)
+  %s def clone test-project1 %s --from-env=test --step=customStepName2 --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod`, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindCustomStep)
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -63,7 +63,7 @@ func NewCmdDefClone() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&o.FromEnvName, "from-env", "", "which environment modules clone from")
-	cmd.Flags().StringVar(&o.StepName, "step", "", "which step modules clone from, required if kind is step")
+	cmd.Flags().StringVar(&o.StepName, "step", "", fmt.Sprintf("which step modules clone from, required if kind is %s", pkg.DefKindCustomStep))
 	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, "which modules to clone")
 	cmd.Flags().StringSliceVar(&o.ToEnvNames, "to-envs", []string{}, "which environments modules clone to")
 	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
@@ -83,10 +83,10 @@ func (o *OptionsDefClone) Complete(cmd *cobra.Command) error {
 	}
 
 	defCmdKinds := []string{
-		"deploy",
-		"setup",
-		"istio",
-		"step",
+		pkg.DefKindDeployContainer,
+		pkg.DefKindDeployArtifact,
+		pkg.DefKindIstio,
+		pkg.DefKindCustomStep,
 	}
 
 	cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -165,7 +165,7 @@ func (o *OptionsDefClone) Complete(cmd *cobra.Command) error {
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
 		switch kind {
-		case "deploy":
+		case pkg.DefKindDeployContainer:
 			m := map[string]string{}
 			if envName == "" {
 				for _, pae := range project.ProjectAvailableEnvs {
@@ -191,7 +191,7 @@ func (o *OptionsDefClone) Complete(cmd *cobra.Command) error {
 					moduleNames = append(moduleNames, k)
 				}
 			}
-		case "setup":
+		case pkg.DefKindDeployArtifact:
 			m := map[string]string{}
 			if envName == "" {
 				for _, pae := range project.ProjectAvailableEnvs {
@@ -217,7 +217,7 @@ func (o *OptionsDefClone) Complete(cmd *cobra.Command) error {
 					moduleNames = append(moduleNames, k)
 				}
 			}
-		case "istio":
+		case pkg.DefKindIstio:
 			m := map[string]string{}
 			if envName == "" {
 				for _, pae := range project.ProjectAvailableEnvs {
@@ -243,7 +243,7 @@ func (o *OptionsDefClone) Complete(cmd *cobra.Command) error {
 					moduleNames = append(moduleNames, k)
 				}
 			}
-		case "step":
+		case pkg.DefKindCustomStep:
 			if step != "" {
 				if envName == "" {
 					for stepName, csd := range project.ProjectDef.CustomStepDefs {
@@ -338,10 +338,10 @@ func (o *OptionsDefClone) Validate(args []string) error {
 	o.Param.ProjectName = projectName
 
 	defCmdKinds := []string{
-		"deploy",
-		"setup",
-		"istio",
-		"step",
+		pkg.DefKindDeployContainer,
+		pkg.DefKindDeployArtifact,
+		pkg.DefKindIstio,
+		pkg.DefKindCustomStep,
 	}
 	var found bool
 	for _, cmdKind := range defCmdKinds {
@@ -371,8 +371,8 @@ func (o *OptionsDefClone) Validate(args []string) error {
 		return err
 	}
 
-	if o.Param.Kind == "step" && o.StepName == "" {
-		err = fmt.Errorf("kind is step, --step required")
+	if o.Param.Kind == pkg.DefKindCustomStep && o.StepName == "" {
+		err = fmt.Errorf("kind is %s, --step required", pkg.DefKindCustomStep)
 		return err
 	}
 
@@ -415,7 +415,7 @@ func (o *OptionsDefClone) Run(args []string) error {
 
 	var defClone pkg.DefClone
 	switch o.Param.Kind {
-	case "deploy":
+	case pkg.DefKindDeployContainer:
 		var pae pkg.ProjectAvailableEnv
 		for _, p := range project.ProjectAvailableEnvs {
 			if o.FromEnvName == p.EnvName {
@@ -443,7 +443,7 @@ func (o *OptionsDefClone) Run(args []string) error {
 		defClone.Kind = pkg.DefCmdKinds[o.Param.Kind]
 		defClone.ProjectName = o.Param.ProjectName
 		defClone.Def = defs
-	case "setup":
+	case pkg.DefKindDeployArtifact:
 		var pae pkg.ProjectAvailableEnv
 		for _, p := range project.ProjectAvailableEnvs {
 			if o.FromEnvName == p.EnvName {
@@ -471,7 +471,7 @@ func (o *OptionsDefClone) Run(args []string) error {
 		defClone.Kind = pkg.DefCmdKinds[o.Param.Kind]
 		defClone.ProjectName = o.Param.ProjectName
 		defClone.Def = defs
-	case "istio":
+	case pkg.DefKindIstio:
 		var pae pkg.ProjectAvailableEnv
 		for _, p := range project.ProjectAvailableEnvs {
 			if o.FromEnvName == p.EnvName {
@@ -499,7 +499,7 @@ func (o *OptionsDefClone) Run(args []string) error {
 		defClone.Kind = pkg.DefCmdKinds[o.Param.Kind]
 		defClone.ProjectName = o.Param.ProjectName
 		defClone.Def = defs
-	case "step":
+	case pkg.DefKindCustomStep:
 		var pae pkg.ProjectAvailableEnv
 		for _, p := range project.ProjectAvailableEnvs {
 			if o.FromEnvName == p.EnvName {

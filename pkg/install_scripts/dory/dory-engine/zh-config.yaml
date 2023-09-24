@@ -59,12 +59,8 @@ app:
     mail: {{ $.account.adminUser.mail }}
     # 手机号码
     mobile: {{ $.account.adminUser.mobile }}
-  # 项目的nodePort可用端口段
-  nodePortRange:
-    # nodePort开始范围
-    nodePortRangeStart: 30100
-    # nodePort结束范围
-    nodePortRangeEnd: 32750
+  # 自动分配的nodePort端口段包含多少个端口
+  nodePortSegment: 10
   # 流水线处于运行状态的周期监控设置，单位(秒)
   runningWatcherInterval:
     # 监控时间间隔
@@ -328,8 +324,6 @@ imageRepoConfigs:
     username: {{ $.imageRepoUsername | quote }}
     # 镜像仓库管理员密码
     password: {{ $.imageRepoPassword | quote }}
-    # 镜像仓库管理员邮箱
-    email: {{ $.imageRepoEmail | quote }}
     # 内部访问的IP地址
     ipInternal: {{ $.imageRepoIp }}
     # 外部访问的IP地址
@@ -362,8 +356,6 @@ artifactRepoConfigs:
     publicUser: {{ $.artifactRepoPublicUser | quote }}
     # 拉取第三方开源依赖的公用账号密码
     publicPassword: {{ $.artifactRepoPublicPassword | quote }}
-    # 拉取第三方开源依赖的公用账号邮箱
-    publicEmail: {{ $.artifactRepoPublicEmail | quote }}
     # 制品仓库服务端口
     port: {{ $.artifactRepoPort }}
     # docker.io镜像仓库代理端口
@@ -443,11 +435,11 @@ defaultPipeline:
 
 # 演示项目打包镜像设置
 demoProjectImageSettings:
-  springDemoImage: "hub/openjdk:11.0.16-jdk"
-  nodeDemoImage: "hub/node:18.14.0-alpine3.17"
-  pythonDemoImage: "public/python:3.10.10-alpine3.17-dory"
-  goDemoImage: "public/alpine:3.17.2-dory"
-  ginDemoImage: "public/alpine:3.17.2-dory"
+  springDemoImage: "{{ $.imageRepoDomainName }}/hub/openjdk:11.0.16-jdk"
+  nodeDemoImage: "{{ $.imageRepoDomainName }}/public/node:18.17.1-alpine3.18-dory"
+  pythonDemoImage: "{{ $.imageRepoDomainName }}/public/python:3.10.10-alpine3.17-dory"
+  goDemoImage: "{{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory"
+  ginDemoImage: "{{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory"
 
 # 演示项目数据库设置
 demoProjectDatabaseSettings:
@@ -528,8 +520,8 @@ dockerBuildSettings:
   dockerBuildEnvs:
     # 构建环境名称
     - buildEnvName: maven-jdk17
-      # 构建环境容器镜像所在的镜像仓库相对路径，当cpu架构为amd64的时候的镜像名字
-      image: "public/maven:3.8.5-openjdk-17-dory"
+      # 构建环境容器镜像，当cpu架构为amd64的时候的镜像名字
+      image: "{{ $.imageRepoDomainName }}/public/maven:3.8.5-openjdk-17-dory"
       # 构建环境支持哪些cpu架构
       # 假如cpu架构不为amd64，构建环境的容器镜像名为 <image>-<cpu架构名字>
       # 例如cpu架构为arm64v8，那么实际构建环境的image名字为 public/maven:3.8.5-openjdk-17-dory-arm64v8
@@ -546,7 +538,7 @@ dockerBuildSettings:
       # 执行检查命令后执行什么命令
       commandsAfterCheck: []
     - buildEnvName: maven-jdk11
-      image: "public/maven:3.8.6-openjdk-11-dory"
+      image: "{{ $.imageRepoDomainName }}/public/maven:3.8.6-openjdk-11-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -554,15 +546,15 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: maven-jdk8
-      image: "public/maven:3.8.6-openjdk-8-dory"
+      image: "{{ $.imageRepoDomainName }}/public/maven:3.8.6-openjdk-8-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
       mountExtraCacheDirs: []
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
-    - buildEnvName: npm-node19
-      image: "hub/node:19.6.0-alpine3.17"
+    - buildEnvName: npm-node20
+      image: "{{ $.imageRepoDomainName }}/public/node:20.5.1-alpine3.18-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -570,7 +562,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: npm-node18
-      image: "hub/node:18.14.0-alpine3.17"
+      image: "{{ $.imageRepoDomainName }}/public/node:18.17.1-alpine3.18-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -578,7 +570,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: go-1.20
-      image: "public/golang:1.20.0-alpine3.17-dory"
+      image: "{{ $.imageRepoDomainName }}/public/golang:1.20.0-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -586,7 +578,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: go-1.18
-      image: "public/golang:1.18.10-alpine3.17-dory"
+      image: "{{ $.imageRepoDomainName }}/public/golang:1.18.10-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -594,7 +586,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: python-3.11
-      image: "public/python:3.11.2-alpine3.17-dory"
+      image: "{{ $.imageRepoDomainName }}/public/python:3.11.2-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -602,7 +594,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: python-3.10
-      image: "public/python:3.10.10-alpine3.17-dory"
+      image: "{{ $.imageRepoDomainName }}/public/python:3.10.10-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -610,7 +602,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk17
-      image: "public/gradle:7.6.0-jdk17-dory"
+      image: "{{ $.imageRepoDomainName }}/public/gradle:7.6.0-jdk17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -618,7 +610,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk11
-      image: "public/gradle:7.6.0-jdk11-dory"
+      image: "{{ $.imageRepoDomainName }}/public/gradle:7.6.0-jdk11-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -626,7 +618,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk8
-      image: "public/gradle:7.6.0-jdk8-dory"
+      image: "{{ $.imageRepoDomainName }}/public/gradle:7.6.0-jdk8-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -634,7 +626,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: alpine-3.17
-      image: "public/alpine:3.17.2-dory"
+      image: "{{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -642,7 +634,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: alpine-3.16
-      image: "public/alpine:3.16.4-dory"
+      image: "{{ $.imageRepoDomainName }}/public/alpine:3.16.4-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -650,7 +642,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: ansible-2.12
-      image: "public/ansible:2.12.2-alpine-dory"
+      image: "{{ $.imageRepoDomainName }}/public/ansible:2.12.2-alpine-dory"
       buildArches: ["arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -661,21 +653,21 @@ dockerBuildSettings:
 # 调试容器docker镜像设置
 componentDebugEnvs:
   # 调试容器镜像地址
-  debugImage: "hub/doryengine/debug-ubuntu:v1.0.0"
+  debugImage: "{{ $.imageRepoDomainName }}/hub/doryengine/debug-ubuntu:v1.0.0"
 
 # 流水线各个步骤使用的docker镜像设置
 stepDockerEnvs:
   # 代码扫描步骤镜像
-  scanCode: "public/sonarsource/sonar-scanner-cli:4.7.0"
+  scanCode: "{{ $.imageRepoDomainName }}/public/sonarsource/sonar-scanner-cli:4.7.0"
   # 镜像扫描步骤镜像
-  scanImage: "public/aquasec/trivy:0.37.2"
+  scanImage: "{{ $.imageRepoDomainName }}/public/aquasec/trivy:0.37.2"
   # 制品发布步骤镜像
-  deployArtifact: "public/ansible:2.12.2-alpine-dory"
+  deployArtifact: "{{ $.imageRepoDomainName }}/public/ansible:2.12.2-alpine-dory"
   # 接口自动化测试步骤镜像
-  testApi: "public/ppodgorsek/robot-framework:dory"
+  testApi: "{{ $.imageRepoDomainName }}/public/ppodgorsek/robot-framework:dory"
   # 性能自动化测试步骤镜像
-  testPerformance: "public/egaillardon/jmeter:5.3.0-1.0.1-dory"
+  testPerformance: "{{ $.imageRepoDomainName }}/public/egaillardon/jmeter:5.3.0-1.0.1-dory"
   # 界面自动化测试步骤镜像
-  testWebUi: "public/ppodgorsek/robot-framework:dory"
+  testWebUi: "{{ $.imageRepoDomainName }}/public/ppodgorsek/robot-framework:dory"
   # 数据库脚本执行与回滚步骤镜像
-  databaseScript: "public/liquibase/liquibase:4.17.2-dory"
+  databaseScript: "{{ $.imageRepoDomainName }}/public/liquibase/liquibase:4.17.2-dory"
