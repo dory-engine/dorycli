@@ -84,9 +84,10 @@ spec:
       - name: {{ $.dory.namespace }}-pvc
         persistentVolumeClaim:
           claimName: {{ $.dory.namespace }}-pvc
-
+      {{- if eq $.dory.imageRepo.type "harbor" }}
       imagePullSecrets:
         - name: {{ $.imageRepoDomainName }}
+      {{- end }}
       {{- if $deploy.nodeSelector }}
       nodeSelector:
         {{- range $key, $val := $deploy.nodeSelector }}
@@ -107,7 +108,7 @@ spec:
       initContainers:
       {{- range $_, $depend := $deploy.dependServices }}
       - name: init-{{ $depend.dependName }}
-        image: {{ $.imageRepoDomainName }}/public/busybox:latest
+        image: {{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}busybox:latest
         imagePullPolicy: IfNotPresent
         command: ['sh', '-c', 'until nc -z -w 5 -v {{- if eq $depend.dependType "UDP" }} -u {{- end }} {{ $depend.dependName }} {{ $depend.dependPort }}; do echo waiting for {{ $depend.dependName }} ready; done;']
       {{- end }}

@@ -5,6 +5,7 @@ installMode: {{ $.mode }}
 # 所有dory组件和镜像仓库组件存放的根目录（绝对路径）
 # 如果安装模式为docker，为本机的绝对路径。
 # 如果安装模式为kubernetes，并且kubernetes集群存在多个节点，请保证本机挂装了共享存储(例如nfs、cephfs)，并且目录在共享存储的挂装目录下
+# 安装过程会把所有配置文件写入到挂装的共享存储目录，kubernetes中的DORY组件会读取共享存储中的这些配置文件
 {{- if eq $.mode "docker" }}
 rootDir: "/data/docker-vols/dory"
 {{- else if eq $.mode "kubernetes" }}
@@ -34,6 +35,7 @@ dory:
   {{- end }}
   # dory-engine license 证书，不填写表示免费试用模式
   licenseKey: ""
+  {{- if $.full }}
   # 代码仓库设置
   gitRepo:
     # 代码仓库类型，选项: gitea, gitlab
@@ -192,6 +194,7 @@ dory:
     #   url: http://192.168.0.1:30008
     #   # 代码扫描仓库管理员token
     #   token: "PLEASE_INPUT_BY_MANUAL"
+  {{- end }}
   # openldap账号中心设置，dory-engine使用openldap存储用户账号
   openldap:
     # 镜像名
@@ -242,6 +245,7 @@ dory:
       userPassword: ""
       # 演示项目数据库外部端口号
       port: 30011
+    {{- if $.full }}
     # # 使用外部演示项目数据库，不自动部署演示项目数据库（internal、external只能选一种部署方式）
     # external:
     #   # 演示项目数据库连接的JDBC连接串
@@ -250,6 +254,7 @@ dory:
     #   dbUser: testuser
     #   # 演示项目数据库连接密码
     #   dbPassword: "PLEASE_INPUT_BY_MANUAL"
+    {{- end }}
   # 演示项目ssh主机
   demoHost:
     # 自动部署演示项目ssh主机（internal、external只能选一种部署方式）
@@ -268,6 +273,7 @@ dory:
       portWeb: 8000
       # 演示项目ssh主机web服务外部端口
       nodePortWeb: 30013
+    {{- if $.full }}
     # # 使用外部演示项目ssh主机，不自动部署演示项目ssh主机（internal、external只能选一种部署方式）
     # external:
     #   # 演示项目ssh主机地址，可以是IP地址或者主机名
@@ -286,6 +292,7 @@ dory:
     #   hostBecomePassword: ""
     #   # 演示项目ssh主机web服务外部端口
     #   nodePortWeb: 30013
+    {{- end }}
   # docker executor部署设置
   docker:
     # 镜像名
@@ -340,8 +347,10 @@ kubernetes:
   # kubernetes环境的 apiserver 端口
   port: 6443
   # kubernetes环境的 apiserver 管理权限token
+  # 运行 "{{ .baseName }} install check" 命令，按照 "在kubernetes集群中创建管理token" 部分的说明获取token
   token: "xxx"
   # kubernetes环境的 apiserver 的ca证书的base64编码字符串
+  # 运行 "{{ .baseName }} install check" 命令，按照 "在kubernetes集群中创建管理token" 部分的说明获取caCrtBase64
   caCrtBase64: "xxx"
   # kubernetes dashboard管理控制台workload的url
   dashboardUrl: {{ `https://k8s.example.com:30000/#/workloads?namespace={{ .projectNamespace }}` }}

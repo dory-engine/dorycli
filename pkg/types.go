@@ -30,6 +30,89 @@ type ProxyRepo struct {
 	Apt    map[string]string `yaml:"apt" json:"apt" bson:"apt" validate:""`
 }
 
+type GitRepo struct {
+	Type     string `yaml:"type" json:"type" bson:"type" validate:""`
+	Internal struct {
+		Image      string `yaml:"image" json:"image" bson:"image" validate:"required_with=Image Port"`
+		ImageDB    string `yaml:"imageDB" json:"imageDB" bson:"imageDB" validate:""`
+		ImageNginx string `yaml:"imageNginx" json:"imageNginx" bson:"imageNginx" validate:""`
+		Port       int    `yaml:"port" json:"port" bson:"port" validate:"required_with=Image Port"`
+	} `yaml:"internal" json:"internal" bson:"internal" validate:""`
+	External struct {
+		ViewUrl       string `yaml:"viewUrl" json:"viewUrl" bson:"viewUrl" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
+		Url           string `yaml:"url" json:"url" bson:"url" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
+		Username      string `yaml:"username" json:"username" bson:"username" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
+		Name          string `yaml:"name" json:"name" bson:"name" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
+		Mail          string `yaml:"mail" json:"mail" bson:"mail" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
+		Password      string `yaml:"password" json:"password" bson:"password" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
+		Token         string `yaml:"token" json:"token" bson:"token" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
+		GitWebhookUrl string `yaml:"gitWebhookUrl" json:"gitWebhookUrl" bson:"gitWebhookUrl" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
+	} `yaml:"external" json:"external" bson:"external" validate:""`
+}
+
+type ImageRepo struct {
+	Type     string `yaml:"type" json:"type" bson:"type" validate:""`
+	Internal struct {
+		Hostname         string `yaml:"hostname" json:"hostname" bson:"hostname" validate:"required_with=Hostname Namespace Version"`
+		Namespace        string `yaml:"namespace" json:"namespace" bson:"namespace" validate:"required_with=Hostname Namespace Version"`
+		Version          string `yaml:"version" json:"version" bson:"version" validate:"required_with=Hostname Namespace Version"`
+		Password         string `yaml:"password" json:"password" bson:"password" validate:""`
+		CertsDir         string `yaml:"certsDir" json:"certsDir" bson:"certsDir" validate:"required_with=CertsDir DataDir"`
+		DataDir          string `yaml:"dataDir" json:"dataDir" bson:"dataDir" validate:"required_with=CertsDir DataDir"`
+		RegistryPassword string `yaml:"registryPassword" json:"registryPassword" bson:"registryPassword" validate:""`
+		RegistryHtpasswd string `yaml:"registryHtpasswd" json:"registryHtpasswd" bson:"registryHtpasswd" validate:""`
+		VersionBig       string `yaml:"versionBig" json:"versionBig" bson:"versionBig" validate:""`
+	} `yaml:"internal" json:"internal" bson:"internal" validate:""`
+	External struct {
+		Ip       string `yaml:"ip" json:"ip" bson:"ip" validate:"required_with=Ip Hostname Username Password Email"`
+		Hostname string `yaml:"hostname" json:"hostname" bson:"hostname" validate:"required_with=Ip Hostname Username Password Email"`
+		Username string `yaml:"username" json:"username" bson:"username" validate:"required_with=Ip Hostname Username Password Email"`
+		Password string `yaml:"password" json:"password" bson:"password" validate:"required_with=Ip Hostname Username Password Email"`
+		Email    string `yaml:"email" json:"email" bson:"email" validate:"required_with=Ip Hostname Username Password Email"`
+	} `yaml:"external" json:"external" bson:"external" validate:""`
+}
+
+type ArtifactRepo struct {
+	Type     string `yaml:"type" json:"type" bson:"type" validate:""`
+	Internal struct {
+		Image    string `yaml:"image" json:"image" bson:"image" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
+		Port     int    `yaml:"port" json:"port" bson:"port" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
+		PortHub  int    `yaml:"portHub" json:"portHub" bson:"portHub" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
+		PortGcr  int    `yaml:"portGcr" json:"portGcr" bson:"portGcr" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
+		PortQuay int    `yaml:"portQuay" json:"portQuay" bson:"portQuay" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
+	} `yaml:"internal" json:"internal" bson:"internal" validate:""`
+	External struct {
+		ViewUrl        string    `yaml:"viewUrl" json:"viewUrl" bson:"viewUrl" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		Schema         string    `yaml:"schema" json:"schema" bson:"schema" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		Hostname       string    `yaml:"hostname" json:"hostname" bson:"hostname" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		Username       string    `yaml:"username" json:"username" bson:"username" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		Password       string    `yaml:"password" json:"password" bson:"password" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		PublicRole     string    `yaml:"publicRole" json:"publicRole" bson:"publicRole" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		PublicUser     string    `yaml:"publicUser" json:"publicUser" bson:"publicUser" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		PublicPassword string    `yaml:"publicPassword" json:"publicPassword" bson:"publicPassword" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		PublicEmail    string    `yaml:"publicEmail" json:"publicEmail" bson:"publicEmail" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		Port           int       `yaml:"port" json:"port" bson:"port" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		PortHub        int       `yaml:"portHub" json:"portHub" bson:"portHub" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		PortGcr        int       `yaml:"portGcr" json:"portGcr" bson:"portGcr" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		PortQuay       int       `yaml:"portQuay" json:"portQuay" bson:"portQuay" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+		ProxyRepo      ProxyRepo `yaml:"proxyRepo" json:"proxyRepo" bson:"proxyRepo" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
+	} `yaml:"external" json:"external" bson:"external" validate:""`
+}
+
+type ScanCodeRepo struct {
+	Type     string `yaml:"type" json:"type" bson:"type" validate:""`
+	Internal struct {
+		Image   string `yaml:"image" json:"image" bson:"image" validate:"required_with=Image ImageDB Port"`
+		ImageDB string `yaml:"imageDB" json:"imageDB" bson:"imageDB" validate:"required_with=Image ImageDB Port"`
+		Port    int    `yaml:"port" json:"port" bson:"port" validate:"required_with=Image ImageDB Port"`
+	} `yaml:"internal" json:"internal" bson:"internal" validate:""`
+	External struct {
+		ViewUrl string `yaml:"viewUrl" json:"viewUrl" bson:"viewUrl" validate:"required_with=ViewUrl Url Token"`
+		Url     string `yaml:"url" json:"url" bson:"url" validate:"required_with=ViewUrl Url Token"`
+		Token   string `yaml:"token" json:"token" bson:"token" validate:"required_with=ViewUrl Url Token"`
+	} `yaml:"external" json:"external" bson:"external" validate:""`
+}
+
 type InstallConfig struct {
 	InstallMode string `yaml:"installMode" json:"installMode" bson:"installMode" validate:"required"`
 	RootDir     string `yaml:"rootDir" json:"rootDir" bson:"rootDir" validate:"required"`
@@ -39,86 +122,11 @@ type InstallConfig struct {
 		Namespace    string            `yaml:"namespace" json:"namespace" bson:"namespace" validate:"required"`
 		NodeSelector map[string]string `yaml:"nodeSelector" json:"nodeSelector" bson:"nodeSelector" validate:""`
 		LicenseKey   string            `yaml:"licenseKey" json:"licenseKey" bson:"licenseKey" validate:""`
-		GitRepo      struct {
-			Type     string `yaml:"type" json:"type" bson:"type" validate:"required,oneof=gitlab gitea"`
-			Internal struct {
-				Image      string `yaml:"image" json:"image" bson:"image" validate:"required_with=Image Port"`
-				ImageDB    string `yaml:"imageDB" json:"imageDB" bson:"imageDB" validate:""`
-				ImageNginx string `yaml:"imageNginx" json:"imageNginx" bson:"imageNginx" validate:""`
-				Port       int    `yaml:"port" json:"port" bson:"port" validate:"required_with=Image Port"`
-			} `yaml:"internal" json:"internal" bson:"internal" validate:""`
-			External struct {
-				ViewUrl       string `yaml:"viewUrl" json:"viewUrl" bson:"viewUrl" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
-				Url           string `yaml:"url" json:"url" bson:"url" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
-				Username      string `yaml:"username" json:"username" bson:"username" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
-				Name          string `yaml:"name" json:"name" bson:"name" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
-				Mail          string `yaml:"mail" json:"mail" bson:"mail" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
-				Password      string `yaml:"password" json:"password" bson:"password" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
-				Token         string `yaml:"token" json:"token" bson:"token" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
-				GitWebhookUrl string `yaml:"gitWebhookUrl" json:"gitWebhookUrl" bson:"gitWebhookUrl" validate:"required_with=ViewUrl Url Username Name Mail Password Token GitWebhookUrl"`
-			} `yaml:"external" json:"external" bson:"external" validate:""`
-		} `yaml:"gitRepo" json:"gitRepo" bson:"gitRepo" validate:"required"`
-		ImageRepo struct {
-			Type     string `yaml:"type" json:"type" bson:"type" validate:"required,oneof=harbor"`
-			Internal struct {
-				Hostname         string `yaml:"hostname" json:"hostname" bson:"hostname" validate:"required_with=Hostname Namespace Version"`
-				Namespace        string `yaml:"namespace" json:"namespace" bson:"namespace" validate:"required_with=Hostname Namespace Version"`
-				Version          string `yaml:"version" json:"version" bson:"version" validate:"required_with=Hostname Namespace Version"`
-				Password         string `yaml:"password" json:"password" bson:"password" validate:""`
-				CertsDir         string `yaml:"certsDir" json:"certsDir" bson:"certsDir" validate:"required_with=CertsDir DataDir"`
-				DataDir          string `yaml:"dataDir" json:"dataDir" bson:"dataDir" validate:"required_with=CertsDir DataDir"`
-				RegistryPassword string `yaml:"registryPassword" json:"registryPassword" bson:"registryPassword" validate:""`
-				RegistryHtpasswd string `yaml:"registryHtpasswd" json:"registryHtpasswd" bson:"registryHtpasswd" validate:""`
-				VersionBig       string `yaml:"versionBig" json:"versionBig" bson:"versionBig" validate:""`
-			} `yaml:"internal" json:"internal" bson:"internal" validate:""`
-			External struct {
-				Ip       string `yaml:"ip" json:"ip" bson:"ip" validate:"required_with=Ip Hostname Username Password Email"`
-				Hostname string `yaml:"hostname" json:"hostname" bson:"hostname" validate:"required_with=Ip Hostname Username Password Email"`
-				Username string `yaml:"username" json:"username" bson:"username" validate:"required_with=Ip Hostname Username Password Email"`
-				Password string `yaml:"password" json:"password" bson:"password" validate:"required_with=Ip Hostname Username Password Email"`
-				Email    string `yaml:"email" json:"email" bson:"email" validate:"required_with=Ip Hostname Username Password Email"`
-			} `yaml:"external" json:"external" bson:"external" validate:""`
-		} `yaml:"imageRepo" json:"imageRepo" bson:"imageRepo" validate:"required"`
-		ArtifactRepo struct {
-			Type     string `yaml:"type" json:"type" bson:"type" validate:"required,oneof=nexus"`
-			Internal struct {
-				Image    string `yaml:"image" json:"image" bson:"image" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
-				Port     int    `yaml:"port" json:"port" bson:"port" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
-				PortHub  int    `yaml:"portHub" json:"portHub" bson:"portHub" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
-				PortGcr  int    `yaml:"portGcr" json:"portGcr" bson:"portGcr" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
-				PortQuay int    `yaml:"portQuay" json:"portQuay" bson:"portQuay" validate:"required_with=Image Port PortHub PortGcr PortQuay"`
-			} `yaml:"internal" json:"internal" bson:"internal" validate:""`
-			External struct {
-				ViewUrl        string    `yaml:"viewUrl" json:"viewUrl" bson:"viewUrl" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				Schema         string    `yaml:"schema" json:"schema" bson:"schema" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				Hostname       string    `yaml:"hostname" json:"hostname" bson:"hostname" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				Username       string    `yaml:"username" json:"username" bson:"username" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				Password       string    `yaml:"password" json:"password" bson:"password" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				PublicRole     string    `yaml:"publicRole" json:"publicRole" bson:"publicRole" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				PublicUser     string    `yaml:"publicUser" json:"publicUser" bson:"publicUser" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				PublicPassword string    `yaml:"publicPassword" json:"publicPassword" bson:"publicPassword" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				PublicEmail    string    `yaml:"publicEmail" json:"publicEmail" bson:"publicEmail" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				Port           int       `yaml:"port" json:"port" bson:"port" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				PortHub        int       `yaml:"portHub" json:"portHub" bson:"portHub" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				PortGcr        int       `yaml:"portGcr" json:"portGcr" bson:"portGcr" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				PortQuay       int       `yaml:"portQuay" json:"portQuay" bson:"portQuay" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-				ProxyRepo      ProxyRepo `yaml:"proxyRepo" json:"proxyRepo" bson:"proxyRepo" validate:"required_with=ViewUrl Schema Hostname Username Password PublicRole PublicUser PublicPassword PublicEmail Port PortHub PortGcr PortQuay"`
-			} `yaml:"external" json:"external" bson:"external" validate:""`
-		} `yaml:"artifactRepo" json:"artifactRepo" bson:"artifactRepo" validate:"required"`
-		ScanCodeRepo struct {
-			Type     string `yaml:"type" json:"type" bson:"type" validate:"required,oneof=sonarqube"`
-			Internal struct {
-				Image   string `yaml:"image" json:"image" bson:"image" validate:"required_with=Image ImageDB Port"`
-				ImageDB string `yaml:"imageDB" json:"imageDB" bson:"imageDB" validate:"required_with=Image ImageDB Port"`
-				Port    int    `yaml:"port" json:"port" bson:"port" validate:"required_with=Image ImageDB Port"`
-			} `yaml:"internal" json:"internal" bson:"internal" validate:""`
-			External struct {
-				ViewUrl string `yaml:"viewUrl" json:"viewUrl" bson:"viewUrl" validate:"required_with=ViewUrl Url Token"`
-				Url     string `yaml:"url" json:"url" bson:"url" validate:"required_with=ViewUrl Url Token"`
-				Token   string `yaml:"token" json:"token" bson:"token" validate:"required_with=ViewUrl Url Token"`
-			} `yaml:"external" json:"external" bson:"external" validate:""`
-		} `yaml:"scanCodeRepo" json:"scanCodeRepo" bson:"scanCodeRepo" validate:"required"`
-		Openldap struct {
+		GitRepo      GitRepo           `yaml:"gitRepo" json:"gitRepo" bson:"gitRepo" validate:""`
+		ImageRepo    ImageRepo         `yaml:"imageRepo" json:"imageRepo" bson:"imageRepo" validate:""`
+		ArtifactRepo ArtifactRepo      `yaml:"artifactRepo" json:"artifactRepo" bson:"artifactRepo" validate:""`
+		ScanCodeRepo ScanCodeRepo      `yaml:"scanCodeRepo" json:"scanCodeRepo" bson:"scanCodeRepo" validate:""`
+		Openldap     struct {
 			Image       string `yaml:"image" json:"image" bson:"image" validate:"required"`
 			ImageAdmin  string `yaml:"imageAdmin" json:"imageAdmin" bson:"imageAdmin" validate:"required"`
 			Port        int    `yaml:"port" json:"port" bson:"port" validate:"required"`
@@ -180,7 +188,6 @@ type InstallConfig struct {
 		Doryengine struct {
 			Port int `yaml:"port" json:"port" bson:"port" validate:"required"`
 		} `yaml:"doryengine" json:"doryengine" bson:"doryengine" validate:"required"`
-		TrivyDb       string `yaml:"trivyDb" json:"trivyDb" bson:"trivyDb" validate:""`
 		NexusInitData string `yaml:"nexusInitData" json:"nexusInitData" bson:"nexusInitData" validate:""`
 	} `yaml:"dory" json:"dory" bson:"dory" validate:"required"`
 	Account struct {
@@ -375,16 +382,25 @@ type Pipeline struct {
 	} `yaml:"pipelineDef" json:"pipelineDef" bson:"pipelineDef" validate:""`
 }
 
+type GitRepoDir struct {
+	BuildSettingsDir   string `yaml:"buildSettingsDir" json:"buildSettingsDir" bson:"buildSettingsDir" validate:""`
+	DatabaseScriptsDir string `yaml:"databaseScriptsDir" json:"databaseScriptsDir" bson:"databaseScriptsDir" validate:""`
+	DemoCodesDir       string `yaml:"demoCodesDir" json:"demoCodesDir" bson:"demoCodesDir" validate:""`
+	DeployScriptsDir   string `yaml:"deployScriptsDir" json:"deployScriptsDir" bson:"deployScriptsDir" validate:""`
+	DocumentsDir       string `yaml:"documentsDir" json:"documentsDir" bson:"documentsDir" validate:""`
+	TestScriptsDir     string `yaml:"testScriptsDir" json:"testScriptsDir" bson:"testScriptsDir" validate:""`
+}
+
 type Project struct {
 	TenantCode  string      `yaml:"tenantCode" json:"tenantCode" bson:"tenantCode" validate:""`
 	ProjectInfo ProjectInfo `yaml:"projectInfo" json:"projectInfo" bson:"projectInfo" validate:""`
 	ProjectRepo struct {
-		GitRepo       string `yaml:"gitRepo" json:"gitRepo" bson:"gitRepo" validate:""`
-		GitRepoType   string `yaml:"gitRepoType" json:"gitRepoType" bson:"gitRepoType" validate:""`
-		ImageRepo     string `yaml:"imageRepo" json:"imageRepo" bson:"imageRepo" validate:""`
-		ImageRepoName string `yaml:"imageRepoName" json:"imageRepoName" bson:"imageRepoName" validate:""`
-		ArtifactRepo  string `yaml:"artifactRepo" json:"artifactRepo" bson:"artifactRepo" validate:""`
-		ScanCodeRepo  string `yaml:"scanCodeRepo" json:"scanCodeRepo" bson:"scanCodeRepo" validate:""`
+		GitRepo          string     `yaml:"gitRepo" json:"gitRepo" bson:"gitRepo" validate:""`
+		GitRepoDir       GitRepoDir `yaml:"gitRepoDir" json:"gitRepoDir" bson:"gitRepoDir" validate:""`
+		ImageRepo        string     `yaml:"imageRepo" json:"imageRepo" bson:"imageRepo" validate:""`
+		ArtifactRepo     string     `yaml:"artifactRepo" json:"artifactRepo" bson:"artifactRepo" validate:""`
+		ArtifactRepoType string     `yaml:"artifactRepoType" json:"artifactRepoType" bson:"artifactRepoType" validate:""`
+		ScanCodeRepo     string     `yaml:"scanCodeRepo" json:"scanCodeRepo" bson:"scanCodeRepo" validate:""`
 	} `yaml:"projectRepo" json:"projectRepo" bson:"projectRepo" validate:""`
 	ProjectNodePorts []struct {
 		EnvName      string        `yaml:"envName" json:"envName" bson:"envName" validate:""`
@@ -1163,6 +1179,10 @@ type EnvK8s struct {
 		StatefulSetName string `yaml:"statefulSetName" json:"statefulSetName" bson:"statefulSetName" validate:"required"`
 		Path            string `yaml:"path" json:"path" bson:"path" validate:"required"`
 	} `yaml:"projectDataPod" json:"projectDataPod" bson:"projectDataPod" validate:""`
+	PodImageSettings struct {
+		ProjectDataPodImage string `yaml:"projectDataPodImage" json:"projectDataPodImage" bson:"projectDataPodImage" validate:"required"`
+		BusyboxImage        string `yaml:"busyboxImage" json:"busyboxImage" bson:"busyboxImage" validate:"required"`
+	} `yaml:"podImageSettings" json:"podImageSettings" bson:"podImageSettings" validate:"required"`
 	ImageRepoUseExternal    bool `yaml:"imageRepoUseExternal" json:"imageRepoUseExternal" bson:"imageRepoUseExternal" validate:""`
 	ArtifactRepoUseExternal bool `yaml:"artifactRepoUseExternal" json:"artifactRepoUseExternal" bson:"artifactRepoUseExternal" validate:""`
 	PvConfigLocal           struct {
@@ -1249,23 +1269,23 @@ type ArtifactRepoConfig struct {
 	Insecure         bool   `yaml:"insecure" json:"insecure" bson:"insecure" validate:""`
 	Username         string `yaml:"username" json:"username" bson:"username" validate:"required"`
 	Password         string `yaml:"password" json:"password" bson:"password" validate:"required"`
-	PublicRole       string `yaml:"publicRole" json:"publicRole" bson:"publicRole" validate:"required"`
-	PublicUser       string `yaml:"publicUser" json:"publicUser" bson:"publicUser" validate:"required"`
-	PublicPassword   string `yaml:"publicPassword" json:"publicPassword" bson:"publicPassword" validate:"required"`
-	PortDocker       int    `yaml:"portDocker" json:"portDocker" bson:"portDocker" validate:"required"`
-	PortGcr          int    `yaml:"portGcr" json:"portGcr" bson:"portGcr" validate:"required"`
-	PortQuay         int    `yaml:"portQuay" json:"portQuay" bson:"portQuay" validate:"required"`
 	ProxyRepo        struct {
-		Maven  string `yaml:"maven" json:"maven" bson:"maven" validate:"required"`
-		Npm    string `yaml:"npm" json:"npm" bson:"npm" validate:"required"`
-		Pip    string `yaml:"pip" json:"pip" bson:"pip" validate:"required"`
-		Gradle string `yaml:"gradle" json:"gradle" bson:"gradle" validate:"required"`
-		Go     string `yaml:"go" json:"go" bson:"go" validate:"required"`
-		Apt    struct {
-			Amd64   string `yaml:"amd64" json:"amd64" bson:"amd64" validate:"required"`
-			Arm64v8 string `yaml:"arm64v8" json:"arm64v8" bson:"arm64v8" validate:"required"`
+		PublicRole     string `yaml:"publicRole" json:"publicRole" bson:"publicRole" validate:""`
+		PublicUser     string `yaml:"publicUser" json:"publicUser" bson:"publicUser" validate:""`
+		PublicPassword string `yaml:"publicPassword" json:"publicPassword" bson:"publicPassword" validate:""`
+		PortDocker     int    `yaml:"portDocker" json:"portDocker" bson:"portDocker" validate:""`
+		PortGcr        int    `yaml:"portGcr" json:"portGcr" bson:"portGcr" validate:""`
+		PortQuay       int    `yaml:"portQuay" json:"portQuay" bson:"portQuay" validate:""`
+		Maven          string `yaml:"maven" json:"maven" bson:"maven" validate:""`
+		Npm            string `yaml:"npm" json:"npm" bson:"npm" validate:""`
+		Pip            string `yaml:"pip" json:"pip" bson:"pip" validate:""`
+		Gradle         string `yaml:"gradle" json:"gradle" bson:"gradle" validate:""`
+		Go             string `yaml:"go" json:"go" bson:"go" validate:""`
+		Apt            struct {
+			Amd64   string `yaml:"amd64" json:"amd64" bson:"amd64" validate:""`
+			Arm64v8 string `yaml:"arm64v8" json:"arm64v8" bson:"arm64v8" validate:""`
 		} `yaml:"apt" json:"apt" bson:"apt" validate:""`
-	} `yaml:"proxyRepo" json:"proxyRepo" bson:"proxyRepo" validate:"required"`
+	} `yaml:"proxyRepo" json:"proxyRepo" bson:"proxyRepo" validate:""`
 }
 
 type ScanCodeRepoConfig struct {

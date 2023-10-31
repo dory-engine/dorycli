@@ -10,6 +10,7 @@ type OptionsInstallPrint struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
 	Mode           string `yaml:"mode" json:"mode" bson:"mode" validate:""`
 	Runtime        string `yaml:"runtime" json:"runtime" bson:"runtime" validate:""`
+	Full           bool   `yaml:"full" json:"full" bson:"full" validate:""`
 }
 
 func NewOptionsInstallPrint() *OptionsInstallPrint {
@@ -44,6 +45,7 @@ func NewCmdInstallPrint() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&o.Mode, "mode", "", "install mode, options: docker, kubernetes")
 	cmd.Flags().StringVar(&o.Runtime, "runtime", "", "dory managed kubernetes cluster's container runtime, options: docker, containerd, crio")
+	cmd.Flags().BoolVarP(&o.Full, "full", "", false, "install DORY and all optional repositories")
 
 	CheckError(o.Complete(cmd))
 	return cmd
@@ -116,8 +118,9 @@ func (o *OptionsInstallPrint) Run(args []string) error {
 	vals := map[string]interface{}{
 		"mode":          o.Mode,
 		"runtime":       o.Runtime,
+		"full":          o.Full,
 		"nexusInitData": pkg.NexusInitData,
-		"trivyDb":       pkg.TrivyDb,
+		"baseName":      pkg.GetCmdBaseName(),
 	}
 	strInstallConfig, err := pkg.ParseTplFromVals(vals, string(bs))
 	if err != nil {

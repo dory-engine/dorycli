@@ -54,9 +54,20 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 		return err
 	}
 
-	if ic.Dory.GitRepo.Internal.Image == "" && ic.Dory.GitRepo.External.ViewUrl == "" {
-		err = fmt.Errorf("%s: dory.gitRepo.internal and dory.gitRepo.external both empty", errInfo)
-		return err
+	if ic.Dory.GitRepo.Type != "gitlab" && ic.Dory.GitRepo.Type != "gitea" {
+		ic.Dory.GitRepo = GitRepo{}
+	}
+
+	if ic.Dory.ImageRepo.Type != "harbor" {
+		ic.Dory.ImageRepo = ImageRepo{}
+	}
+
+	if ic.Dory.ArtifactRepo.Type != "nexus" {
+		ic.Dory.ArtifactRepo = ArtifactRepo{}
+	}
+
+	if ic.Dory.ScanCodeRepo.Type != "sonarqube" {
+		ic.Dory.ScanCodeRepo = ScanCodeRepo{}
 	}
 
 	if ic.Dory.GitRepo.Internal.Image != "" && ic.Dory.GitRepo.External.ViewUrl != "" {
@@ -80,11 +91,6 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 		}
 	}
 
-	if ic.Dory.ArtifactRepo.Internal.Image == "" && ic.Dory.ArtifactRepo.External.ViewUrl == "" {
-		err = fmt.Errorf("%s: dory.artifactRepo.internal and dory.artifactRepo.external both empty", errInfo)
-		return err
-	}
-
 	if ic.Dory.ArtifactRepo.Internal.Image != "" && ic.Dory.ArtifactRepo.External.ViewUrl != "" {
 		err = fmt.Errorf("%s: dory.artifactRepo.internal and dory.artifactRepo.external can not set at the same time", errInfo)
 		return err
@@ -97,11 +103,6 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 
 	if ic.Dory.ArtifactRepo.External.ViewUrl != "" && (ic.Dory.ArtifactRepo.External.ProxyRepo.Pip == "" || ic.Dory.ArtifactRepo.External.ProxyRepo.Go == "" || ic.Dory.ArtifactRepo.External.ProxyRepo.Gradle == "" || ic.Dory.ArtifactRepo.External.ProxyRepo.Maven == "" || ic.Dory.ArtifactRepo.External.ProxyRepo.Npm == "") {
 		err = fmt.Errorf("%s: dory.artifactRepo.external.proxyRepo required", errInfo)
-		return err
-	}
-
-	if ic.Dory.ScanCodeRepo.Internal.Image == "" && ic.Dory.ScanCodeRepo.External.ViewUrl == "" {
-		err = fmt.Errorf("%s: dory.scanCodeRepo.internal and dory.scanCodeRepo.external both empty", errInfo)
 		return err
 	}
 
@@ -127,11 +128,6 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 
 	if ic.Dory.DemoHost.Internal.Image != "" && ic.Dory.DemoHost.External.HostAddr != "" {
 		err = fmt.Errorf("%s: dory.demoHost.internal and dory.demoHost.external can not set at the same time", errInfo)
-		return err
-	}
-
-	if ic.Dory.ImageRepo.Internal.Hostname == "" && ic.Dory.ImageRepo.External.Hostname == "" {
-		err = fmt.Errorf("%s: imageRepo.internal and imageRepo.external both empty", errInfo)
 		return err
 	}
 
@@ -220,12 +216,10 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 	}
 
 	if ic.Kubernetes.Runtime != "docker" && ic.Kubernetes.Runtime != "containerd" && ic.Kubernetes.Runtime != "crio" {
-		if !strings.HasPrefix(ic.Kubernetes.PvConfigLocal.LocalPath, "/") {
-			fieldName = "kubernetes.runtime"
-			fieldValue = ic.Kubernetes.Runtime
-			err = fmt.Errorf("%s: %s %s format error: must be docker or containerd or crio", errInfo, fieldName, fieldValue)
-			return err
-		}
+		fieldName = "kubernetes.runtime"
+		fieldValue = ic.Kubernetes.Runtime
+		err = fmt.Errorf("%s: %s %s format error: must be docker or containerd or crio", errInfo, fieldName, fieldValue)
+		return err
 	}
 
 	if ic.Kubernetes.PvConfigLocal.LocalPath != "" {
@@ -299,7 +293,6 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 		ic.Dory.DemoHost.Internal.Password = RandomString(16, false, "=")
 	}
 
-	ic.Dory.TrivyDb = TrivyDb
 	ic.Dory.NexusInitData = NexusInitData
 	return err
 }
@@ -448,7 +441,7 @@ func (ic *InstallConfig) UnmarshalMapValues() (map[string]interface{}, error) {
 	vals["demoHostNodePortWeb"] = demoHostNodePortWeb
 
 	gitWebhookUrl := "http://dory-engine:9000"
-	if ic.Dory.GitRepo.Internal.Image == "" {
+	if (ic.Dory.GitRepo.Type == "gitlab" || ic.Dory.GitRepo.Type == "gitea") && ic.Dory.GitRepo.External.Url != "" && ic.Dory.GitRepo.External.GitWebhookUrl != "" {
 		gitWebhookUrl = ic.Dory.GitRepo.External.GitWebhookUrl
 	}
 	vals["gitWebhookUrl"] = gitWebhookUrl

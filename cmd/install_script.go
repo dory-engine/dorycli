@@ -134,18 +134,6 @@ func (o *OptionsInstallScript) Run(args []string) error {
 		}
 	}
 
-	_, err = os.Stat(pkg.NexusInitData)
-	if err != nil {
-		err = fmt.Errorf("%s not exists in current directory", pkg.NexusInitData)
-		return err
-	}
-
-	_, err = os.Stat(pkg.TrivyDb)
-	if err != nil {
-		err = fmt.Errorf("%s not exists in current directory", pkg.TrivyDb)
-		return err
-	}
-
 	var installConfig pkg.InstallConfig
 	err = yaml.Unmarshal(bs, &installConfig)
 	if err != nil {
@@ -157,6 +145,14 @@ func (o *OptionsInstallScript) Run(args []string) error {
 	if err != nil {
 		err = fmt.Errorf("install script error: %s", err.Error())
 		return err
+	}
+
+	if installConfig.Dory.ArtifactRepo.Type == "nexus" {
+		_, err = os.Stat(pkg.NexusInitData)
+		if err != nil {
+			err = fmt.Errorf("%s not exists in current directory", pkg.NexusInitData)
+			return err
+		}
 	}
 
 	if installConfig.InstallMode == "docker" {

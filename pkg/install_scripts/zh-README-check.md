@@ -9,9 +9,51 @@
 
 ## 系统硬件资源需求
 
+### 安装DORY核心组件 (默认安装)
+
+- cpus: 1核
+- memory: 1G
+- storage: 2G
+
+### 安装所有可选组件 (完整安装)
+
 - cpus: 4核
 - memory: 16G
 - storage: 60G
+
+## 在kubernetes集群中创建管理token
+
+- [注意] 请保证本机的kubectl能够管理目标kubernetes集群
+
+- kubernetes管理token用于dory连接kubernetes集群并发布应用，必须在dory配置文件中设置
+
+```shell script
+# 获取kubernetes集群管理员ca证书的base64编码字符串 `kubernetes.caCrtBase64`
+# kubernetes集群管理员ca证书需要在dory安装过程进行设置
+kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
+
+# 创建管理员serviceaccount
+kubectl create serviceaccount -n kube-system admin-user --dry-run=client -o yaml | kubectl apply -f -
+
+# 创建管理员clusterrolebinding
+kubectl create clusterrolebinding admin-user --clusterrole=cluster-admin --serviceaccount=kube-system:admin-user --dry-run=client -o yaml | kubectl apply -f -
+
+# 需要手动创建serviceaccount的secret
+cat << EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: admin-user-secret
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: admin-user
+type: kubernetes.io/service-account-token
+EOF
+
+# 获取kubernetes管理token `kubernetes.token`
+# kubernetes管理token需要在dory安装过程进行设置
+kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }' | base64 -d
+```
 
 ## x86架构和arm64架构容器镜像交叉构建需求
 
@@ -68,40 +110,6 @@ podman --rm -t arm64v8/alpine:latest uname -m
 # systemctl restart containerd
 ```
 {{- end }}
-
-## 在kubernetes集群中创建管理token
-
-- [注意] 请保证本机的kubectl能够管理目标kubernetes集群
-
-- kubernetes管理token用于dory连接kubernetes集群并发布应用，必须在dory配置文件中设置
-
-```shell script
-# 获取kubernetes集群管理员ca证书的base64编码字符串
-# kubernetes集群管理员ca证书需要在dory安装过程进行设置
-kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
-
-# 创建管理员serviceaccount
-kubectl create serviceaccount -n kube-system admin-user --dry-run=client -o yaml | kubectl apply -f -
-
-# 创建管理员clusterrolebinding
-kubectl create clusterrolebinding admin-user --clusterrole=cluster-admin --serviceaccount=kube-system:admin-user --dry-run=client -o yaml | kubectl apply -f -
-
-# 需要手动创建serviceaccount的secret
-cat << EOF | kubectl apply -f -
-apiVersion: v1
-kind: Secret
-metadata:
-  name: admin-user-secret
-  namespace: kube-system
-  annotations:
-    kubernetes.io/service-account.name: admin-user
-type: kubernetes.io/service-account-token
-EOF
-
-# 获取kubernetes管理token
-# kubernetes管理token需要在dory安装过程进行设置
-kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }' | base64 -d
-```
 
 ## kubernetes-dashboard
 
@@ -223,7 +231,7 @@ service/istio-ingressgateway   ClusterIP   10.103.206.173   <none>        15021/
 service/istiod                 ClusterIP   10.103.41.209    <none>        15010/TCP,15012/TCP,443/TCP,15014/TCP          15h
 ```
 
-## sonarqube内核参数调整
+## sonarqube内核参数调整 (可选，不安装sonarqube请忽略)
 
 ```shell script
 # sonarqube 部署必须设置linux内核参数: vm.max_map_count = 262144

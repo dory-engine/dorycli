@@ -1,7 +1,9 @@
 {
   "insecure-registries": [
+    {{- if eq $.dory.artifactRepo.type "nexus"}}
     "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortHub }}",
     "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortGcr }}",
     "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortQuay }}"
+    {{- end }}
   ]
 }

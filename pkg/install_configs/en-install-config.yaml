@@ -5,6 +5,7 @@ installMode: {{ $.mode }}
 # all dory components data will write in the root directory (use absolute path)
 # if install mode is docker: use this host local path
 # if install mode is kubernetes: if kubernetes cluster with multiple nodes, please use shared storage (nfs or cephfs), make sure shared storage is mounted in this host path
+# The installation process will write all configuration files to the mounted shared storage directory, and the DORY component in kubernetes will read these configuration files in the shared storage.
 {{- if eq $.mode "docker" }}
 rootDir: "/data/docker-vols/dory"
 {{- else if eq $.mode "kubernetes" }}
@@ -34,6 +35,7 @@ dory:
   {{- end }}
   # dory-engine license key, emtpy means free trial mode
   licenseKey: ""
+  {{- if $.full }}
   # git repository settings
   gitRepo:
     # git repository type, options: gitea, gitlab
@@ -192,6 +194,7 @@ dory:
     #   url: http://192.168.0.1:30008
     #   # scan code repository admin user token
     #   token: "PLEASE_INPUT_BY_MANUAL"
+  {{- end }}
   # openldap account center settings, dory-engine use openldap to store user accounts
   openldap:
     # openldap image name
@@ -242,6 +245,7 @@ dory:
       userPassword: ""
       # demo project databasee expose service port (kubernetes node port)
       port: 30011
+    {{- if $.full }}
     # # use external demo project database, do not deploy demo project database automatically (internal or external only accept one deploy way)
     # external:
     #   # demo project database JDBC connection string
@@ -250,6 +254,7 @@ dory:
     #   dbUser: testuser
     #   # demo project database connection password
     #   dbPassword: "PLEASE_INPUT_BY_MANUAL"
+    {{- end }}
   # demo project ssh host settings
   demoHost:
     # deploy demo project ssh host automatically (internal or external only accept one deploy way)
@@ -268,6 +273,7 @@ dory:
       portWeb: 8000
       # demo project ssh host web service expose node port (kubernetes node port)
       nodePortWeb: 30013
+    {{- if $.full }}
     # # use external demo project ssh host, do not deploy demo project ssh host automatically (internal or external only accept one deploy way)
     # external:
     #   # demo project ssh host ip or host name
@@ -286,6 +292,7 @@ dory:
     #   hostBecomePassword: ""
     #   # demo project ssh host web service expose node port (kubernetes node port)
     #   nodePortWeb: 30013
+    {{- end }}
   # docker executors deploy settings
   docker:
     # docker executor image name
@@ -340,8 +347,10 @@ kubernetes:
   # kubernetes apiserver port
   port: 6443
   # kubernetes apiserver admin token
+  # Run the "{{ .baseName }} install check" command and obtain token according to the instructions in the "create kubernetes admin token" section
   token: "xxx"
   # The base64 encoded string of the ca certificate of the apiserver in the kubernetes environment
+  # Run the "{{ .baseName }} install check" command and obtain caCrtBase64 according to the instructions in the "create kubernetes admin token" section
   caCrtBase64: "xxx"
   # kubernetes dashboard workload browser access url
   dashboardUrl: {{ `https://k8s.example.com:30000/#/workloads?namespace={{ .projectNamespace }}` }}

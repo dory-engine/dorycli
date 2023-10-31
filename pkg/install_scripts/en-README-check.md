@@ -9,9 +9,49 @@
 
 ## hardware requirement
 
+### Install DORY core components (default installation)
+
+- cpus: 1 core
+- memory: 1G
+- storage: 2G
+
+### Install all optional components (full installation)
+
 - cpus: 4 cores
 - memory: 16G
 - storage: 60G
+
+## create kubernetes admin token
+
+- kubernetes admin token is for dory to deploy project applications in kubernetes cluster, you must set it in dory's config file
+
+```shell script
+# Get the kubernetes cluster administrator ca certificate base64 encoded string `kubernetes.caCrtBase64`
+# The kubernetes cluster administrator ca certificate needs to be set during the dory installation process
+kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
+
+# create admin serviceaccount
+kubectl create serviceaccount -n kube-system admin-user --dry-run=client -o yaml | kubectl apply -f -
+
+# create administrator clusterrolebinding
+kubectl create clusterrolebinding admin-user --clusterrole=cluster-admin --serviceaccount=kube-system:admin-user --dry-run=client -o yaml | kubectl apply -f -
+
+# Need to manually create the secret of serviceaccount
+cat << EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+   name: admin-user-secret
+   namespace: kube-system
+   annotations:
+     kubernetes.io/service-account.name: admin-user
+type: kubernetes.io/service-account-token
+EOF
+
+# Get the kubernetes management token `kubernetes.token`
+# The kubernetes management token needs to be set during the dory installation process
+kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }' | base64 -d
+```
 
 ## X86 architecture and arm64 architecture container image cross-build requirements
 
@@ -67,38 +107,6 @@ podman --rm -t arm64v8/alpine:latest uname -m
 # systemctl restart containerd
 ```
 {{- end }}
-
-## create kubernetes admin token
-
-- kubernetes admin token is for dory to deploy project applications in kubernetes cluster, you must set it in dory's config file
-
-```shell script
-# Get the kubernetes cluster administrator ca certificate base64 encoded string
-# The kubernetes cluster administrator ca certificate needs to be set during the dory installation process
-kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
-
-# create admin serviceaccount
-kubectl create serviceaccount -n kube-system admin-user --dry-run=client -o yaml | kubectl apply -f -
-
-# create administrator clusterrolebinding
-kubectl create clusterrolebinding admin-user --clusterrole=cluster-admin --serviceaccount=kube-system:admin-user --dry-run=client -o yaml | kubectl apply -f -
-
-# Need to manually create the secret of serviceaccount
-cat << EOF | kubectl apply -f -
-apiVersion: v1
-kind: Secret
-metadata:
-   name: admin-user-secret
-   namespace: kube-system
-   annotations:
-     kubernetes.io/service-account.name: admin-user
-type: kubernetes.io/service-account-token
-EOF
-
-# Get the kubernetes management token
-# The kubernetes management token needs to be set during the dory installation process
-kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }' | base64 -d
-```
 
 ## kubernetes-dashboard
 
@@ -220,7 +228,7 @@ service/istio-ingressgateway   ClusterIP   10.103.206.173   <none>        15021/
 service/istiod                 ClusterIP   10.103.41.209    <none>        15010/TCP,15012/TCP,443/TCP,15014/TCP          15h
 ```
 
-## sonarqube linux kernel param settings
+## sonarqube linux kernel param settings (optional, if not install sonarqube please ignore)
 
 ```shell script
 # sonarqube required linux kernel param: vm.max_map_count = 262144

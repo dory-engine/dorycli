@@ -4,12 +4,14 @@ app:
   # dory在docker容器运行的目录(绝对路径)
   dockerParentWorkDir: /dory-engine
   # 项目定义的版本库存放目录(相对路径)
-  defDir: dory-data/projectDefs
+  defDir: dory-data/project-defs
   # 应用的构建缓存相对路径，相对于dory-engine程序的位置(相对路径)
   cacheDir: dory-data/caches
   # trivy-db 镜像扫描漏洞库存放路径，相对于dory-engine程序的位置(相对路径)
   # 目录下包含 db, fanal, java-db 三个漏洞库目录
   trivyDbDir: dory-data/trivy
+  # 各项目的本地制品文件存放路径，相对于dory-engine程序的位置(相对路径)
+  artifactDir: dory-data/artifacts
   # 应用使用什么uid运行
   userID: 1000
   # 应用的restful服务端口
@@ -78,9 +80,9 @@ app:
   # 流水线执行完是否删除流水线工作空间目录
   clearWorkspace: true
   # 测试报告存放目录
-  testReportDir: dory-data/testReport
+  testReportDir: dory-data/test-reports
   # 测试报告查看URI
-  testReportUri: /assets/testReport
+  testReportUri: /assets/test-reports
   # 默认头像目录URI
   avatarDefaultUri: /avatar/default
   # 默认头像完整路径URI
@@ -92,9 +94,9 @@ app:
   # 用户头像的URL前缀
   avatarUrlPrefix: ""
   # 自定义步骤输出文件存放目录
-  customStepOutputDir: dory-data/customStepOutput
+  customStepOutputDir: dory-data/custom-step-output
   # 自定义步骤输出文件查看URI
-  customStepOutputUri: /assets/customStepOutput
+  customStepOutputUri: /assets/custom-step-output
   # 接口请求超时设置，单位(秒)
   requestTimeoutSeconds: 5
   # 上传下载请求超时设置，单位(秒)
@@ -118,13 +120,27 @@ app:
   # dory把docker executor中以下路径的文件保存成输出文件
   dockerOutputFileDir: /tmp/dory-file-output
   # 项目代码仓库存放目录
-  gitRepoDir: dory-data/gitRepos
+  gitRepoDir: dory-data/git-repos
   # 项目组件的代码仓库存放目录
-  gitRepoComponentDir: dory-data/gitRepoComponents
+  gitRepoComponentDir: dory-data/git-repo-components
   # 项目初始化的代码仓库存放目录
-  gitRepoProjectInitDir: dory-data/gitRepoProjectInits
+  gitRepoProjectInitDir: dory-data/git-repo-project-inits
   # 自定义步骤脚本的代码仓库存放目录
-  gitRepoCustomStepDir: dory-data/gitRepoCustomSteps
+  gitRepoCustomStepDir: dory-data/git-repo-custom-steps
+  # 演示项目代码默认目录设置
+  gitRepoDefaultDir:
+    # 默认依赖配置目录
+    buildSettingsDir: build-settings
+    # 默认数据库脚本目录
+    databaseScriptsDir: database-scripts
+    # 默认演示代码目录
+    demoCodesDir: demo-codes
+    # 默认主机部署脚本目录
+    deployScriptsDir: deploy-scripts
+    # 默认文档目录
+    documentsDir: demo-documents
+    # 默认自动化测试脚本目录
+    testScriptsDir: test-scripts
   # 数据库变更脚本文件名
   databaseChangeLogFileName: changelogs.sql
   # 数据库变更动作设置文件名
@@ -203,9 +219,9 @@ mail:
   # 邮件中打开的服务器地址
   url: {{ $.viewURL }}:{{ $.dory.doryengine.port }}/#/reset-password
   # 触发器邮件附件目录
-  triggerMailDir: dory-data/triggerMail
+  triggerMailDir: dory-data/trigger-mail
   # 触发器邮件附件目录查看URI
-  triggerMailUri: /assets/triggerMail
+  triggerMailUri: /assets/trigger-mail
 # redis设置
 redis:
   # redis主机
@@ -260,13 +276,14 @@ ldap:
   # LDAP基础域配置
   baseDN: {{ $.dory.openldap.baseDN | quote}}
   # LDAP服务器访问地址配置
-  url: "ldap://{{ $.dory.openldap.serviceName }}.{{ $.dory.namespace }}:389"
+  url: "ldap://{{ $.dory.openldap.serviceName }}:389"
   # LDAP服务名
-  serviceName: {{ $.dory.openldap.serviceName }}.{{ $.dory.namespace }}
+  serviceName: {{ $.dory.openldap.serviceName }}
   # LDAP管理员账号全称
   adminCN: "cn=admin,{{ $.dory.openldap.baseDN }}"
   # LDAP管理员账号密码
   password: {{ $.dory.openldap.password | quote}}
+{{- if or (eq $.dory.gitRepo.type "gitlab") (eq $.dory.gitRepo.type "gitea") }}
 # 代码仓库配置，支持gitlab和gitea
 gitRepoConfigs:
   # 代码仓库类型，选项: gitlab, gitea
@@ -310,6 +327,8 @@ gitRepoConfigs:
     # 代码仓库管理员token
     token: {{ $.dory.gitRepo.external.token | quote }}
     {{- end }}
+{{- end }}
+{{- if eq $.dory.imageRepo.type "harbor" }}
 # 镜像仓库配置，支持harbor
 imageRepoConfigs:
   # 镜像仓库类型，选项: harbor
@@ -328,9 +347,11 @@ imageRepoConfigs:
     ipInternal: {{ $.imageRepoIp }}
     # 外部访问的IP地址
     ipExternal: {{ $.imageRepoIp }}
+{{- end }}
+{{- if eq $.dory.artifactRepo.type "nexus" }}
 # 制品仓库配置，支持nexus
 artifactRepoConfigs:
-  # 制品仓库类型，选项: nexus
+    # 制品仓库类型，选项: nexus
   - kind: {{ $.dory.artifactRepo.type }}
     # 制品仓库名字标识，用于项目配置关联对应代码仓库名字，格式例如: xxx-xxx
     repoName: {{ $.dory.artifactRepo.type }}-dory
@@ -350,23 +371,23 @@ artifactRepoConfigs:
     username: {{ $.artifactRepoUsername | quote }}
     # 制品仓库管理员密码
     password: {{ $.artifactRepoPassword | quote }}
-    # 制品仓库public role名称
-    publicRole: {{ $.artifactRepoPublicRole | quote }}
-    # 拉取第三方开源依赖的公用账号名称
-    publicUser: {{ $.artifactRepoPublicUser | quote }}
-    # 拉取第三方开源依赖的公用账号密码
-    publicPassword: {{ $.artifactRepoPublicPassword | quote }}
     # 制品仓库服务端口
     port: {{ $.artifactRepoPort }}
-    # docker.io镜像仓库代理端口
-    portDocker: {{ $.artifactRepoPortHub }}
-    # gcr.io镜像仓库代理端口
-    portGcr: {{ $.artifactRepoPortGcr }}
-    # quay.io镜像仓库代理端口
-    portQuay: {{ $.artifactRepoPortQuay }}
-    {{- if $.artifactRepoInternal }}
     # 代理仓库设置
     proxyRepo:
+      # 制品仓库public role名称
+      publicRole: {{ $.artifactRepoPublicRole | quote }}
+      # 拉取第三方开源依赖的公用账号名称
+      publicUser: {{ $.artifactRepoPublicUser | quote }}
+      # 拉取第三方开源依赖的公用账号密码
+      publicPassword: {{ $.artifactRepoPublicPassword | quote }}
+      # docker.io镜像仓库代理端口
+      portDocker: {{ $.artifactRepoPortHub }}
+      # gcr.io镜像仓库代理端口
+      portGcr: {{ $.artifactRepoPortGcr }}
+      # quay.io镜像仓库代理端口
+      portQuay: {{ $.artifactRepoPortQuay }}
+      {{- if $.artifactRepoInternal }}
       # maven第三方开源依赖的仓库相对路径
       maven: repository/maven-group-public/
       # npm第三方开源依赖的仓库相对路径
@@ -383,9 +404,7 @@ artifactRepoConfigs:
         amd64: repository/apt-aliyun-focal/
         # arm64v8代理源
         arm64v8: repository/apt-aliyun-focal-arm64/
-    {{- else }}
-    # 代理仓库设置
-    proxyRepo:
+      {{- else }}
       # maven第三方开源依赖的仓库相对路径
       maven: {{ $.dory.artifactRepo.external.proxyRepo.maven }}
       # npm第三方开源依赖的仓库相对路径
@@ -402,7 +421,9 @@ artifactRepoConfigs:
         # {{ $k }}代理源
         {{ $k }}: {{ $v }}
         {{- end }}
-    {{- end }}
+      {{- end }}
+{{- end }}
+{{- if eq $.dory.scanCodeRepo.type "sonarqube" }}
 # 代码扫描仓库配置，支持sonarqube
 scanCodeRepoConfigs:
   # 代码扫描仓库类型，选项: sonarqube
@@ -417,6 +438,7 @@ scanCodeRepoConfigs:
     insecure: false
     # 代码扫描仓库管理员token
     token: {{ $.scanCodeRepoToken | quote }}
+{{- end }}
 # 公网代理服务器配置
 proxy:
   # 公网代理地址，例如: http://username:password@192.168.0.1:8080
@@ -435,11 +457,11 @@ defaultPipeline:
 
 # 演示项目打包镜像设置
 demoProjectImageSettings:
-  springDemoImage: "{{ $.imageRepoDomainName }}/hub/openjdk:11.0.16-jdk"
-  nodeDemoImage: "{{ $.imageRepoDomainName }}/public/node:18.17.1-alpine3.18-dory"
-  pythonDemoImage: "{{ $.imageRepoDomainName }}/public/python:3.10.10-alpine3.17-dory"
-  goDemoImage: "{{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory"
-  ginDemoImage: "{{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory"
+  springDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ else }}{{ end }}openjdk:11.0.16-jdk"
+  nodeDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:18.17.1-alpine3.18-dory"
+  pythonDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}python:3.10.10-alpine3.17-dory"
+  goDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.17.2-dory"
+  ginDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.17.2-dory"
 
 # 演示项目数据库设置
 demoProjectDatabaseSettings:
@@ -481,8 +503,6 @@ demoProjectHostSettings:
 
 # 编译环境设置，对应的环境与docker镜像设置
 dockerBuildSettings:
-  # 开通项目的时候，是否使用制品仓库拉取第三方开源依赖
-  artifactRepoDependencyPull: true
   # 默认第三方开源依赖地址，不启用制品仓库拉取第三方开源依赖情况下的依赖仓库地址设置
   defaultBuildDependency:
     # maven第三方开源依赖的仓库设置
@@ -496,7 +516,7 @@ dockerBuildSettings:
     # npm第三方开源依赖的仓库设置
     npm:
       # ~/.npmrc的仓库url
-      url: https://registry.npm.taobao.org
+      url: https://registry.npmmirror.com
     # pypi第三方开源依赖的仓库设置
     pip:
       # ~/.pip/pip.conf的仓库url
@@ -513,7 +533,7 @@ dockerBuildSettings:
     # go第三方开源依赖的仓库设置
     go:
       # ~/.config/go/env的仓库url
-      url: https://mirrors.aliyun.com/goproxy
+      url: https://goproxy.cn
   # 构建docker executor对应的构建用户的home目录
   dockerHomeDir: "/home/dory"
   # 构建docker executor环境设置
@@ -521,7 +541,7 @@ dockerBuildSettings:
     # 构建环境名称
     - buildEnvName: maven-jdk17
       # 构建环境容器镜像，当cpu架构为amd64的时候的镜像名字
-      image: "{{ $.imageRepoDomainName }}/public/maven:3.8.5-openjdk-17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.5-openjdk-17-dory"
       # 构建环境支持哪些cpu架构
       # 假如cpu架构不为amd64，构建环境的容器镜像名为 <image>-<cpu架构名字>
       # 例如cpu架构为arm64v8，那么实际构建环境的image名字为 public/maven:3.8.5-openjdk-17-dory-arm64v8
@@ -538,7 +558,7 @@ dockerBuildSettings:
       # 执行检查命令后执行什么命令
       commandsAfterCheck: []
     - buildEnvName: maven-jdk11
-      image: "{{ $.imageRepoDomainName }}/public/maven:3.8.6-openjdk-11-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.6-openjdk-11-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -546,7 +566,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: maven-jdk8
-      image: "{{ $.imageRepoDomainName }}/public/maven:3.8.6-openjdk-8-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.6-openjdk-8-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -554,7 +574,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: npm-node20
-      image: "{{ $.imageRepoDomainName }}/public/node:20.5.1-alpine3.18-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:20.5.1-alpine3.18-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -562,7 +582,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: npm-node18
-      image: "{{ $.imageRepoDomainName }}/public/node:18.17.1-alpine3.18-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:18.17.1-alpine3.18-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -570,7 +590,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: go-1.20
-      image: "{{ $.imageRepoDomainName }}/public/golang:1.20.0-alpine3.17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}golang:1.20.0-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -578,7 +598,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: go-1.18
-      image: "{{ $.imageRepoDomainName }}/public/golang:1.18.10-alpine3.17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}golang:1.18.10-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -586,7 +606,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: python-3.11
-      image: "{{ $.imageRepoDomainName }}/public/python:3.11.2-alpine3.17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}python:3.11.2-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -594,7 +614,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: python-3.10
-      image: "{{ $.imageRepoDomainName }}/public/python:3.10.10-alpine3.17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}python:3.10.10-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -602,7 +622,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk17
-      image: "{{ $.imageRepoDomainName }}/public/gradle:7.6.0-jdk17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -610,7 +630,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk11
-      image: "{{ $.imageRepoDomainName }}/public/gradle:7.6.0-jdk11-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk11-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -618,7 +638,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk8
-      image: "{{ $.imageRepoDomainName }}/public/gradle:7.6.0-jdk8-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk8-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -626,7 +646,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: alpine-3.17
-      image: "{{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.17.2-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -634,7 +654,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: alpine-3.16
-      image: "{{ $.imageRepoDomainName }}/public/alpine:3.16.4-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.16.4-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -642,7 +662,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: ansible-2.12
-      image: "{{ $.imageRepoDomainName }}/public/ansible:2.12.2-alpine-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}ansible:2.12.2-alpine-dory"
       buildArches: ["arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -653,21 +673,21 @@ dockerBuildSettings:
 # 调试容器docker镜像设置
 componentDebugEnvs:
   # 调试容器镜像地址
-  debugImage: "{{ $.imageRepoDomainName }}/hub/doryengine/debug-ubuntu:v1.0.0"
+  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ else }}doryengine/{{ end }}debug-ubuntu:v1.0.0"
 
 # 流水线各个步骤使用的docker镜像设置
 stepDockerEnvs:
   # 代码扫描步骤镜像
-  scanCode: "{{ $.imageRepoDomainName }}/public/sonarsource/sonar-scanner-cli:4.7.0"
+  scanCode: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}sonarsource/sonar-scanner-cli:4.7.0"
   # 镜像扫描步骤镜像
-  scanImage: "{{ $.imageRepoDomainName }}/public/aquasec/trivy:0.37.2"
+  scanImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}aquasec/trivy:0.37.2"
   # 制品发布步骤镜像
-  deployArtifact: "{{ $.imageRepoDomainName }}/public/ansible:2.12.2-alpine-dory"
+  deployArtifact: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}ansible:2.12.2-alpine-dory"
   # 接口自动化测试步骤镜像
-  testApi: "{{ $.imageRepoDomainName }}/public/ppodgorsek/robot-framework:dory"
+  testApi: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/ppodgorsek/{{ else }}doryengine/{{ end }}robot-framework:dory"
   # 性能自动化测试步骤镜像
-  testPerformance: "{{ $.imageRepoDomainName }}/public/egaillardon/jmeter:5.3.0-1.0.1-dory"
+  testPerformance: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/egaillardon/{{ else }}doryengine/{{ end }}jmeter:5.3.0-1.0.1-dory"
   # 界面自动化测试步骤镜像
-  testWebUi: "{{ $.imageRepoDomainName }}/public/ppodgorsek/robot-framework:dory"
+  testWebUi: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/ppodgorsek/{{ else }}doryengine/{{ end }}robot-framework:dory"
   # 数据库脚本执行与回滚步骤镜像
-  databaseScript: "{{ $.imageRepoDomainName }}/public/liquibase/liquibase:4.17.2-dory"
+  databaseScript: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/liquibase/{{ else }}doryengine/{{ end }}liquibase:4.17.2-dory"

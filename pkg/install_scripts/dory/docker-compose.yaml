@@ -4,7 +4,11 @@ services:
   {{- if eq $.dory.gitRepo.type "gitea" }}
   {{ $giteaDbPwd := randAlphaNum 16 }}
   {{ $.dory.gitRepo.type }}:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.image }}
+    {{- else }}
+    image: {{ $.dory.gitRepo.internal.image }}
+    {{- end }}
     container_name: {{ $.dory.gitRepo.type }}
     hostname: {{ $.dory.gitRepo.type }}
     volumes:
@@ -28,7 +32,11 @@ services:
       - {{ $.dory.gitRepo.type }}-mysql
 
   {{ $.dory.gitRepo.type }}-mysql:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.imageDB }}
+    {{- else }}
+    image: {{ $.dory.gitRepo.internal.imageDB }}
+    {{- end }}
     container_name: {{ $.dory.gitRepo.type }}-mysql
     hostname: {{ $.dory.gitRepo.type }}-mysql
     volumes:
@@ -45,7 +53,11 @@ services:
     restart: always
   {{- else if eq $.dory.gitRepo.type "gitlab" }}
   {{ $.dory.gitRepo.type }}:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.image }}
+    {{- else }}
+    image: {{ $.dory.gitRepo.internal.image }}
+    {{- end }}
     container_name: {{ $.dory.gitRepo.type }}
     hostname: {{ $.dory.gitRepo.type }}
     volumes:
@@ -59,7 +71,11 @@ services:
     restart: always
 
   nginx-{{ $.dory.gitRepo.type }}:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.imageNginx }}
+    {{- else }}
+    image: {{ $.dory.gitRepo.internal.imageNginx }}
+      {{- end }}
     container_name: nginx-{{ $.dory.gitRepo.type }}
     hostname: nginx-{{ $.dory.gitRepo.type }}
     volumes:
@@ -78,7 +94,11 @@ services:
   {{- if $.artifactRepoInternal }}
   {{- if eq $.dory.artifactRepo.type "nexus" }}
   {{ $.dory.artifactRepo.type }}:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.artifactRepo.internal.image }}
+    {{- else }}
+    image: {{ $.dory.artifactRepo.internal.image }}
+    {{- end }}
     container_name: {{ $.dory.artifactRepo.type }}
     hostname: {{ $.dory.artifactRepo.type }}
     volumes:
@@ -100,7 +120,11 @@ services:
   {{- if eq $.dory.scanCodeRepo.type "sonarqube" }}
   {{ $sonarqubeDbPwd := randAlphaNum 16 }}
   {{ $.dory.scanCodeRepo.type }}-web:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.scanCodeRepo.internal.image }}
+    {{- else }}
+    image: {{ $.dory.scanCodeRepo.internal.image }}
+    {{- end }}
     container_name: {{ $.dory.scanCodeRepo.type }}-web
     hostname: {{ $.dory.scanCodeRepo.type }}-web
     volumes:
@@ -123,7 +147,11 @@ services:
       - {{ $.dory.scanCodeRepo.type }}-db
 
   {{ $.dory.scanCodeRepo.type }}-db:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.scanCodeRepo.internal.imageDB }}
+    {{- else }}
+    image: {{ $.dory.scanCodeRepo.internal.imageDB }}
+    {{- end }}
     container_name: {{ $.dory.scanCodeRepo.type }}-db
     hostname: {{ $.dory.scanCodeRepo.type }}-db
     volumes:
@@ -140,7 +168,11 @@ services:
   {{- end }}
 
   {{ $.dory.openldap.serviceName }}:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.openldap.image }}
+    {{- else }}
+    image: {{ $.dory.openldap.image }}
+    {{- end }}
     container_name: {{ $.dory.openldap.serviceName }}
     hostname: {{ $.dory.openldap.serviceName }}
     volumes:
@@ -159,7 +191,11 @@ services:
     restart: always
 
   ldapadmin:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.openldap.imageAdmin }}
+    {{- else }}
+    image: {{ $.dory.openldap.imageAdmin }}
+    {{- end }}
     container_name: ldapadmin
     hostname: ldapadmin
     volumes:
@@ -175,7 +211,11 @@ services:
       - {{ $.dory.openldap.serviceName }}
 
   redis-dory:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.redis.image }}
+    {{- else }}
+    image: {{ $.dory.redis.image }}
+    {{- end }}
     container_name: redis-dory
     hostname: redis-dory
     volumes:
@@ -188,7 +228,11 @@ services:
     restart: always
 
   mongo-dory:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.mongo.image }}
+    {{- else }}
+    image: {{ $.dory.mongo.image }}
+    {{- end }}
     container_name: mongo-dory
     hostname: mongo-dory
     volumes:
@@ -205,7 +249,11 @@ services:
   {{- range $i, $_ := $list }}
   {{ $idx := ($i | replace "_" "") }}
   {{ $.dory.docker.dockerName }}-{{ $idx }}:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.docker.image }}
+    {{- else }}
+    image: {{ $.dory.docker.image }}
+    {{- end }}
     container_name: {{ $.dory.docker.dockerName }}-{{ $idx }}
     hostname: {{ $.dory.docker.dockerName }}-{{ $idx }}.{{ $.dory.docker.dockerName }}
     volumes:
@@ -220,14 +268,20 @@ services:
       TZ: {{ $.kubernetes.timezone }}
       DOCKER_TLS_CERTDIR: ""
     command: "--host=tcp://0.0.0.0:2376 --tlsverify --tlscacert=/certs/ca.crt --tlscert=/certs/tls.crt --tlskey=/certs/tls.key"
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     extra_hosts:
       - "{{ $.imageRepoDomainName }}:{{ $.imageRepoIp }}"
+    {{- end }}
     privileged: true
     restart: always
   {{- end }}
 
   dory-engine:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/doryengine/dory-engine:{{ $.versionDoryEngine }}-alpine
+    {{- else }}
+    image: doryengine/dory-engine:{{ $.versionDoryEngine }}-alpine
+    {{- end }}
     container_name: dory-engine
     hostname: dory-engine
     volumes:
@@ -242,15 +296,21 @@ services:
     command: "/dory-engine/dory-engine"
     working_dir: /dory-engine
     user: "1000:1000"
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     extra_hosts:
       - "{{ $.imageRepoDomainName }}:{{ $.imageRepoIp }}"
+    {{- end }}
     restart: always
     depends_on:
       - redis-dory
       - mongo-dory
 
   dory-console:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/doryengine/dory-console:{{ $.versionDoryFrontend }}
+    {{- else }}
+    image: doryengine/dory-console:{{ $.versionDoryFrontend }}
+    {{- end }}
     container_name: dory-console
     hostname: dory-console
     volumes:
@@ -266,7 +326,11 @@ services:
 
   {{- if $.demoDatabaseInternal }}
   {{ $.dory.demoDatabase.internal.deployName }}:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.demoDatabase.internal.image }}
+    {{- else }}
+    image: {{ $.dory.demoDatabase.internal.image }}
+    {{- end }}
     container_name: {{ $.dory.demoDatabase.internal.deployName }}
     hostname: {{ $.dory.demoDatabase.internal.deployName }}
     volumes:
@@ -287,7 +351,11 @@ services:
 
   {{- if $.demoHostInternal }}
   {{ $.dory.demoHost.internal.deployName }}:
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.demoHost.internal.image }}
+    {{- else }}
+    image: {{ $.dory.demoHost.internal.image }}
+    {{- end }}
     container_name: {{ $.dory.demoHost.internal.deployName }}
     hostname: {{ $.dory.demoHost.internal.deployName }}
     volumes:

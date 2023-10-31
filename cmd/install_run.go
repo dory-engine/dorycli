@@ -109,31 +109,9 @@ func (o *OptionsInstallRun) Run(args []string) error {
 		}
 	}()
 
-	_, err = os.Stat(pkg.NexusInitData)
-	if err != nil {
-		err = fmt.Errorf("%s not exists in current directory", pkg.NexusInitData)
-		return err
-	}
-
-	_, err = os.Stat(pkg.TrivyDb)
-	if err != nil {
-		err = fmt.Errorf("%s not exists in current directory", pkg.TrivyDb)
-		return err
-	}
-
 	bs, err = os.ReadFile(o.FileName)
 	if err != nil {
 		err = fmt.Errorf("install run error: %s", err.Error())
-		return err
-	}
-
-	log.Warning("Install dory will remove all current data, please backup first")
-	log.Warning("Are you sure install now? [YES/NO]")
-	reader := bufio.NewReader(os.Stdin)
-	userInput, _ := reader.ReadString('\n')
-	userInput = strings.Trim(userInput, "\n")
-	if userInput != "YES" {
-		err = fmt.Errorf("user cancelled")
 		return err
 	}
 
@@ -147,6 +125,24 @@ func (o *OptionsInstallRun) Run(args []string) error {
 	err = installConfig.VerifyInstallConfig()
 	if err != nil {
 		err = fmt.Errorf("install run error: %s", err.Error())
+		return err
+	}
+
+	if installConfig.Dory.ArtifactRepo.Type == "nexus" {
+		_, err = os.Stat(pkg.NexusInitData)
+		if err != nil {
+			err = fmt.Errorf("%s not exists in current directory", pkg.NexusInitData)
+			return err
+		}
+	}
+
+	log.Warning("Install dory will remove all current data, please backup first")
+	log.Warning("Are you sure install now? [YES/NO]")
+	reader := bufio.NewReader(os.Stdin)
+	userInput, _ := reader.ReadString('\n')
+	userInput = strings.Trim(userInput, "\n")
+	if userInput != "YES" {
+		err = fmt.Errorf("user cancelled")
 		return err
 	}
 
@@ -173,32 +169,34 @@ func (o *OptionsInstallRun) HarborConnectHint(installConfig pkg.InstallConfig) e
 	var err error
 	var bs []byte
 
-	readmeName := "README-harbor-prepare.md"
+	if installConfig.Dory.ImageRepo.Type == "harbor" {
+		readmeName := "README-harbor-prepare.md"
 
-	vals, err := installConfig.UnmarshalMapValues()
-	if err != nil {
-		return err
-	}
+		vals, err := installConfig.UnmarshalMapValues()
+		if err != nil {
+			return err
+		}
 
-	bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s-%s", pkg.DirInstallScripts, o.Language, readmeName))
-	if err != nil {
-		err = fmt.Errorf("create %s error: %s", readmeName, err.Error())
-		return err
-	}
-	strReadme, err := pkg.ParseTplFromVals(vals, string(bs))
-	if err != nil {
-		err = fmt.Errorf("create %s error: %s", readmeName, err.Error())
-		return err
-	}
+		bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s-%s", pkg.DirInstallScripts, o.Language, readmeName))
+		if err != nil {
+			err = fmt.Errorf("create %s error: %s", readmeName, err.Error())
+			return err
+		}
+		strReadme, err := pkg.ParseTplFromVals(vals, string(bs))
+		if err != nil {
+			err = fmt.Errorf("create %s error: %s", readmeName, err.Error())
+			return err
+		}
 
-	var userInput string
-	log.Warning(fmt.Sprintf("\n%s", strReadme))
-	reader := bufio.NewReader(os.Stdin)
-	userInput, _ = reader.ReadString('\n')
-	userInput = strings.Trim(userInput, "\n")
-	if userInput != "YES" {
-		err = fmt.Errorf("user cancelled")
-		return err
+		var userInput string
+		log.Warning(fmt.Sprintf("\n%s", strReadme))
+		reader := bufio.NewReader(os.Stdin)
+		userInput, _ = reader.ReadString('\n')
+		userInput = strings.Trim(userInput, "\n")
+		if userInput != "YES" {
+			err = fmt.Errorf("user cancelled")
+			return err
+		}
 	}
 
 	return err
@@ -207,139 +205,146 @@ func (o *OptionsInstallRun) HarborConnectHint(installConfig pkg.InstallConfig) e
 func (o *OptionsInstallRun) HarborLoginDocker(installConfig pkg.InstallConfig) error {
 	var err error
 
-	var cmdContainerLogin string
-	if installConfig.InstallMode == "docker" {
-		cmdContainerLogin = "docker login"
-	} else if installConfig.InstallMode == "kubernetes" {
-		switch installConfig.Kubernetes.Runtime {
-		case "docker":
+	if installConfig.Dory.ImageRepo.Type == "harbor" {
+		var cmdContainerLogin string
+		if installConfig.InstallMode == "docker" {
 			cmdContainerLogin = "docker login"
-		case "containerd":
-			cmdContainerLogin = "nerdctl -n k8s.io login"
-		case "crio":
-			cmdContainerLogin = "podman login"
+		} else if installConfig.InstallMode == "kubernetes" {
+			switch installConfig.Kubernetes.Runtime {
+			case "docker":
+				cmdContainerLogin = "docker login"
+			case "containerd":
+				cmdContainerLogin = "nerdctl -n k8s.io login"
+			case "crio":
+				cmdContainerLogin = "podman login"
+			}
 		}
-	}
 
-	// update /etc/hosts
-	ip := installConfig.HostIP
-	domainName := installConfig.Dory.ImageRepo.Internal.Hostname
-	username := "admin"
-	password := installConfig.Dory.ImageRepo.Internal.Password
-	if installConfig.Dory.ImageRepo.Internal.Hostname == "" {
-		ip = installConfig.Dory.ImageRepo.External.Ip
-		domainName = installConfig.Dory.ImageRepo.External.Hostname
-		username = installConfig.Dory.ImageRepo.External.Username
-		password = installConfig.Dory.ImageRepo.External.Password
-	}
-	_, _, err = pkg.CommandExec(fmt.Sprintf("cat /etc/hosts | grep %s", domainName), ".")
-	if err != nil {
-		// harbor domain name not exists
-		_, _, err = pkg.CommandExec(fmt.Sprintf("sudo echo '%s  %s' >> /etc/hosts", ip, domainName), ".")
+		// update /etc/hosts
+		ip := installConfig.HostIP
+		domainName := installConfig.Dory.ImageRepo.Internal.Hostname
+		username := "admin"
+		password := installConfig.Dory.ImageRepo.Internal.Password
+		if installConfig.Dory.ImageRepo.Internal.Hostname == "" {
+			ip = installConfig.Dory.ImageRepo.External.Ip
+			domainName = installConfig.Dory.ImageRepo.External.Hostname
+			username = installConfig.Dory.ImageRepo.External.Username
+			password = installConfig.Dory.ImageRepo.External.Password
+		}
+		_, _, err = pkg.CommandExec(fmt.Sprintf("cat /etc/hosts | grep %s", domainName), ".")
+		if err != nil {
+			// harbor domain name not exists
+			_, _, err = pkg.CommandExec(fmt.Sprintf("sudo echo '%s  %s' >> /etc/hosts", ip, domainName), ".")
+			if err != nil {
+				err = fmt.Errorf("install harbor error: %s", err.Error())
+				return err
+			}
+			log.Info("add harbor domain name to /etc/hosts")
+		}
+		log.Info("login to harbor")
+		_, _, err = pkg.CommandExec(fmt.Sprintf("%s --username %s --password %s %s", cmdContainerLogin, username, password, domainName), ".")
 		if err != nil {
 			err = fmt.Errorf("install harbor error: %s", err.Error())
 			return err
 		}
-		log.Info("add harbor domain name to /etc/hosts")
+		log.Success(fmt.Sprintf("install harbor success"))
 	}
-	log.Info("login to harbor")
-	_, _, err = pkg.CommandExec(fmt.Sprintf("%s --username %s --password %s %s", cmdContainerLogin, username, password, domainName), ".")
-	if err != nil {
-		err = fmt.Errorf("install harbor error: %s", err.Error())
-		return err
-	}
-	log.Success(fmt.Sprintf("install harbor success"))
 	return err
 }
 
 func (o *OptionsInstallRun) HarborCreateProject(installConfig pkg.InstallConfig) error {
 	var err error
 
-	log.Info("create harbor project public, hub, gcr, quay begin")
-	projs := []string{
-		"public",
-		"hub",
-		"gcr",
-		"quay",
-	}
-	for _, proj := range projs {
-		err = installConfig.HarborProjectAdd(proj)
-		if err != nil {
-			if installConfig.Dory.ImageRepo.Internal.Hostname != "" {
-				err = fmt.Errorf("create harbor project %s error: %s", proj, err.Error())
-				return err
-			} else {
-				err = fmt.Errorf("create harbor project %s error: %s", proj, err.Error())
-				log.Error(err.Error())
-				err = nil
-			}
+	if installConfig.Dory.ImageRepo.Type == "harbor" {
+		log.Info("create harbor project public, hub, gcr, quay begin")
+		projs := []string{
+			"public",
+			"hub",
+			"gcr",
+			"quay",
 		}
-		log.Info(fmt.Sprintf("create harbor project %s success", proj))
+		for _, proj := range projs {
+			err = installConfig.HarborProjectAdd(proj)
+			if err != nil {
+				if installConfig.Dory.ImageRepo.Internal.Hostname != "" {
+					err = fmt.Errorf("create harbor project %s error: %s", proj, err.Error())
+					return err
+				} else {
+					err = fmt.Errorf("create harbor project %s error: %s", proj, err.Error())
+					log.Error(err.Error())
+					err = nil
+				}
+			}
+			log.Info(fmt.Sprintf("create harbor project %s success", proj))
+		}
+		log.Success(fmt.Sprintf("install harbor success"))
 	}
-	log.Success(fmt.Sprintf("install harbor success"))
 
 	return err
 }
 
 func (o *OptionsInstallRun) HarborPushDockerImages(installConfig pkg.InstallConfig, dockerImages pkg.InstallDockerImages) error {
 	var err error
-	log.Info("container images push to harbor begin")
 
-	var cmdContainerTag, cmdContainerPush string
-	if installConfig.InstallMode == "docker" {
-		cmdContainerTag = "docker tag"
-		cmdContainerPush = "docker push"
-	} else if installConfig.InstallMode == "kubernetes" {
-		switch installConfig.Kubernetes.Runtime {
-		case "docker":
+	if installConfig.Dory.ImageRepo.Type == "harbor" {
+		log.Info("container images push to harbor begin")
+
+		var cmdContainerTag, cmdContainerPush string
+		if installConfig.InstallMode == "docker" {
 			cmdContainerTag = "docker tag"
 			cmdContainerPush = "docker push"
-		case "containerd":
-			cmdContainerTag = "nerdctl -n k8s.io tag"
-			cmdContainerPush = "nerdctl -n k8s.io push"
-		case "crio":
-			cmdContainerTag = "podman tag"
-			cmdContainerPush = "podman push"
+		} else if installConfig.InstallMode == "kubernetes" {
+			switch installConfig.Kubernetes.Runtime {
+			case "docker":
+				cmdContainerTag = "docker tag"
+				cmdContainerPush = "docker push"
+			case "containerd":
+				cmdContainerTag = "nerdctl -n k8s.io tag"
+				cmdContainerPush = "nerdctl -n k8s.io push"
+			case "crio":
+				cmdContainerTag = "podman tag"
+				cmdContainerPush = "podman push"
+			}
 		}
-	}
 
-	pushDockerImages := []pkg.InstallDockerImage{}
-	for _, idi := range dockerImages.InstallDockerImages {
-		if idi.Target != "" {
-			pushDockerImages = append(pushDockerImages, idi)
+		pushDockerImages := []pkg.InstallDockerImage{}
+		for _, idi := range dockerImages.InstallDockerImages {
+			if idi.Target != "" {
+				pushDockerImages = append(pushDockerImages, idi)
+			}
 		}
-	}
-	domainName := installConfig.Dory.ImageRepo.Internal.Hostname
-	if installConfig.Dory.ImageRepo.Internal.Hostname == "" {
-		domainName = installConfig.Dory.ImageRepo.External.Hostname
-	}
-	for i, idi := range pushDockerImages {
-		targetImage := fmt.Sprintf("%s/%s", domainName, idi.Target)
-		source := idi.Source
-		if idi.DockerFile != "" {
-			source = idi.Target
+		domainName := installConfig.Dory.ImageRepo.Internal.Hostname
+		if installConfig.Dory.ImageRepo.Internal.Hostname == "" {
+			domainName = installConfig.Dory.ImageRepo.External.Hostname
 		}
-		_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s %s && %s %s", cmdContainerTag, source, targetImage, cmdContainerPush, targetImage), ".")
-		if err != nil {
-			err = fmt.Errorf("container images %s push to harbor error: %s", source, err.Error())
-			return err
-		}
-		log.Info(fmt.Sprintf("# %s/%s pushed # progress: [%d/%d]", domainName, idi.Target, i+1, len(pushDockerImages)))
-		if idi.Arm64 != "" {
-			targetImage := fmt.Sprintf("%s/%s-arm64v8", domainName, idi.Target)
-			source := idi.Arm64
+		for i, idi := range pushDockerImages {
+			targetImage := fmt.Sprintf("%s/%s", domainName, idi.Target)
+			source := idi.Source
 			if idi.DockerFile != "" {
-				source = fmt.Sprintf("%s-arm64v8", idi.Target)
+				source = idi.Target
 			}
 			_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s %s && %s %s", cmdContainerTag, source, targetImage, cmdContainerPush, targetImage), ".")
 			if err != nil {
 				err = fmt.Errorf("container images %s push to harbor error: %s", source, err.Error())
 				return err
 			}
-			log.Info(fmt.Sprintf("# %s/%s-arm64v8 pushed # progress: [%d/%d]", domainName, idi.Target, i+1, len(pushDockerImages)))
+			log.Info(fmt.Sprintf("# %s/%s pushed # progress: [%d/%d]", domainName, idi.Target, i+1, len(pushDockerImages)))
+			if idi.Arm64 != "" {
+				targetImage := fmt.Sprintf("%s/%s-arm64v8", domainName, idi.Target)
+				source := idi.Arm64
+				if idi.DockerFile != "" {
+					source = fmt.Sprintf("%s-arm64v8", idi.Target)
+				}
+				_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s %s && %s %s", cmdContainerTag, source, targetImage, cmdContainerPush, targetImage), ".")
+				if err != nil {
+					err = fmt.Errorf("container images %s push to harbor error: %s", source, err.Error())
+					return err
+				}
+				log.Info(fmt.Sprintf("# %s/%s-arm64v8 pushed # progress: [%d/%d]", domainName, idi.Target, i+1, len(pushDockerImages)))
+			}
 		}
+		log.Success(fmt.Sprintf("container images push to harbor success"))
 	}
-	log.Success(fmt.Sprintf("container images push to harbor success"))
 	return err
 }
 
@@ -598,12 +603,11 @@ func (o *OptionsInstallRun) DoryCreateOpenldapCertsConfig(installConfig pkg.Inst
 	return err
 }
 
-func (o *OptionsInstallRun) DoryCreateNexusTrivyDirs(installConfig pkg.InstallConfig) error {
+func (o *OptionsInstallRun) DoryCreateDirs(installConfig pkg.InstallConfig) error {
 	var err error
 
 	doryDir := fmt.Sprintf("%s/%s", installConfig.RootDir, installConfig.Dory.Namespace)
-
-	if installConfig.Dory.ArtifactRepo.Internal.Image != "" {
+	if installConfig.Dory.ArtifactRepo.Type == "nexus" && installConfig.Dory.ArtifactRepo.Internal.Image != "" {
 		// extract nexus init data
 		_, _, err = pkg.CommandExec(fmt.Sprintf("tar Cxzvf %s %s", doryDir, pkg.NexusInitData), ".")
 		if err != nil {
@@ -618,20 +622,14 @@ func (o *OptionsInstallRun) DoryCreateNexusTrivyDirs(installConfig pkg.InstallCo
 		log.Success(fmt.Sprintf("extract nexus init data %s success", doryDir))
 	}
 
-	// extract trivy vulnerabilities database
-	_, _, err = pkg.CommandExec(fmt.Sprintf("tar Cxzvf %s/dory-engine/dory-data %s", doryDir, pkg.TrivyDb), ".")
-	if err != nil {
-		err = fmt.Errorf("extract nexus init data error: %s", err.Error())
-		return err
+	if (installConfig.Dory.GitRepo.Type == "gitlab" || installConfig.Dory.GitRepo.Type == "gitea") && installConfig.Dory.GitRepo.Internal.Image != "" {
+		_ = os.RemoveAll(fmt.Sprintf("%s/%s", doryDir, installConfig.Dory.GitRepo.Type))
+		_ = os.MkdirAll(fmt.Sprintf("%s/%s", doryDir, installConfig.Dory.GitRepo.Type), 0755)
 	}
-	log.Success(fmt.Sprintf("extract trivy vulnerabilities database %s success", doryDir))
 
 	// create directory and chown
 	_ = os.RemoveAll(fmt.Sprintf("%s/mongo-dory", doryDir))
 	_ = os.MkdirAll(fmt.Sprintf("%s/mongo-dory", doryDir), 0700)
-
-	_ = os.RemoveAll(fmt.Sprintf("%s/%s", doryDir, installConfig.Dory.GitRepo.Type))
-	_ = os.MkdirAll(fmt.Sprintf("%s/%s", doryDir, installConfig.Dory.GitRepo.Type), 0755)
 
 	_, _, err = pkg.CommandExec(fmt.Sprintf("sudo chown -R 999:999 %s/mongo-dory", doryDir), doryDir)
 	if err != nil {
@@ -643,6 +641,7 @@ func (o *OptionsInstallRun) DoryCreateNexusTrivyDirs(installConfig pkg.InstallCo
 		err = fmt.Errorf("create directory and chown error: %s", err.Error())
 		return err
 	}
+
 	log.Success(fmt.Sprintf("create directory and chown %s success", doryDir))
 
 	return err
@@ -1028,8 +1027,8 @@ func (o *OptionsInstallRun) InstallWithDocker(installConfig pkg.InstallConfig) e
 		return err
 	}
 
-	// create directories and nexus data and trivy data
-	err = o.DoryCreateNexusTrivyDirs(installConfig)
+	// create directories and nexus data
+	err = o.DoryCreateDirs(installConfig)
 	if err != nil {
 		return err
 	}
@@ -1440,7 +1439,7 @@ func (o *OptionsInstallRun) InstallWithKubernetes(installConfig pkg.InstallConfi
 	}
 
 	// create directories and nexus data
-	err = o.DoryCreateNexusTrivyDirs(installConfig)
+	err = o.DoryCreateDirs(installConfig)
 	if err != nil {
 		return err
 	}

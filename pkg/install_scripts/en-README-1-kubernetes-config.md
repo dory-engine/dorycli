@@ -3,6 +3,7 @@
 ## dory-engine settings after installed
 
 {{- if $.dory.gitRepo.internal.image }}
+
 ### finish {{ $.dory.gitRepo.type }} install and update dory config.yaml
 
 - url: {{ $.viewURL }}:{{ $.dory.gitRepo.internal.port }}
@@ -30,6 +31,7 @@
 {{- end }}
 
 {{- if $.artifactRepoInternal }}
+
 ### update {{ $.dory.artifactRepo.type }} admin password and update dory config.yaml
 
 - url: {{ $.artifactRepoViewUrl }}
@@ -46,6 +48,7 @@
 {{- end }}
 
 {{- if $.scanCodeRepoInternal }}
+
 ### update {{ $.dory.scanCodeRepo.type }} admin password, create admin token and update dory config.yaml
 
 - url: {{ $.scanCodeRepoViewUrl }}
@@ -60,6 +63,16 @@
 - 4. for security reason, set project default visibility to `Priviate`
   - open `{{ $.scanCodeRepoViewUrl }}/admin/projects_management`, `Default visibility of new projects` set as `Private`
 {{- end }}
+
+### trivy vulnerabilities database update
+
+- If you need to enable the image scanning function, please perform trivy vulnerability library update
+
+```shell
+docker run --rm -v {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-db-only
+docker run --rm -v {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-java-db-only
+chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy
+```
 
 ### restart dory-engine and dory-console
 
@@ -82,6 +95,7 @@ kubectl -n {{ $.dory.namespace }} get pods -o wide -w
 - data located at: `{{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine`
 
 {{- if $.dory.gitRepo.internal.image }}
+
 ### {{ $.dory.gitRepo.type }} git repository
 
 - url: {{ $.viewURL }}:{{ $.dory.gitRepo.internal.port }}
@@ -89,6 +103,7 @@ kubectl -n {{ $.dory.namespace }} get pods -o wide -w
 {{- end }}
 
 {{- if $.artifactRepoInternal }}
+
 ### {{ $.dory.artifactRepo.type }} artifact and dependency repository
 
 - url: {{ $.artifactRepoViewUrl }}
@@ -99,6 +114,7 @@ kubectl -n {{ $.dory.namespace }} get pods -o wide -w
 {{- end }}
 
 {{- if $.imageRepoInternal }}
+
 ### {{ $.dory.imageRepo.type }} image repository
 
 - url: https://{{ $.imageRepoDomainName }}
@@ -106,26 +122,20 @@ kubectl -n {{ $.dory.namespace }} get pods -o wide -w
 - data located at: `{{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }}`
 {{- end }}
 
-### openldap account management
-
-- url: {{ $.viewURL | replace "http://" "https://" }}:{{ $.dory.openldap.port }}
-- user: cn=admin,{{ $.dory.openldap.baseDN }} / {{ $.dory.openldap.password }}
-
 {{- if $.scanCodeRepoInternal }}
+
 ### {{ $.dory.scanCodeRepo.type }} scan code repository
 
 - url: {{ $.scanCodeRepoViewUrl }}
 {{- end }}
 
-### trivy vulnerabilities database update
+### openldap account management
 
-```shell
-docker run --rm -v {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-db-only
-docker run --rm -v {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-java-db-only
-chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy
-```
+- url: {{ $.viewURL | replace "http://" "https://" }}:{{ $.dory.openldap.port }}
+- user: cn=admin,{{ $.dory.openldap.baseDN }} / {{ $.dory.openldap.password }}
 
 {{- if $.demoDatabaseInternal }}
+
 ### project demo database
 
 - connect jdbc url: {{ $.demoDatabaseUrl }}
@@ -133,6 +143,7 @@ chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/
 {{- end }}
 
 {{- if $.demoHostInternal }}
+
 ### project demo ssh host
 
 - ssh command: `ssh -p {{ $.demoHostPort }} root@{{ $.demoHostAddr }}`

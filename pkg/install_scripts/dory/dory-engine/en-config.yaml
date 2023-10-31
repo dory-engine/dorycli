@@ -4,12 +4,14 @@ app:
   # dory run in which docker's directory (absolute path)
   dockerParentWorkDir: /dory-engine
   # project definition version control files directory (relative path)
-  defDir: dory-data/projectDefs
+  defDir: dory-data/project-defs
   # project build caches directory (relative path)
   cacheDir: dory-data/caches
   # trivy-db image scan vulnerability library storage path, relative to the location of the dory-engine program (relative path)
   # The directory contains three vulnerability library directories: db, fanal, java-db
   trivyDbDir: dory-data/trivy
+  # The local artifact files storage patht, relative to the location of the dory-engine program (relative path)
+  artifactDir: dory-data/artifacts
   # system UID dory run with
   userID: 1000
   # restful api service port
@@ -78,9 +80,9 @@ app:
   # clear work space after pipeline run finish
   clearWorkspace: true
   # test report directory (relative path)
-  testReportDir: dory-data/testReport
+  testReportDir: dory-data/test-reports
   # test report view path
-  testReportUri: /assets/testReport
+  testReportUri: /assets/test-reports
   # default avatar view path
   avatarDefaultUri: /avatar/default
   # default avatar full view path
@@ -92,9 +94,9 @@ app:
   # user avatar url prefix
   avatarUrlPrefix: ""
   # custom step output files directory (relative path)
-  customStepOutputDir: dory-data/customStepOutput
+  customStepOutputDir: dory-data/custom-step-output
   # custom step output files view path
-  customStepOutputUri: /assets/customStepOutput
+  customStepOutputUri: /assets/custom-step-output
   # request timeout seconds
   requestTimeoutSeconds: 5
   # upload and download request timeout settings (seconds)
@@ -118,13 +120,27 @@ app:
   # dory will save output files in this path of docker executor
   dockerOutputFileDir: /tmp/dory-file-output
   # project git repository files directory (relative path)
-  gitRepoDir: dory-data/gitRepos
+  gitRepoDir: dory-data/git-repos
   #  project components git repository files directory (relative path)
-  gitRepoComponentDir: dory-data/gitRepoComponents
+  gitRepoComponentDir: dory-data/git-repo-components
   #  project initial git repository files directory (relative path)
-  gitRepoProjectInitDir: dory-data/gitRepoProjectInits
+  gitRepoProjectInitDir: dory-data/git-repo-project-inits
   #  project custom step git repository files directory (relative path)
-  gitRepoCustomStepDir: dory-data/gitRepoCustomSteps
+  gitRepoCustomStepDir: dory-data/git-repo-custom-steps
+  # demo project code default directory settings
+  gitRepoDefaultDir:
+    # default build settings directory
+    buildSettingsDir: build-settings
+    # default database scripts directory
+    databaseScriptsDir: database-scripts
+    # default demo source codes directory
+    demoCodesDir: demo-codes
+    # default host deployment scripts directory
+    deployScriptsDir: deploy-scripts
+    # default demo document directory
+    documentsDir: demo-documents
+    # default automated test scripts directory
+    testScriptsDir: test-scripts
   # database changelog filename
   databaseChangeLogFileName: changelogs.sql
   # database change action settings filename
@@ -203,9 +219,9 @@ mail:
   # reset password view url in mail
   url: {{ $.viewURL }}:{{ $.dory.doryengine.port }}/#/reset-password
   # trigger mail directory
-  triggerMailDir: dory-data/triggerMail
+  triggerMailDir: dory-data/trigger-mail
   # trigger mail view path
-  triggerMailUri: /assets/triggerMail
+  triggerMailUri: /assets/trigger-mail
 # redis cache settings
 redis:
   # redis host
@@ -260,13 +276,14 @@ ldap:
   # LDAP base DN setting
   baseDN: {{ $.dory.openldap.baseDN | quote}}
   # LDAP server connect url
-  url: "ldap://{{ $.dory.openldap.serviceName }}.{{ $.dory.namespace }}:389"
+  url: "ldap://{{ $.dory.openldap.serviceName }}:389"
   # LDAP service name
-  serviceName: {{ $.dory.openldap.serviceName }}.{{ $.dory.namespace }}
+  serviceName: {{ $.dory.openldap.serviceName }}
   # LDAP admin user
   adminCN: "cn=admin,{{ $.dory.openldap.baseDN }}"
   # LDAP admin password
   password: {{ $.dory.openldap.password | quote}}
+{{- if or (eq $.dory.gitRepo.type "gitlab") (eq $.dory.gitRepo.type "gitea") }}
 # git repository settings, support gitlab and gitea
 gitRepoConfigs:
   # git repository type, options: gitlab, gitea
@@ -310,6 +327,8 @@ gitRepoConfigs:
     # git repository admin user token
     token: {{ $.dory.gitRepo.external.token | quote }}
     {{- end }}
+{{- end }}
+{{- if eq $.dory.imageRepo.type "harbor" }}
 # image repository settings, support harbor
 imageRepoConfigs:
   # image repository type, options: harbor
@@ -328,9 +347,11 @@ imageRepoConfigs:
     ipInternal: {{ $.imageRepoIp }}
     # image repository external access ip address
     ipExternal: {{ $.imageRepoIp }}
+{{- end }}
+{{- if eq $.dory.artifactRepo.type "nexus" }}
 # artifact and dependency repository settings, support nexus
 artifactRepoConfigs:
-  # artifact and dependency repository type, options: nexus
+    # artifact and dependency repository type, options: nexus
   - kind: {{ $.dory.artifactRepo.type }}
     # artifact and dependency repository id name, format like: xxx-xxx
     repoName: {{ $.dory.artifactRepo.type }}-dory
@@ -350,23 +371,23 @@ artifactRepoConfigs:
     username: {{ $.artifactRepoUsername | quote }}
     # artifact and dependency repository admin password
     password: {{ $.artifactRepoPassword | quote }}
-    # artifact and dependency repository public user role name
-    publicRole: {{ $.artifactRepoPublicRole | quote }}
-    # artifact and dependency repository public username
-    publicUser: {{ $.artifactRepoPublicUser | quote }}
-    # artifact and dependency repository public password
-    publicPassword: {{ $.artifactRepoPublicPassword | quote }}
     # artifact and dependency repository service port
     port: {{ $.artifactRepoPort }}
-    # docker.io image proxy service port
-    portDocker: {{ $.artifactRepoPortHub }}
-    # gcr.io image proxy service port
-    portGcr: {{ $.artifactRepoPortGcr }}
-    # quay.io image proxy service port
-    portQuay: {{ $.artifactRepoPortQuay }}
-    {{- if $.artifactRepoInternal }}
     # artifact and dependency repository proxy settings
     proxyRepo:
+      # artifact and dependency repository public user role name
+      publicRole: {{ $.artifactRepoPublicRole | quote }}
+      # artifact and dependency repository public username
+      publicUser: {{ $.artifactRepoPublicUser | quote }}
+      # artifact and dependency repository public password
+      publicPassword: {{ $.artifactRepoPublicPassword | quote }}
+      # docker.io image proxy service port
+      portDocker: {{ $.artifactRepoPortHub }}
+      # gcr.io image proxy service port
+      portGcr: {{ $.artifactRepoPortGcr }}
+      # quay.io image proxy service port
+      portQuay: {{ $.artifactRepoPortQuay }}
+      {{- if $.artifactRepoInternal }}
       # maven proxy path
       maven: repository/maven-group-public/
       # npm proxy path
@@ -381,28 +402,28 @@ artifactRepoConfigs:
       apt:
         # x86 proxy path
         amd64: repository/apt-aliyun-focal/
-        # arm64v8 proxy path
+        # arm64v8 proxy source
         arm64v8: repository/apt-aliyun-focal-arm64/
-    {{- else }}
-    # artifact and dependency repository proxy settings
-    proxyRepo:
+      {{- else }}
       # maven proxy path
-      maven: repository/maven-group-public/
+      maven: {{ $.dory.artifactRepo.external.proxyRepo.maven }}
       # npm proxy path
-      npm: repository/npm-group-public/
+      npm: {{ $.dory.artifactRepo.external.proxyRepo.maven }}
       # pypi proxy path
-      pip: repository/pypi-group-public/simple
+      pip: {{ $.dory.artifactRepo.external.proxyRepo.pip }}
       # gradle proxy path
-      gradle: repository/maven-group-public/
+      gradle: {{ $.dory.artifactRepo.external.proxyRepo.gradle }}
       # go proxy path
-      go: repository/go-group-public
+      go: {{ $.dory.artifactRepo.external.proxyRepo.go }}
       # apt proxy settings
       apt:
         {{- range $k, $v := $.dory.artifactRepo.external.proxyRepo.apt }}
-        # {{ $k }} proxy path
-        {{ $k }}: {{ $v }}
-        {{- end }}
-    {{- end }}
+          # {{ $k }} proxy path
+          {{ $k }}: {{ $v }}
+          {{- end }}
+      {{- end }}
+{{- end }}
+{{- if eq $.dory.scanCodeRepo.type "sonarqube" }}
 # scan code repository settings, support sonarqube
 scanCodeRepoConfigs:
   # scan code repository type, options: sonarqube
@@ -417,6 +438,7 @@ scanCodeRepoConfigs:
     insecure: false
     # scan code repository admin user token
     token: {{ $.scanCodeRepoToken | quote }}
+{{- end }}
 # internet proxy settings
 proxy:
   # internet proxy url, example: http://username:password@192.168.0.1:8080
@@ -435,11 +457,11 @@ defaultPipeline:
 
 # demo project package source image settings
 demoProjectImageSettings:
-  springDemoImage: "{{ $.imageRepoDomainName }}/hub/openjdk:11.0.16-jdk"
-  nodeDemoImage: "{{ $.imageRepoDomainName }}/public/node:18.17.1-alpine3.18-dory"
-  pythonDemoImage: "{{ $.imageRepoDomainName }}/public/python:3.10.10-alpine3.17-dory"
-  goDemoImage: "{{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory"
-  ginDemoImage: "{{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory"
+  springDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ else }}{{ end }}openjdk:11.0.16-jdk"
+  nodeDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:18.17.1-alpine3.18-dory"
+  pythonDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}python:3.10.10-alpine3.17-dory"
+  goDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.17.2-dory"
+  ginDemoImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.17.2-dory"
 
 # demo project database settings
 demoProjectDatabaseSettings:
@@ -481,8 +503,6 @@ demoProjectHostSettings:
 
 # build step languages and docker image settings
 dockerBuildSettings:
-  # fetch build dependencies from artifact and dependency repository enable
-  artifactRepoDependencyPull: true
   # default build dependencies settings, if not fetch build dependencies from artifact and dependency repository
   defaultBuildDependency:
     # maven build dependencies settings
@@ -496,7 +516,7 @@ dockerBuildSettings:
     # npm build dependencies settings
     npm:
       # ~/.npmrc repository url
-      url: https://registry.npm.taobao.org
+      url: https://registry.npmmirror.com
     # pypi build dependencies settings
     pip:
       # ~/.pip/pip.conf repository url
@@ -513,7 +533,7 @@ dockerBuildSettings:
     # go build dependencies settings
     go:
       # ~/.config/go/env repository url
-      url: https://mirrors.aliyun.com/goproxy
+      url: https://goproxy.cn
   # docker executor for build user home directory
   dockerHomeDir: "/home/dory"
   # docker executor for build environment settings
@@ -521,7 +541,7 @@ dockerBuildSettings:
     # build environment name
     - buildEnvName: maven-jdk17
       # build environment docker image, image name when the cpu architecture is amd64
-      image: "{{ $.imageRepoDomainName }}/public/maven:3.8.5-openjdk-17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.5-openjdk-17-dory"
       # which cpu architectures are supported by the build environment
       # if the cpu architecture is not amd64, the container image name of the build environment is <image>-<cpu architecture name>
       # for example, the cpu architecture is arm64v8, then the image name of the actual build environment is public/maven:3.8.5-openjdk-17-dory-arm64v8
@@ -538,7 +558,7 @@ dockerBuildSettings:
       # commands run after build
       commandsAfterCheck: []
     - buildEnvName: maven-jdk11
-      image: "{{ $.imageRepoDomainName }}/public/maven:3.8.6-openjdk-11-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.6-openjdk-11-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -546,7 +566,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: maven-jdk8
-      image: "{{ $.imageRepoDomainName }}/public/maven:3.8.6-openjdk-8-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.6-openjdk-8-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -554,7 +574,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: npm-node20
-      image: "{{ $.imageRepoDomainName }}/public/node:20.5.1-alpine3.18-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:20.5.1-alpine3.18-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -562,7 +582,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: npm-node18
-      image: "{{ $.imageRepoDomainName }}/public/node:18.17.1-alpine3.18-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:18.17.1-alpine3.18-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -570,7 +590,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: go-1.20
-      image: "{{ $.imageRepoDomainName }}/public/golang:1.20.0-alpine3.17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}golang:1.20.0-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -578,7 +598,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: go-1.18
-      image: "{{ $.imageRepoDomainName }}/public/golang:1.18.10-alpine3.17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}golang:1.18.10-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -586,7 +606,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: python-3.11
-      image: "{{ $.imageRepoDomainName }}/public/python:3.11.2-alpine3.17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}python:3.11.2-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -594,7 +614,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: python-3.10
-      image: "{{ $.imageRepoDomainName }}/public/python:3.10.10-alpine3.17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}python:3.10.10-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -602,7 +622,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk17
-      image: "{{ $.imageRepoDomainName }}/public/gradle:7.6.0-jdk17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk17-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -610,7 +630,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk11
-      image: "{{ $.imageRepoDomainName }}/public/gradle:7.6.0-jdk11-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk11-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -618,7 +638,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk8
-      image: "{{ $.imageRepoDomainName }}/public/gradle:7.6.0-jdk8-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk8-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: true
       enableProxy: false
@@ -626,7 +646,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: alpine-3.17
-      image: "{{ $.imageRepoDomainName }}/public/alpine:3.17.2-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.17.2-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -634,7 +654,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: alpine-3.16
-      image: "{{ $.imageRepoDomainName }}/public/alpine:3.16.4-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.16.4-dory"
       buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -642,7 +662,7 @@ dockerBuildSettings:
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: ansible-2.12
-      image: "{{ $.imageRepoDomainName }}/public/ansible:2.12.2-alpine-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}ansible:2.12.2-alpine-dory"
       buildArches: ["arm64v8"]
       mountHomeDir: false
       enableProxy: false
@@ -653,21 +673,21 @@ dockerBuildSettings:
 # debug component docker images settings
 componentDebugEnvs:
   # debug component docker image, relative path in image repository
-  debugImage: "{{ $.imageRepoDomainName }}/hub/doryengine/debug-ubuntu:v1.0.0"
+  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ else }}doryengine/{{ end }}debug-ubuntu:v1.0.0"
 
 # docker images used by pipeline step settings
 stepDockerEnvs:
   # scan code step docker image
-  scanCode: "{{ $.imageRepoDomainName }}/public/sonarsource/sonar-scanner-cli:4.7.0"
+  scanCode: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}sonarsource/sonar-scanner-cli:4.7.0"
   #  scan image step docker image
-  scanImage: "{{ $.imageRepoDomainName }}/public/aquasec/trivy:0.37.2"
+  scanImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}aquasec/trivy:0.37.2"
   # deploy artifact step docker image
-  deployArtifact: "{{ $.imageRepoDomainName }}/public/ansible:2.12.2-alpine-dory"
+  deployArtifact: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}ansible:2.12.2-alpine-dory"
   # api test step docker image
-  testApi: "{{ $.imageRepoDomainName }}/public/ppodgorsek/robot-framework:dory"
+  testApi: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/ppodgorsek/{{ else }}doryengine/{{ end }}robot-framework:dory"
   # performance test step docker image
-  testPerformance: "{{ $.imageRepoDomainName }}/public/egaillardon/jmeter:5.3.0-1.0.1-dory"
+  testPerformance: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/egaillardon/{{ else }}doryengine/{{ end }}jmeter:5.3.0-1.0.1-dory"
   # webui test step docker image
-  testWebUi: "{{ $.imageRepoDomainName }}/public/ppodgorsek/robot-framework:dory"
+  testWebUi: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/ppodgorsek/{{ else }}doryengine/{{ end }}robot-framework:dory"
   # database script execute and rollback step docker image
-  databaseScript: "{{ $.imageRepoDomainName }}/public/liquibase/liquibase:4.17.2-dory"
+  databaseScript: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/liquibase/{{ else }}doryengine/{{ end }}liquibase:4.17.2-dory"

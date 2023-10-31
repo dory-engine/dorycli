@@ -3,6 +3,7 @@
 ## 安装完成后必须进行dory-engine配置
 
 {{- if $.dory.gitRepo.internal.image }}
+
 ### 完成 {{ $.dory.gitRepo.type }} 安装并更新dory的config.yaml配置
 
 - url: {{ $.viewURL }}:{{ $.dory.gitRepo.internal.port }}
@@ -30,6 +31,7 @@
 {{- end }}
 
 {{- if $.artifactRepoInternal }}
+
 ### 更新 {{ $.dory.artifactRepo.type }} 管理员密码，并更新dory的config.yaml配置文件
 
 - url: {{ $.artifactRepoViewUrl }}
@@ -46,6 +48,7 @@
 {{- end }}
 
 {{- if $.scanCodeRepoInternal }}
+
 ### 更新 {{ $.dory.scanCodeRepo.type }} 管理员密码，创建管理员token，并更新dory的config.yaml配置文件
 
 - url: {{ $.scanCodeRepoViewUrl }}
@@ -60,6 +63,16 @@
 - 4. 出于安全考虑，设置项目默认查看权限为`私有`
   - 打开 `{{ $.scanCodeRepoViewUrl }}/admin/projects_management`，`Default visibility of new projects`设置为`Private`
 {{- end }}
+
+### trivy漏洞库更新
+
+- 如果需要启用镜像扫描功能，请执行trivy漏洞库更新
+
+```shell
+docker run --rm -v {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-db-only
+docker run --rm -v {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-java-db-only
+chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy
+```
 
 ### 重启 dory-engine 和 dory-console 服务
 
@@ -82,6 +95,7 @@ kubectl -n {{ $.dory.namespace }} get pods -o wide -w
 - dory-engine数据和配置存放在: `{{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine`
 
 {{- if $.dory.gitRepo.internal.image }}
+
 ### {{ $.dory.gitRepo.type }} 代码仓库
 
 - url: {{ $.viewURL }}:{{ $.dory.gitRepo.internal.port }}
@@ -89,6 +103,7 @@ kubectl -n {{ $.dory.namespace }} get pods -o wide -w
 {{- end }}
 
 {{- if $.artifactRepoInternal }}
+
 ### {{ $.dory.artifactRepo.type }} 依赖与制品仓库
 
 - url: {{ $.artifactRepoViewUrl }}
@@ -99,6 +114,7 @@ kubectl -n {{ $.dory.namespace }} get pods -o wide -w
 {{- end }}
 
 {{- if $.imageRepoInternal }}
+
 ### {{ $.dory.imageRepo.type }} 容器镜像仓库
 
 - url: https://{{ $.imageRepoDomainName }}
@@ -106,26 +122,20 @@ kubectl -n {{ $.dory.namespace }} get pods -o wide -w
 - 数据存放在: `{{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }}`
 {{- end }}
 
-### openldap 账号管理中心
-
-- url: {{ $.viewURL | replace "http://" "https://" }}:{{ $.dory.openldap.port }}
-- 管理员用户: cn=admin,{{ $.dory.openldap.baseDN }} / {{ $.dory.openldap.password }}
-
 {{- if $.scanCodeRepoInternal }}
+
 ### {{ $.dory.scanCodeRepo.type }} 代码扫描仓库
 
 - url: {{ $.scanCodeRepoViewUrl }}
 {{- end }}
 
-### trivy漏洞库更新
+### openldap 账号管理中心
 
-```shell
-docker run --rm -v {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-db-only
-docker run --rm -v {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-java-db-only
-chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy
-```
+- url: {{ $.viewURL | replace "http://" "https://" }}:{{ $.dory.openldap.port }}
+- 管理员用户: cn=admin,{{ $.dory.openldap.baseDN }} / {{ $.dory.openldap.password }}
 
 {{- if $.demoDatabaseInternal }}
+
 ### 项目演示数据库
 
 - jdbc 连接 url: {{ $.demoDatabaseUrl }}
@@ -133,6 +143,7 @@ chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/
 {{- end }}
 
 {{- if $.demoHostInternal }}
+
 ### 项目演示ssh主机
 
 - ssh 命令: `ssh -p {{ $.demoHostPort }} root@{{ $.demoHostAddr }}`

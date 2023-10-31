@@ -4,7 +4,11 @@ deploys:
   {{- if eq $.dory.gitRepo.type "gitea" }}
     {{ $giteaDbPwd := randAlphaNum 16 }}
   - deployName: {{ $.dory.gitRepo.type }}
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.image }}
+    {{- else }}
+    deployImage: {{ $.dory.gitRepo.internal.image }}
+    {{- end }}
     deployNodePort:
       - port: 3000
         nodePort: {{ $.dory.gitRepo.internal.port }}
@@ -47,7 +51,11 @@ deploys:
         dependType: TCP
 
   - deployName: {{ $.dory.gitRepo.type }}-mysql
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.imageDB }}
+    {{- else }}
+    deployImage: {{ $.dory.gitRepo.internal.imageDB }}
+    {{- end }}
     deployLocalPort:
       - port: 3306
     deployReplicas: 1
@@ -79,7 +87,11 @@ deploys:
 
   {{- else if eq $.dory.gitRepo.type "gitlab" }}
   - deployName: {{ $.dory.gitRepo.type }}
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.image }}
+    {{- else }}
+    deployImage: {{ $.dory.gitRepo.internal.image }}
+    {{- end }}
     deployNodePort:
       - port: 80
     deployReplicas: 1
@@ -104,7 +116,11 @@ deploys:
       livenessPeriodSeconds: 30
 
   - deployName: nginx-{{ $.dory.gitRepo.type }}
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.imageNginx }}
+    {{- else }}
+    deployImage: {{ $.dory.gitRepo.internal.imageNginx }}
+    {{- end }}
     deployNodePort:
         - port: 8080
           nodePort: {{ $.dory.gitRepo.internal.port }}
@@ -135,7 +151,11 @@ deploys:
   {{- if $.artifactRepoInternal }}
   {{- if eq $.dory.artifactRepo.type "nexus" }}
   - deployName: {{ $.dory.artifactRepo.type }}
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.artifactRepo.internal.image }}
+    {{- else }}
+    deployImage: {{ $.dory.artifactRepo.internal.image }}
+    {{- end }}
     deployNodePort:
       - port: 8081
         nodePort: {{ $.dory.artifactRepo.internal.port }}
@@ -168,7 +188,11 @@ deploys:
   {{- if eq $.dory.scanCodeRepo.type "sonarqube" }}
   {{ $sonarqubeDbPwd := randAlphaNum 16 }}
   - deployName: {{ $.dory.scanCodeRepo.type }}-web
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.scanCodeRepo.internal.image }}
+    {{- else }}
+    deployImage: {{ $.dory.scanCodeRepo.internal.image }}
+    {{- end }}
     deployNodePort:
       - port: 9000
         nodePort: {{ $.dory.scanCodeRepo.internal.port }}
@@ -209,7 +233,11 @@ deploys:
         dependType: TCP
 
   - deployName: {{ $.dory.scanCodeRepo.type }}-db
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.scanCodeRepo.internal.imageDB }}
+    {{- else }}
+    deployImage: {{ $.dory.scanCodeRepo.internal.imageDB }}
+    {{- end }}
     deployLocalPort:
       - port: 5432
     deployReplicas: 1
@@ -239,7 +267,11 @@ deploys:
   {{- end }}
 
   - deployName: {{ $.dory.openldap.serviceName }}
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.openldap.image }}
+    {{- else }}
+    deployImage: {{ $.dory.openldap.image }}
+    {{- end }}
     deployLocalPort:
       - port: 389
     deployReplicas: 1
@@ -275,7 +307,11 @@ deploys:
       livenessPeriodSeconds: 30
 
   - deployName: ldapadmin
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.openldap.imageAdmin }}
+    {{- else }}
+    deployImage: {{ $.dory.openldap.imageAdmin }}
+    {{- end }}
     deployNodePort:
       - port: 443
         nodePort: {{ $.dory.openldap.port }}
@@ -301,7 +337,11 @@ deploys:
         dependType: TCP
 
   - deployName: redis-dory
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.redis.image }}
+    {{- else }}
+    deployImage: {{ $.dory.redis.image }}
+    {{- end }}
     deployLocalPort:
       - port: 6379
     deployReplicas: 1
@@ -327,7 +367,11 @@ deploys:
       livenessPeriodSeconds: 30
 
   - deployName: mongo-dory
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.mongo.image }}
+    {{- else }}
+    deployImage: {{ $.dory.mongo.image }}
+    {{- end }}
     deployLocalPort:
       - port: 27017
     deployReplicas: 1
@@ -353,7 +397,11 @@ deploys:
       livenessPeriodSeconds: 30
 
   - deployName: {{ $.dory.docker.dockerName }}
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.docker.image }}
+    {{- else }}
+    deployImage: {{ $.dory.docker.image }}
+    {{- end }}
     deployLocalPort:
       - port: 2376
     deployReplicas: {{ $.dory.docker.dockerNumber }}
@@ -402,13 +450,19 @@ deploys:
     podManagementPolicy: Parallel
     securityContext:
       privileged: true
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     hostAliases:
       - hostnames:
           - {{ $.imageRepoDomainName }}
         ip: {{ $.imageRepoIp }}
+    {{- end }}
 
   - deployName: dory-engine
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/doryengine/dory-engine:{{ $.versionDoryEngine }}-alpine
+    {{- else }}
+    deployImage: doryengine/dory-engine:{{ $.versionDoryEngine }}-alpine
+    {{- end }}
     deployLocalPort:
       - port: 9000
     deployReplicas: 1
@@ -440,10 +494,12 @@ deploys:
     securityContext:
       runAsGroup: 1000
       runAsUser: 1000
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     hostAliases:
       - hostnames:
           - {{ $.imageRepoDomainName }}
         ip: {{ $.imageRepoIp }}
+    {{- end }}
     dependServices:
       - dependName: mongo-dory
         dependPort: 27017
@@ -453,7 +509,11 @@ deploys:
         dependType: TCP
 
   - deployName: dory-console
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/doryengine/dory-console:{{ $.versionDoryFrontend }}
+    {{- else }}
+    deployImage: doryengine/dory-console:{{ $.versionDoryFrontend }}
+    {{- end }}
     deployNodePort:
       - port: 80
         nodePort: {{ $.dory.doryengine.port }}
@@ -481,7 +541,11 @@ deploys:
 
   {{- if $.demoDatabaseInternal }}
   - deployName: {{ $.dory.demoDatabase.internal.deployName }}
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.demoDatabase.internal.image }}
+    {{- else }}
+    deployImage: {{ $.dory.demoDatabase.internal.image }}
+    {{- end }}
     deployNodePort:
       - port: 3306
         nodePort: {{ $.dory.demoDatabase.internal.port }}
@@ -515,7 +579,11 @@ deploys:
 
   {{- if $.demoHostInternal }}
   - deployName: {{ $.dory.demoHost.internal.deployName }}
+    {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.demoHost.internal.image }}
+    {{- else }}
+    deployImage: {{ $.dory.demoHost.internal.image }}
+    {{- end }}
     deployNodePort:
       - port: {{ $.dory.demoHost.internal.portSsh }}
         nodePort: {{ $.demoHostPort }}

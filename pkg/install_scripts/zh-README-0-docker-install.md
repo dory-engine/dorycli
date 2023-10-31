@@ -20,12 +20,10 @@ tar Cxzvf {{ $.rootDir }}/{{ $.dory.namespace }} ../{{ $.dory.nexusInitData }}
 chown -R 200:200 {{ $.rootDir }}/{{ $.dory.namespace }}/nexus
 ls -alh {{ $.rootDir }}/{{ $.dory.namespace }}/nexus
 {{- end }}
-
-# 解压trivy漏洞库
-tar Cxzvf {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data ../{{ $.dory.trivyDb }}
-ls -alh {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy
 ```
 
+{{ $certPath := "" }}{{- if eq $.kubernetes.runtime "docker" }}{{ $certPath = "/etc/docker" }}{{- else if eq $.kubernetes.runtime "containerd" }}{{ $certPath = "/etc/containerd" }}{{- else if eq $.kubernetes.runtime "crio" }}{{ $certPath = "/etc/containers" }}{{- end }}
+{{- if eq $.dory.imageRepo.type "harbor" }}
 ## {{ $.dory.imageRepo.type }} 安装配置
 
 ```shell script
@@ -54,7 +52,6 @@ sleep 10
 # 检查 {{ $.dory.imageRepo.type }} 状态
 docker-compose ps
 {{- end }}
-{{ $certPath := "" }}{{- if eq $.kubernetes.runtime "docker" }}{{ $certPath = "/etc/docker" }}{{- else if eq $.kubernetes.runtime "containerd" }}{{ $certPath = "/etc/containerd" }}{{- else if eq $.kubernetes.runtime "crio" }}{{ $certPath = "/etc/containers" }}{{- end }}
 
 {{- if $.imageRepoInternal }}
 # 把{{ $.dory.imageRepo.type }}服务器({{ $.imageRepoIp }})上的证书复制到所有kubernetes节点的 {{ $certPath }}/certs.d/{{ $.imageRepoDomainName }} 目录
@@ -92,6 +89,7 @@ docker push {{ $.imageRepoDomainName }}/{{ $image.target }}-arm64v8
 {{- end }}
 {{- end }}
 ```
+{{- end }}
 
 ## 使用docker-compose方式安装dory组件
 

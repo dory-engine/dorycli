@@ -27,7 +27,7 @@ func NewCmdInstall() *cobra.Command {
   vi install-config-kubernetes.yaml
   
   # 4. pull and build all container images required for installing dory in kubernetes over docker runtime
-  %s install pull --mode kubernetes --runtime docker -f install-config-kubernetes.yaml
+  %s install pull -f install-config-kubernetes.yaml
   
   # 5. (option 1) install dory with kubernetes automatically
   %s install run -o readme-install-kubernetes -f install-config-kubernetes.yaml
@@ -48,7 +48,7 @@ func NewCmdInstall() *cobra.Command {
   vi install-config-docker.yaml
   
   # 4. pull and build all container images required for installing dory in docker
-  %s install pull --mode docker -f install-config-docker.yaml
+  %s install pull -f install-config-docker.yaml
   
   # 5. (option 1) install dory with docker automatically
   %s install run -o readme-install-docker -f install-config-docker.yaml

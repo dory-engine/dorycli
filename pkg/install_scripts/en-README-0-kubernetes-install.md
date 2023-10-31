@@ -35,7 +35,7 @@ mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/tmp
 cp -rp {{ $.dory.namespace }}/{{ $.dory.docker.dockerName }} {{ $.rootDir }}/{{ $.dory.namespace }}/
 cp -rp {{ $.dory.namespace }}/{{ $.dory.openldap.serviceName }} {{ $.rootDir }}/{{ $.dory.namespace }}/
 cp -rp {{ $.dory.namespace }}/dory-engine {{ $.rootDir }}/{{ $.dory.namespace }}/
-{{- if eq $.dory.gitRepo.type "gitlab" }}
+{{- if and (eq $.dory.gitRepo.type "gitlab") $.dory.gitRepo.internal.image }}
 cp -rp {{ $.dory.namespace }}/nginx-gitlab {{ $.rootDir }}/{{ $.dory.namespace }}/
 {{- end }}
 cp -r /usr/share/zoneinfo {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data
@@ -45,10 +45,12 @@ cp -rp /usr/share/zoneinfo {{ $.rootDir }}/timezone
 mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/mongo-dory
 chown -R 999:999 {{ $.rootDir }}/{{ $.dory.namespace }}/mongo-dory
 ls -alh {{ $.rootDir }}/{{ $.dory.namespace }}
+chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine
 ```
 
-## {{ $.dory.imageRepo.type }} installation and configuration
 {{ $certPath := "" }}{{- if eq $.kubernetes.runtime "docker" }}{{ $certPath = "/etc/docker" }}{{- else if eq $.kubernetes.runtime "containerd" }}{{ $certPath = "/etc/containerd" }}{{- else if eq $.kubernetes.runtime "crio" }}{{ $certPath = "/etc/containers" }}{{- end }}
+{{- if eq $.dory.imageRepo.type "harbor" }}
+## {{ $.dory.imageRepo.type }} installation and configuration
 
 ```shell script
 {{- if $.imageRepoInternal }}
@@ -106,6 +108,7 @@ curl -k -X POST -H 'Content-Type: application/json' -d '{"project_name": "quay",
 {{- end }}
 {{- end }}
 ```
+{{- end }}
 
 ## install dory services with kubernetes
 
@@ -131,11 +134,6 @@ tar Cxzvf {{ $.rootDir }}/{{ $.dory.namespace }} ../{{ $.dory.nexusInitData }}
 chown -R 200:200 {{ $.rootDir }}/{{ $.dory.namespace }}/nexus
 ls -alh {{ $.rootDir }}/{{ $.dory.namespace }}/nexus
 {{- end }}
-
-# extract trivy vulnerabilities database
-tar Cxzvf {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data ../{{ $.dory.trivyDb }}
-chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine
-ls -alh {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/trivy
 
 # start all dory services with kubernetes
 kubectl apply -f {{ $.dory.namespace }}/step02-statefulset.yaml

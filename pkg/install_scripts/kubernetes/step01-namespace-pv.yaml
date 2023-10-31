@@ -6,6 +6,7 @@ metadata:
   labels:
     ns: {{ $.currentNamespace }}
 
+{{- if eq $.dory.imageRepo.type "harbor" }}
 {{- $harborDockerConfigJson := printf `{"auths": {"%s": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.imageRepoDomainName $.imageRepoUsername $.imageRepoPassword $.imageRepoEmail (printf "%s:%s" $.imageRepoUsername $.imageRepoPassword | b64enc) }}
 ---
 apiVersion: v1
@@ -17,7 +18,9 @@ type: kubernetes.io/dockerconfigjson
 data:
   .dockerconfigjson: |
     {{ $harborDockerConfigJson | b64enc | nindent 4 }}
+{{- end }}
 
+{{- if eq $.dory.artifactRepo.type "nexus"}}
 {{- $nexusDockerhubConfigJson := printf `{"auths": {"%s:%d": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.artifactRepoIp $.artifactRepoPortHub $.artifactRepoPublicUser $.artifactRepoPublicPassword $.artifactRepoPublicEmail (printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc) }}
 ---
 apiVersion: v1
@@ -53,6 +56,7 @@ type: kubernetes.io/dockerconfigjson
 data:
   .dockerconfigjson: |
     {{ $nexusQuayConfigJson | b64enc | nindent 4 }}
+{{- end }}
 
 ---
 apiVersion: v1
@@ -61,8 +65,6 @@ metadata:
   name: {{ $.currentNamespace }}-timezone-pv
   labels:
     app: {{ $.currentNamespace }}-timezone
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "{{ $.currentNamespace }}-timezone-pv"
 spec:
   storageClassName: {{ $.currentNamespace }}-timezone-pv
   capacity:
@@ -117,8 +119,6 @@ metadata:
   name: {{ $.currentNamespace }}-pv
   labels:
     app: {{ $.currentNamespace }}
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "{{ $.currentNamespace }}-pv"
 spec:
   storageClassName: {{ $.currentNamespace }}-pv
   capacity:

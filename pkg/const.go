@@ -3,11 +3,10 @@ package pkg
 import "embed"
 
 const (
-	VersionDoryCli      = "v1.5.1"
-	VersionDoryEngine   = "v2.5.1"
-	VersionDoryFrontend = "v2.5.1"
+	VersionDoryCli      = "v1.5.2"
+	VersionDoryEngine   = "v2.5.2"
+	VersionDoryFrontend = "v2.5.2"
 
-	TrivyDb       = "trivy-db-20230718.tar.gz"
 	NexusInitData = "nexus-data-init.tar.gz"
 
 	ConfigDirDefault  = ".dorycli"
@@ -91,7 +90,6 @@ var (
 		AdminKindScanCodeRepoConfig,
 	}
 
-	//  "scrc": "scanCodeRepoConfig",
 	AdminCmdKinds = map[string]string{
 		AdminKindAll:                "",
 		AdminKindUser:               "user",

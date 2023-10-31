@@ -1,4 +1,6 @@
 {
+  {{- if or (eq $.dory.imageRepo.type "harbor") (eq $.dory.artifactRepo.type "nexus") }}
+  {{- if and (eq $.dory.imageRepo.type "harbor") (eq $.dory.artifactRepo.type "nexus") }}
   "auths": {
     "{{ $.imageRepoDomainName }}": {
       "auth": {{ printf "%s:%s" $.imageRepoUsername $.imageRepoPassword | b64enc | quote }}
@@ -13,4 +15,24 @@
       "auth": {{ printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc | quote }}
     }
   }
+  {{- else if eq $.dory.imageRepo.type "harbor" }}
+  "auths": {
+    "{{ $.imageRepoDomainName }}": {
+      "auth": {{ printf "%s:%s" $.imageRepoUsername $.imageRepoPassword | b64enc | quote }}
+    }
+  }
+  {{- else if eq $.dory.artifactRepo.type "nexus" }}
+  "auths": {
+    "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortHub }}": {
+      "auth":  {{ printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc | quote }}
+    },
+    "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortGcr }}": {
+      "auth": {{ printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc | quote }}
+    },
+    "{{ $.artifactRepoIp }}:{{ $.artifactRepoPortQuay }}": {
+      "auth": {{ printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc | quote }}
+    }
+  }
+  {{- end }}
+  {{- end }}
 }

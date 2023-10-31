@@ -51,6 +51,13 @@ projectDataPod:
   # pod中项目共享目录的路径
   path: /project-data
 
+# pod镜像设置
+podImageSettings:
+  # project-data-pod的镜像路径
+  projectDataPodImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.17.2-dory"
+  # busybox的镜像路径
+  busyboxImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}busybox:latest"
+
 # 是否使用外部主机和IP设置连接镜像仓库
 imageRepoUseExternal: false
 # 是否使用外部主机和IP设置连接依赖与制品仓库
