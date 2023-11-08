@@ -58,7 +58,6 @@ kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }
 ## x86架构和arm64架构容器镜像交叉构建需求
 
 - {{ if eq $.mode "docker" }}本节点{{ else }}所有部署DORY的节点{{ end }}都安装`qemu-user-static`，以保证这些节点都能够运行x86架构和arm64架构容器镜像
-
 - 文档参见以下链接: https://github.com/multiarch/qemu-user-static
 
 - 升级linux操作系统内核为最新版本，保证linux kernel支持`binfmt_misc`
@@ -119,7 +118,27 @@ podman --rm -t arm64v8/alpine:latest uname -m
 - 安装:
 ```shell script
 # 安装 kubernetes-dashboard
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.1/aio/deploy/recommended.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+# 暴露 kubernetes-dashboard 的服务端口为 nodePort 30000
+cat << EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  ports:
+  - nodePort: 30000
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard
+  type: NodePort
+EOF
 ```
 
 ## traefik (ingress controller)
@@ -139,7 +158,7 @@ deployment:
   kind: DaemonSet
 image:
   name: traefik
-  tag: v2.6.3
+  tag: v2.10.5
 pilot:
   enabled: true
 experimental:
@@ -172,11 +191,11 @@ kubectl -n traefik get services -o wide
 - install:
 ```shell script
 # 拉取镜像
-{{ $.cmdImagePull }} registry.aliyuncs.com/google_containers/metrics-server:v0.6.1
-{{ $.cmdImageTag }} registry.aliyuncs.com/google_containers/metrics-server:v0.6.1 k8s.gcr.io/metrics-server/metrics-server:v0.6.1
+{{ $.cmdImagePull }} registry.aliyuncs.com/google_containers/metrics-server:v0.6.4
+{{ $.cmdImageTag }} registry.aliyuncs.com/google_containers/metrics-server:v0.6.4 registry.k8s.io/metrics-server/metrics-server:v0.6.4
 
 # 获取metrics-server安装yaml
-curl -O -L https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml
+curl -O -L https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.4/components.yaml
 # 添加--kubelet-insecure-tls参数
 sed -i 's/- args:/- args:\n        - --kubelet-insecure-tls/g' components.yaml
 # 安装metrics-server
@@ -197,11 +216,11 @@ kubectl top pods -A
 
 - install:
 ```shell script
-# 安装istioctl，这里以v1.14.1为例子，客户端下载地址 https://github.com/istio/istio/releases/tag/1.14.1
+# 安装istioctl，这里以v1.19.3为例子，客户端下载地址 https://github.com/istio/istio/releases/tag/1.19.3
 
 # 下载istioctl
-wget https://github.com/istio/istio/releases/download/1.14.1/istioctl-1.14.1-linux-amd64.tar.gz
-tar zxvf istioctl-1.14.1-linux-amd64.tar.gz
+wget https://github.com/istio/istio/releases/download/1.19.3/istioctl-1.19.3-linux-amd64.tar.gz
+tar zxvf istioctl-1.19.3-linux-amd64.tar.gz
 
 # 把istioctl移动到$PATH对应目录
 mv istioctl /usr/bin/

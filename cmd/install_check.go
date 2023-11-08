@@ -160,19 +160,19 @@ func (o *OptionsInstallCheck) Run(args []string) error {
 		}
 		log.Success("check docker-compose installed success")
 	} else if o.Mode == "kubernetes" {
-		log.Info("check helm version 3 installed")
+		log.Info("check helm v3.x installed")
 		outputHelm, _, err := pkg.CommandExec(fmt.Sprintf("helm version --template='{{.Version}}'"), ".")
 		if err != nil {
-			err = fmt.Errorf("check helm installed error: %s", err.Error())
+			err = fmt.Errorf("check helm v3.x installed error: %s", err.Error())
 			log.Error(err.Error())
 			return err
 		}
 		if !strings.HasPrefix(outputHelm, "v3.") {
-			err = fmt.Errorf("check helm installed error: helm version must be v3.x")
+			err = fmt.Errorf("check helm v3.x installed error: helm version must be v3.x")
 			log.Error(err.Error())
 			return err
 		}
-		log.Success("check helm installed success")
+		log.Success("check helm v3.x installed success")
 	}
 
 	var cmdImagePull, cmdImageTag string

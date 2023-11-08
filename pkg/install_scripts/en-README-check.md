@@ -23,6 +23,8 @@
 
 ## create kubernetes admin token
 
+- [note] Please ensure that the local kubectl can manage the target kubernetes cluster
+
 - kubernetes admin token is for dory to deploy project applications in kubernetes cluster, you must set it in dory's config file
 
 ```shell script
@@ -116,7 +118,27 @@ podman --rm -t arm64v8/alpine:latest uname -m
 - install:
 ```shell script
 # install kubernetes-dashboard
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.1/aio/deploy/recommended.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+# expose kubernetes-dashboard service in nodePort 30000
+cat << EOF | kubectl apply -f -
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  ports:
+  - nodePort: 30000
+    port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard
+  type: NodePort
+EOF
 ```
 
 ## traefik (ingress controller)
@@ -136,7 +158,7 @@ deployment:
   kind: DaemonSet
 image:
   name: traefik
-  tag: v2.6.3
+  tag: v2.10.5
 pilot:
   enabled: true
 experimental:
@@ -169,11 +191,11 @@ kubectl -n traefik get services -o wide
 - install:
 ```shell script
 # pull container image
-{{ $.cmdImagePull }} registry.aliyuncs.com/google_containers/metrics-server:v0.6.1
-{{ $.cmdImageTag }} registry.aliyuncs.com/google_containers/metrics-server:v0.6.1 k8s.gcr.io/metrics-server/metrics-server:v0.6.1
+{{ $.cmdImagePull }} registry.aliyuncs.com/google_containers/metrics-server:v0.6.4
+{{ $.cmdImageTag }} registry.aliyuncs.com/google_containers/metrics-server:v0.6.4 registry.k8s.io/metrics-server/metrics-server:v0.6.4
 
 # get metrics-server install yaml
-curl -O -L https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml
+curl -O -L https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.4/components.yaml
 # add --kubelet-insecure-tls args
 sed -i 's/- args:/- args:\n        - --kubelet-insecure-tls/g' components.yaml
 # install metrics-server
@@ -194,11 +216,11 @@ kubectl top pods -A
 
 - install:
 ```shell script
-# install istioctl, for example here use version v1.13.2, istioctl client tool download page: https://github.com/istio/istio/releases/tag/1.14.1
+# install istioctl, for example here use version v1.19.3, istioctl client tool download page: https://github.com/istio/istio/releases/tag/1.19.3
 
 # down load istioctl
-wget https://github.com/istio/istio/releases/download/1.14.1/istioctl-1.14.1-linux-amd64.tar.gz
-tar zxvf istioctl-1.14.1-linux-amd64.tar.gz
+wget https://github.com/istio/istio/releases/download/1.19.3/istioctl-1.19.3-linux-amd64.tar.gz
+tar zxvf istioctl-1.19.3-linux-amd64.tar.gz
 
 # move istioctl to $PATH directory
 mv istioctl /usr/bin/
