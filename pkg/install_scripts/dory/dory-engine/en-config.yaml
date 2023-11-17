@@ -678,7 +678,7 @@ componentDebugEnvs:
 # docker images used by pipeline step settings
 stepDockerEnvs:
   # scan code step docker image
-  scanCode: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}sonarsource/sonar-scanner-cli:4.7.0"
+  scanCode: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}sonarsource/sonar-scanner-cli:5.0.1"
   #  scan image step docker image
   scanImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}aquasec/trivy:0.37.2"
   # deploy artifact step docker image

@@ -347,10 +347,10 @@ kubernetes:
   # kubernetes环境的 apiserver 端口
   port: 6443
   # kubernetes环境的 apiserver 管理权限token
-  # 运行 "{{ .baseName }} install check" 命令，按照 "在kubernetes集群中创建管理token" 部分的说明获取token
+  # 运行 "{{ .baseName }} install check --mode {{ $.mode }} --runtime {{ $.runtime }} --language {{ $.language }}" 命令，按照 "在kubernetes集群中创建管理token" 部分的说明获取token
   token: "xxx"
   # kubernetes环境的 apiserver 的ca证书的base64编码字符串
-  # 运行 "{{ .baseName }} install check" 命令，按照 "在kubernetes集群中创建管理token" 部分的说明获取caCrtBase64
+  # 运行 "{{ .baseName }} install check --mode {{ $.mode }} --runtime {{ $.runtime }} --language {{ $.language }}" 命令，按照 "在kubernetes集群中创建管理token" 部分的说明获取caCrtBase64
   caCrtBase64: "xxx"
   # kubernetes dashboard管理控制台workload的url
   dashboardUrl: {{ `https://k8s.example.com:30000/#/workloads?namespace={{ .projectNamespace }}` }}

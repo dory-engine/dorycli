@@ -678,7 +678,7 @@ componentDebugEnvs:
 # 流水线各个步骤使用的docker镜像设置
 stepDockerEnvs:
   # 代码扫描步骤镜像
-  scanCode: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}sonarsource/sonar-scanner-cli:4.7.0"
+  scanCode: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}sonarsource/sonar-scanner-cli:5.0.1"
   # 镜像扫描步骤镜像
   scanImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}{{ end }}aquasec/trivy:0.37.2"
   # 制品发布步骤镜像

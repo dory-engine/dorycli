@@ -119,6 +119,7 @@ func (o *OptionsInstallPrint) Run(args []string) error {
 		"mode":          o.Mode,
 		"runtime":       o.Runtime,
 		"full":          o.Full,
+		"language":      o.Language,
 		"nexusInitData": pkg.NexusInitData,
 		"baseName":      pkg.GetCmdBaseName(),
 	}

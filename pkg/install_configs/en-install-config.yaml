@@ -347,10 +347,10 @@ kubernetes:
   # kubernetes apiserver port
   port: 6443
   # kubernetes apiserver admin token
-  # Run the "{{ .baseName }} install check" command and obtain token according to the instructions in the "create kubernetes admin token" section
+  # Run the "{{ .baseName }} install check --mode {{ $.mode }} --runtime {{ $.runtime }} --language {{ $.language }}" command and obtain token according to the instructions in the "create kubernetes admin token" section
   token: "xxx"
   # The base64 encoded string of the ca certificate of the apiserver in the kubernetes environment
-  # Run the "{{ .baseName }} install check" command and obtain caCrtBase64 according to the instructions in the "create kubernetes admin token" section
+  # Run the "{{ .baseName }} install check --mode {{ $.mode }} --runtime {{ $.runtime }} --language {{ $.language }}" command and obtain caCrtBase64 according to the instructions in the "create kubernetes admin token" section
   caCrtBase64: "xxx"
   # kubernetes dashboard workload browser access url
   dashboardUrl: {{ `https://k8s.example.com:30000/#/workloads?namespace={{ .projectNamespace }}` }}

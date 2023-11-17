@@ -68,8 +68,8 @@ dockerImages:
   - source: doryengine/debug-ubuntu:v1.0.0
     target: hub/doryengine/debug-ubuntu:v1.0.0
     arm64: doryengine/debug-ubuntu:v1.0.0-arm64v8
-  - source: sonarsource/sonar-scanner-cli:4.7.0
-    target: public/sonarsource/sonar-scanner-cli:4.7.0
+  - source: sonarsource/sonar-scanner-cli:5.0.1
+    target: public/sonarsource/sonar-scanner-cli:5.0.1
   - source: liquibase/liquibase:4.17.2
     target: public/liquibase/liquibase:4.17.2-dory
     dockerFile: Dockerfile-liquibase
