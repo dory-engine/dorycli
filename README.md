@@ -81,7 +81,7 @@ mv dorycli /usr/local/bin/
 
 ## 使用 `dorycli` 安装 `Dory-Engine`
 
-[🚀🚀🚀 使用dorycli快速安装Dory-Engine (https://www.bilibili.com/video/BV1x94y167T5/)](https://www.bilibili.com/video/BV1aG411D7Sj/)
+[🚀🚀🚀 使用dorycli快速安装Dory-Engine (https://www.bilibili.com/video/BV1aG411D7Sj/)](https://www.bilibili.com/video/BV1aG411D7Sj/)
 
 ## Dory-Engine的使用演示
 

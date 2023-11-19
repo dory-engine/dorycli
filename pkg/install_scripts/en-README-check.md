@@ -55,7 +55,7 @@ EOF
 kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }' | base64 -d
 ```
 
-## X86 architecture and arm64 architecture container image cross-build requirements
+## X86 architecture and arm64 architecture container image cross-build requirements (optional)
 
 - {{ if eq $.mode "docker" }}this node{{ else }}all nodes deploying DORY{{ end }} install `qemu-user-static` to ensure that these nodes can run x86 architecture and arm64 architecture container images
 - see the following link for documentation: https://github.com/multiarch/qemu-user-static
@@ -76,9 +76,9 @@ yum install -y qemu
 {{- if or (eq $.mode "docker") (eq $.runtime "docker") }}
 docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 {{- else if eq $.runtime "containerd" }}
-nerdctl -n k8s.io --rm --privileged multiarch/qemu-user-static --reset -p yes
+nerdctl -n k8s.io run --rm --privileged multiarch/qemu-user-static --reset -p yes
 {{- else if eq $.runtime "crio" }}
-podman --rm --privileged multiarch/qemu-user-static --reset -p yes
+podman run --rm --privileged multiarch/qemu-user-static --reset -p yes
 {{- end }}
 ```
 
@@ -87,9 +87,9 @@ podman --rm --privileged multiarch/qemu-user-static --reset -p yes
 {{- if or (eq $.mode "docker") (eq $.runtime "docker") }}
 docker run --rm -t arm64v8/alpine:latest uname -m
 {{- else if eq $.runtime "containerd" }}
-nerdctl -n k8s.io --rm -t arm64v8/alpine:latest uname -m
+nerdctl -n k8s.io run --rm -t arm64v8/alpine:latest uname -m
 {{- else if eq $.runtime "crio" }}
-podman --rm -t arm64v8/alpine:latest uname -m
+podman run --rm -t arm64v8/alpine:latest uname -m
 {{- end }}
 ```
 

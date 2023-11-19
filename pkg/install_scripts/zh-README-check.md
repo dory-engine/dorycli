@@ -55,7 +55,7 @@ EOF
 kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }' | base64 -d
 ```
 
-## x86架构和arm64架构容器镜像交叉构建需求
+## x86架构和arm64架构容器镜像交叉构建需求 (可选)
 
 - {{ if eq $.mode "docker" }}本节点{{ else }}所有部署DORY的节点{{ end }}都安装`qemu-user-static`，以保证这些节点都能够运行x86架构和arm64架构容器镜像
 - 文档参见以下链接: https://github.com/multiarch/qemu-user-static
@@ -76,9 +76,9 @@ yum install -y qemu
 {{- if or (eq $.mode "docker") (eq $.runtime "docker") }}
 docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 {{- else if eq $.runtime "containerd" }}
-nerdctl -n k8s.io --rm --privileged multiarch/qemu-user-static --reset -p yes
+nerdctl -n k8s.io run --rm --privileged multiarch/qemu-user-static --reset -p yes
 {{- else if eq $.runtime "crio" }}
-podman --rm --privileged multiarch/qemu-user-static --reset -p yes
+podman run --rm --privileged multiarch/qemu-user-static --reset -p yes
 {{- end }}
 ```
 
@@ -87,9 +87,9 @@ podman --rm --privileged multiarch/qemu-user-static --reset -p yes
 {{- if or (eq $.mode "docker") (eq $.runtime "docker") }}
 docker run --rm -t arm64v8/alpine:latest uname -m
 {{- else if eq $.runtime "containerd" }}
-nerdctl -n k8s.io --rm -t arm64v8/alpine:latest uname -m
+nerdctl -n k8s.io run --rm -t arm64v8/alpine:latest uname -m
 {{- else if eq $.runtime "crio" }}
-podman --rm -t arm64v8/alpine:latest uname -m
+podman run --rm -t arm64v8/alpine:latest uname -m
 {{- end }}
 ```
 
