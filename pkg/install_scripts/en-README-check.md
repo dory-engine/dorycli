@@ -28,10 +28,6 @@
 - kubernetes admin token is for dory to deploy project applications in kubernetes cluster, you must set it in dory's config file
 
 ```shell script
-# Get the kubernetes cluster administrator ca certificate base64 encoded string `kubernetes.caCrtBase64`
-# The kubernetes cluster administrator ca certificate needs to be set during the dory installation process
-kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
-
 # create admin serviceaccount
 kubectl create serviceaccount -n kube-system admin-user --dry-run=client -o yaml | kubectl apply -f -
 
@@ -53,6 +49,10 @@ EOF
 # Get the kubernetes management token `kubernetes.token`
 # The kubernetes management token needs to be set during the dory installation process
 kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }' | base64 -d
+
+# Get the kubernetes cluster administrator ca certificate base64 encoded string `kubernetes.caCrtBase64`
+# The kubernetes cluster administrator ca certificate needs to be set during the dory installation process
+kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
 ```
 
 ## X86 architecture and arm64 architecture container image cross-build requirements (optional)

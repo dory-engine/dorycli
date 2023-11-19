@@ -28,10 +28,6 @@
 - kubernetes管理token用于dory连接kubernetes集群并发布应用，必须在dory配置文件中设置
 
 ```shell script
-# 获取kubernetes集群管理员ca证书的base64编码字符串 `kubernetes.caCrtBase64`
-# kubernetes集群管理员ca证书需要在dory安装过程进行设置
-kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
-
 # 创建管理员serviceaccount
 kubectl create serviceaccount -n kube-system admin-user --dry-run=client -o yaml | kubectl apply -f -
 
@@ -53,6 +49,10 @@ EOF
 # 获取kubernetes管理token `kubernetes.token`
 # kubernetes管理token需要在dory安装过程进行设置
 kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }' | base64 -d
+
+# 获取kubernetes集群管理员ca证书的base64编码字符串 `kubernetes.caCrtBase64`
+# kubernetes集群管理员ca证书需要在dory安装过程进行设置
+kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
 ```
 
 ## x86架构和arm64架构容器镜像交叉构建需求 (可选)
