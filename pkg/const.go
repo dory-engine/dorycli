@@ -36,6 +36,8 @@ var (
 	FsInstallScripts embed.FS
 	//go:embed install_configs/*
 	FsInstallConfigs embed.FS
+	//go:embed language/*
+	FsLanguage embed.FS
 
 	DefKindAll             = "all"
 	DefKindBuild           = "build"

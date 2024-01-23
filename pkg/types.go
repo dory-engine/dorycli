@@ -407,8 +407,12 @@ type Project struct {
 		EnvNodePorts []EnvNodePort `yaml:"envNodePorts" json:"envNodePorts" bson:"envNodePorts" validate:""`
 		NodePorts    []int         `yaml:"nodePorts" json:"nodePorts" bson:"nodePorts" validate:""`
 	} `yaml:"projectNodePorts" json:"projectNodePorts" bson:"projectNodePorts" validate:""`
-	Modules   map[string][]Module `yaml:"modules" json:"modules" bson:"modules" validate:""`
-	Pipelines []Pipeline          `yaml:"pipelines" json:"pipelines" bson:"pipelines" validate:""`
+	Modules      map[string][]Module `yaml:"modules" json:"modules" bson:"modules" validate:""`
+	OpsBatchDefs []struct {
+		OpsBatchDesc string `yaml:"opsBatchDesc" json:"opsBatchDesc" bson:"opsBatchDesc" validate:""`
+		OpsBatchName string `yaml:"opsBatchName" json:"opsBatchName" bson:"opsBatchName" validate:""`
+	} `yaml:"opsBatchDefs" json:"opsBatchDefs" bson:"opsBatchDefs" validate:""`
+	Pipelines []Pipeline `yaml:"pipelines" json:"pipelines" bson:"pipelines" validate:""`
 }
 
 type Run struct {

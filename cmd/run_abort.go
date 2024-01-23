@@ -28,10 +28,11 @@ func NewCmdRunAbort() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("abort [runName]")
-	msgShort := fmt.Sprintf("abort pipeline run")
-	msgLong := fmt.Sprintf(`abort pipeline run in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # abort pipeline run
-  %s run abort test-project1-develop-1`, baseName)
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_run_abort_short")
+	msgLong := OptCommon.TransLang("cmd_run_abort_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_run_abort_example", baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -44,7 +45,7 @@ func NewCmdRunAbort() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().BoolVarP(&o.Log, "logs", "l", false, "show run logs")
+	cmd.Flags().BoolVarP(&o.Log, "logs", "l", false, OptCommon.TransLang("param_run_abort_logs"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

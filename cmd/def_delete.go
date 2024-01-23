@@ -6,6 +6,7 @@ import (
 	"github.com/dory-engine/dorycli/pkg"
 	"github.com/spf13/cobra"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -43,23 +44,15 @@ func NewCmdDefDelete() *cobra.Command {
 		pkg.DefKindOpsBatch,
 		pkg.DefKindCustomStep,
 	}
+	sort.Strings(defCmdKinds)
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`delete [projectName] [kind] [--modules=moduleName1,moduleName2] [--envs=envName1,envName2] [--steps=stepName1,stepName2] [--output=json|yaml]
-# kind options: %s`, strings.Join(defCmdKinds, " / "))
-	msgShort := fmt.Sprintf("delete modules from project definitions")
-	msgLong := fmt.Sprintf(`delete modules from project definitions in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # delete modules from project build definitions
-  %s def delete test-project1 %s --modules=tp1-gin-demo,tp1-node-demo
+	msgUse := fmt.Sprintf(`delete [projectName] [kind] [--modules=moduleName1,moduleName2] [--envs=envName1,envName2] [--steps=stepName1,stepName2] [--output=json|yaml]`)
 
-  # delete modules from project deploy definitions in envNames
-  %s def delete test-project1 %s --modules=tp1-gin-demo,tp1-node-demo --envs=test
-
-  # delete modules from project step definitions in stepNames
-  %s def delete test-project1 %s --modules=tp1-gin-demo,tp1-node-demo --steps=customStepName1
-
-  # delete modules from project step definitions in envNames and stepNames
-  %s def delete test-project1 %s --modules=tp1-gin-demo,tp1-node-demo --envs=test --steps=customStepName1`, baseName, pkg.DefKindBuild, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindCustomStep, baseName, pkg.DefKindCustomStep)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_def_delete_short")
+	msgLong := OptCommon.TransLang("cmd_def_delete_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_def_delete_example", strings.Join(defCmdKinds, " / "), baseName, pkg.DefKindBuild, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindCustomStep, baseName, pkg.DefKindCustomStep))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -72,12 +65,12 @@ func NewCmdDefDelete() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, "moduleNames to delete")
-	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, fmt.Sprintf("filter project definitions in envNames, required if kind is %s / %s / %s", pkg.DefKindDeployContainer, pkg.DefKindDeployArtifact, pkg.DefKindIstio))
-	cmd.Flags().StringSliceVar(&o.StepNames, "steps", []string{}, fmt.Sprintf("filter project definitions in stepNames, required if kind is %s", pkg.DefKindCustomStep))
-	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
-	cmd.Flags().BoolVar(&o.Full, "full", false, "output project definitions in full version, use with --output option")
-	cmd.Flags().BoolVar(&o.Try, "try", false, "try to check input project definitions only, not apply to dory-engine server, use with --output option")
+	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, OptCommon.TransLang("param_def_delete_modules"))
+	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, OptCommon.TransLang("param_def_delete_envs", pkg.DefKindDeployContainer, pkg.DefKindDeployArtifact, pkg.DefKindIstio))
+	cmd.Flags().StringSliceVar(&o.StepNames, "steps", []string{}, OptCommon.TransLang("param_def_delete_steps", pkg.DefKindCustomStep))
+	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_def_delete_output"))
+	cmd.Flags().BoolVar(&o.Full, "full", false, OptCommon.TransLang("param_def_delete_full"))
+	cmd.Flags().BoolVar(&o.Try, "try", false, OptCommon.TransLang("param_def_delete_try"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

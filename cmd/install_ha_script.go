@@ -30,13 +30,11 @@ func NewCmdInstallHaScript() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("script")
-	msgShort := fmt.Sprintf("create load balancer config files and docker-compose files and kuberentes install files")
-	msgLong := fmt.Sprintf(`create keepalived and nginx load balancer config files and docker-compose files and kuberentes install files`)
-	msgExample := fmt.Sprintf(`  # create load balancer config files and docker-compose files and kuberentes install files
-  %s install ha script -o readme-kubernetes-ha -f kubernetes-ha.yaml
-  or
-  cat kubernetes-ha.yaml | %s install ha script -o readme-kubernetes-ha -f -
-`, baseName, baseName)
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_install_ha_script_short")
+	msgLong := OptCommon.TransLang("cmd_install_ha_script_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_ha_script_example", baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -49,8 +47,8 @@ func NewCmdInstallHaScript() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", "install settings YAML file")
-	cmd.Flags().StringVarP(&o.OutputDir, "output", "o", "", "output README, script and config files directory")
+	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", OptCommon.TransLang("param_install_ha_script_file"))
+	cmd.Flags().StringVarP(&o.OutputDir, "output", "o", "", OptCommon.TransLang("param_install_ha_script_output"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

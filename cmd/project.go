@@ -5,18 +5,18 @@ import (
 	"github.com/dory-engine/dorycli/pkg"
 	"github.com/spf13/cobra"
 	"os"
+	"sort"
+	"strings"
 )
 
 func NewCmdProject() *cobra.Command {
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("project")
-	msgShort := fmt.Sprintf("manage project resources")
-	msgLong := fmt.Sprintf(`manage project resources in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # get project resources
-  %s project get
 
-  # execute project ops batch
-  %s project execute test-project1 your-ops-batch-name`, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_project_short")
+	msgLong := OptCommon.TransLang("cmd_project_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_project_example", baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -28,6 +28,21 @@ func NewCmdProject() *cobra.Command {
 			if len(args) == 0 {
 				cmd.Help()
 				os.Exit(0)
+			} else {
+				var found bool
+				subcommands := []string{"get", "execute"}
+				sort.Strings(subcommands)
+				for _, subcommand := range subcommands {
+					if args[0] == subcommand {
+						found = true
+						break
+					}
+				}
+				if !found {
+					log.Error(fmt.Sprintf("subcommand options: %s\n", strings.Join(subcommands, " / ")))
+					cmd.Help()
+					os.Exit(0)
+				}
 			}
 		},
 	}

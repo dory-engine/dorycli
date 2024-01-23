@@ -40,13 +40,11 @@ func NewCmdRunGet() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("get [runName]")
-	msgShort := fmt.Sprintf("get pipeline run resources")
-	msgLong := fmt.Sprintf(`get pipeline run resources in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # get all pipeline run resources
-  %s run get
 
-  # get single pipeline run resoure
-  %s run get test-project1-develop-1`, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_run_get_short")
+	msgLong := OptCommon.TransLang("cmd_run_get_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_run_get_example", baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -59,14 +57,14 @@ func NewCmdRunGet() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringSliceVar(&o.ProjectNames, "projects", []string{}, "filters by projectNames, example: test-project1,test-project2")
-	cmd.Flags().StringSliceVar(&o.PipelineNames, "pipelines", []string{}, "filters by pipelineNames, example: test-project1-develop,test-project2-ops")
-	cmd.Flags().StringSliceVar(&o.StatusResults, "statuses", []string{}, "filters by pipeline run statuses, example: SUCCESS,FAIL (options: SUCCESS / FAIL / ABORT / RUNNING / INPUT)")
-	cmd.Flags().StringVar(&o.StartDate, "start", "", "filters by pipeline run startTime in time range, example: 2022-01-01")
-	cmd.Flags().StringVar(&o.EndDate, "end", "", "filters by pipeline run startTime in time range, example: 2022-01-31")
-	cmd.Flags().IntVar(&o.Page, "page", 1, "pagination number")
-	cmd.Flags().IntVarP(&o.Number, "number", "n", 200, "show how many items each page")
-	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
+	cmd.Flags().StringSliceVar(&o.ProjectNames, "projects", []string{}, OptCommon.TransLang("param_run_get_projects"))
+	cmd.Flags().StringSliceVar(&o.PipelineNames, "pipelines", []string{}, OptCommon.TransLang("param_run_get_pipelines"))
+	cmd.Flags().StringSliceVar(&o.StatusResults, "statuses", []string{}, OptCommon.TransLang("param_run_get_statuses"))
+	cmd.Flags().StringVar(&o.StartDate, "start", "", OptCommon.TransLang("param_run_get_start"))
+	cmd.Flags().StringVar(&o.EndDate, "end", "", OptCommon.TransLang("param_run_get_end"))
+	cmd.Flags().IntVar(&o.Page, "page", 1, OptCommon.TransLang("param_run_get_page"))
+	cmd.Flags().IntVarP(&o.Number, "number", "n", 50, OptCommon.TransLang("param_run_get_number"))
+	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_run_get_output"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

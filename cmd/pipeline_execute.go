@@ -32,16 +32,11 @@ func NewCmdPipelineExecute() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("execute [pipelineName]")
-	msgShort := fmt.Sprintf("execute pipeline")
-	msgLong := fmt.Sprintf(`execute pipeline in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # execute pipeline
-  %s pipeline execute test-project1-develop
 
-  # execute pipeline with batch input automatically
-  %s pipeline execute test-project1-ops --batch "develop::test::inputCheckDeploy::tp1-gin-demo,tp1-go-demo"
-
-  # execute pipeline with params input
-  %s pipeline execute test-project1-ops --param=varName1=varValue1 --param=varName2=varValue2`, baseName, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_pipeline_execute_short")
+	msgLong := OptCommon.TransLang("cmd_pipeline_execute_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_pipeline_execute_example", baseName, baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -54,8 +49,8 @@ func NewCmdPipelineExecute() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVarP(&o.Batch, "batch", "b", "", "send input in run automatically, input values split with ::, example: develop::test::inputCheckDeploy::tp1-gin-demo,tp1-go-demo")
-	cmd.Flags().StringSliceVar(&o.Params, "params", []string{}, "pipeline input params, example: varName=varValue")
+	cmd.Flags().StringVarP(&o.Batch, "batch", "b", "", OptCommon.TransLang("param_pipeline_execute_batch"))
+	cmd.Flags().StringSliceVar(&o.Params, "params", []string{}, OptCommon.TransLang("param_pipeline_execute_params"))
 	CheckError(o.Complete(cmd))
 	return cmd
 }

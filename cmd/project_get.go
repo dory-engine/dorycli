@@ -31,16 +31,11 @@ func NewCmdProjectGet() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("get [projectName] ...")
-	msgShort := fmt.Sprintf("get project resources")
-	msgLong := fmt.Sprintf(`get project resources in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # get all project resources
-  %s project get
 
-  # get single project resoure
-  %s project get test-project1
-
-  # get multiple project resources
-  %s project get test-project1 test-project2`, baseName, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_project_get_short")
+	msgLong := OptCommon.TransLang("cmd_project_get_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_project_get_example", baseName, baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -53,8 +48,8 @@ func NewCmdProjectGet() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVar(&o.ProjectTeam, "team", "", "filters by projectTeam")
-	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
+	cmd.Flags().StringVar(&o.ProjectTeam, "team", "", OptCommon.TransLang("param_project_get_team"))
+	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_project_get_output"))
 
 	CheckError(o.Complete(cmd))
 	return cmd
@@ -168,18 +163,24 @@ func (o *OptionsProjectGet) Run(args []string) error {
 				for _, pnp := range project.ProjectNodePorts {
 					projectEnvs = append(projectEnvs, pnp.EnvName)
 				}
-				projectEnvNames := strings.Join(projectEnvs, ",")
+				projectEnvNames := strings.Join(projectEnvs, "\n")
 				pipelines := []string{}
 				for _, pp := range project.Pipelines {
 					pipelines = append(pipelines, pp.PipelineName)
 				}
-				pipelineNames := strings.Join(pipelines, ",")
+				pipelineNames := strings.Join(pipelines, "\n")
 
-				data = append(data, []string{projectName, projectShortName, projectEnvNames, pipelineNames})
+				opsBatches := []string{}
+				for _, obd := range project.OpsBatchDefs {
+					opsBatches = append(opsBatches, obd.OpsBatchName)
+				}
+				opsBatchNames := strings.Join(opsBatches, "\n")
+
+				data = append(data, []string{projectName, projectShortName, projectEnvNames, pipelineNames, opsBatchNames})
 			}
 
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Name", "ShortName", "EnvNames", "Pipelines"})
+			table.SetHeader([]string{"Name", "ShortName", "EnvNames", "Pipelines", "Batches"})
 			table.SetAutoWrapText(false)
 			table.SetAutoFormatHeaders(true)
 			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)

@@ -27,10 +27,11 @@ func NewCmdRunLog() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("logs [runName]")
-	msgShort := fmt.Sprintf("get pipeline run logs")
-	msgLong := fmt.Sprintf(`get pipeline run logs in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # get pipeline run logs
-  %s run logs test-project1-develop-1`, baseName)
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_run_logs_short")
+	msgLong := OptCommon.TransLang("cmd_run_logs_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_run_logs_example", baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,

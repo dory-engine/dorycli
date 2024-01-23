@@ -23,8 +23,8 @@ type OptionsDefPatch struct {
 	StepName       string   `yaml:"stepName" json:"stepName" bson:"stepName" validate:""`
 	Patch          string   `yaml:"patch" json:"patch" bson:"patch" validate:""`
 	FileName       string   `yaml:"fileName" json:"fileName" bson:"fileName" validate:""`
-	Runs           []string `yaml:"runs" json:"runs" bson:"runs" validate:""`
-	NoRuns         []string `yaml:"noRuns" json:"noRuns" bson:"noRuns" validate:""`
+	EnableExecute  []string `yaml:"enableExecute" json:"enableExecute" bson:"enableExecute" validate:""`
+	DisableExecute []string `yaml:"disableExecute" json:"disableExecute" bson:"disableExecute" validate:""`
 	Try            bool     `yaml:"try" json:"try" bson:"try" validate:""`
 	Full           bool     `yaml:"full" json:"full" bson:"full" validate:""`
 	Output         string   `yaml:"output" json:"output" bson:"output" validate:""`
@@ -57,54 +57,15 @@ func NewCmdDefPatch() *cobra.Command {
 		pkg.DefKindCustomStep,
 		pkg.DefKindPipeline,
 	}
+	sort.Strings(defCmdKinds)
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`patch [projectName] [kind] [--output=json|yaml] [--patch=patchAction] [--file=patchFile]... [--modules=moduleName1,moduleName2] [--envs=envName1,envName2] [--branches=branchName1,branchName2] [--step=stepName1,stepName2]
-  # kind options: %s`, strings.Join(defCmdKinds, " / "))
-	msgShort := fmt.Sprintf("patch project definitions")
-	msgLong := fmt.Sprintf(`patch project definitions in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # print current project build modules definitions for patched
-  %s def patch test-project1 %s --modules=tp1-go-demo,tp1-gin-demo -o yaml
+	msgUse := fmt.Sprintf(`patch [projectName] [kind] [--output=json|yaml] [--patch=patchAction] [--file=patchFile]... [--modules=moduleName1,moduleName2] [--envs=envName1,envName2] [--branches=branchName1,branchName2] [--step=stepName1,stepName2]`)
 
-  # patch project build modules definitions, update tp1-gin-demo,tp1-go-demo buildChecks commands
-  %s def patch test-project1 %s --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'
-
-  # patch project deploy modules definitions, delete test environment tp1-go-demo,tp1-gin-demo deployResources settings
-  %s def patch test-project1 %s --modules=tp1-go-demo,tp1-gin-demo --envs=test --patch='[{"action": "delete", "path": "deployResources"}]'
-
-  # patch project deploy modules definitions, delete test environment tp1-gin-demo deployNodePorts.0.nodePort to 30109
-  %s def patch test-project1 %s --modules=tp1-gin-demo --envs=test --patch='[{"action": "update", "path": "deployNodePorts.0.nodePort", "value": 30109}]'
-
-  # patch project pipeline definitions, update builds dp1-gin-demo run setting to true 
-  %s def patch test-project1 %s --branches=develop,release --patch='[{"action": "update", "path": "builds.#(name==\"dp1-gin-demo\").run", "value": true}]'
-
-  # patch project pipeline definitions, update builds dp1-gin-demo,dp1-go-demo run setting to true 
-  %s def patch test-project1 %s --branches=develop,release --runs=dp1-gin-demo,dp1-go-demo
-
-  # patch project pipeline definitions, update builds dp1-gin-demo,dp1-go-demo run setting to false 
-  %s def patch test-project1 %s --branches=develop,release --no-runs=dp1-gin-demo,dp1-go-demo
-
-  # patch project custom step modules definitions, update customStepName2 step in test environment tp1-gin-demo paramInputYaml
-  %s def patch test-project1 %s --envs=test --step=customStepName2 --modules=tp1-gin-demo --patch='[{"action": "update", "path": "paramInputYaml", "value": "path: Tests"}]'
-
-  # patch project pipeline definitions from stdin, support JSON and YAML
-  cat << EOF | %s def patch test-project1 %s --branches=develop,release -f -
-  - action: update
-    path: builds
-    value:
-      - name: dp1-go-demo
-        run: true
-      - name: dp1-vue-demo
-        run: true
-  - action: update
-    path: pipelineStep.deploy.enable
-    value: false
-  - action: delete
-    value: customStepInsertDefs.build
-  EOF
-
-  # patch project pipeline definitions from file, support JSON and YAML
-  %s def patch test-project1 %s --branches=develop,release -f patch.yaml`, baseName, pkg.DefKindBuild, baseName, pkg.DefKindBuild, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindCustomStep, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindPipeline)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_def_patch_short")
+	msgLong := OptCommon.TransLang("cmd_def_patch_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_def_patch_example", strings.Join(defCmdKinds, " / "), baseName, pkg.DefKindBuild, baseName, pkg.DefKindBuild, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindCustomStep, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindPipeline))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -117,17 +78,17 @@ func NewCmdDefPatch() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, "filter moduleNames to patch")
-	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, fmt.Sprintf("filter envNames to patch, required if kind is %s / %s / %s / %s", pkg.DefKindDeployContainer, pkg.DefKindDeployArtifact, pkg.DefKindIstio, pkg.DefKindIstioGateway))
-	cmd.Flags().StringSliceVar(&o.BranchNames, "branches", []string{}, fmt.Sprintf("filter branchNames to patch, required if kind is %s", pkg.DefKindPipeline))
-	cmd.Flags().StringVar(&o.StepName, "step", "", fmt.Sprintf("filter stepName to patch, required if kind is %s", pkg.DefKindCustomStep))
-	cmd.Flags().StringVarP(&o.Patch, "patch", "p", "", "patch actions in JSON format")
-	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", "project definitions file name or directory, support *.json and *.yaml and *.yml file")
-	cmd.Flags().StringSliceVar(&o.Runs, "runs", []string{}, fmt.Sprintf("set pipeline which build modules enable run, only uses with kind is %s", pkg.DefKindPipeline))
-	cmd.Flags().StringSliceVar(&o.NoRuns, "no-runs", []string{}, fmt.Sprintf("set pipeline which build modules disable run, only uses with kind is %s", pkg.DefKindPipeline))
-	cmd.Flags().BoolVar(&o.Try, "try", false, "try to check input project definitions only, not apply to dory-engine server, use with --output option")
-	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
-	cmd.Flags().BoolVar(&o.Full, "full", false, "output project definitions in full version, use with --output option")
+	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, OptCommon.TransLang("param_def_patch_modules"))
+	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, OptCommon.TransLang("param_def_patch_envs", pkg.DefKindDeployContainer, pkg.DefKindDeployArtifact, pkg.DefKindIstio, pkg.DefKindIstioGateway))
+	cmd.Flags().StringSliceVar(&o.BranchNames, "branches", []string{}, OptCommon.TransLang("param_def_patch_branches", pkg.DefKindPipeline))
+	cmd.Flags().StringVar(&o.StepName, "step", "", OptCommon.TransLang("param_def_patch_step", pkg.DefKindCustomStep))
+	cmd.Flags().StringVarP(&o.Patch, "patch", "p", "", OptCommon.TransLang("param_def_patch_patch"))
+	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", OptCommon.TransLang("param_def_patch_file"))
+	cmd.Flags().StringSliceVar(&o.EnableExecute, "enable-execute", []string{}, OptCommon.TransLang("param_def_patch_enable_execute", pkg.DefKindPipeline))
+	cmd.Flags().StringSliceVar(&o.DisableExecute, "disable-execute", []string{}, OptCommon.TransLang("param_def_patch_disable_execute", pkg.DefKindPipeline))
+	cmd.Flags().BoolVar(&o.Try, "try", false, OptCommon.TransLang("param_def_patch_try"))
+	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_def_patch_output"))
+	cmd.Flags().BoolVar(&o.Full, "full", false, OptCommon.TransLang("param_def_patch_full"))
 
 	CheckError(o.Complete(cmd))
 	return cmd
@@ -393,7 +354,7 @@ func (o *OptionsDefPatch) Complete(cmd *cobra.Command) error {
 		return err
 	}
 
-	err = cmd.RegisterFlagCompletionFunc("runs", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	err = cmd.RegisterFlagCompletionFunc("enable-execute", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		moduleNames := []string{}
 		projectName := args[0]
 		project, err := o.GetProjectDef(projectName)
@@ -409,7 +370,7 @@ func (o *OptionsDefPatch) Complete(cmd *cobra.Command) error {
 		return err
 	}
 
-	err = cmd.RegisterFlagCompletionFunc("no-runs", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	err = cmd.RegisterFlagCompletionFunc("disable-execute", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		moduleNames := []string{}
 		projectName := args[0]
 		project, err := o.GetProjectDef(projectName)
@@ -519,7 +480,7 @@ func (o *OptionsDefPatch) Validate(args []string) error {
 		return err
 	}
 
-	for _, runName := range o.Runs {
+	for _, runName := range o.EnableExecute {
 		err = pkg.ValidateRunName(runName)
 		if err != nil {
 			err = fmt.Errorf("run runName %s format error: %s", runName, err.Error())
@@ -527,7 +488,7 @@ func (o *OptionsDefPatch) Validate(args []string) error {
 		}
 	}
 
-	for _, runName := range o.NoRuns {
+	for _, runName := range o.DisableExecute {
 		err = pkg.ValidateRunName(runName)
 		if err != nil {
 			err = fmt.Errorf("no-run runName %s format error: %s", runName, err.Error())
@@ -638,8 +599,8 @@ func (o *OptionsDefPatch) Validate(args []string) error {
 		o.Param.PatchActions = append(o.Param.PatchActions, patchAction)
 	}
 
-	if kind == pkg.DefKindPipeline && len(o.Runs) > 0 {
-		for _, name := range o.Runs {
+	if kind == pkg.DefKindPipeline && len(o.EnableExecute) > 0 {
+		for _, name := range o.EnableExecute {
 			patchAction := pkg.PatchAction{
 				Action: "update",
 				Path:   fmt.Sprintf(`builds.#(name=="%s").run`, name),
@@ -649,8 +610,8 @@ func (o *OptionsDefPatch) Validate(args []string) error {
 			o.Param.PatchActions = append(o.Param.PatchActions, patchAction)
 		}
 	}
-	if kind == pkg.DefKindPipeline && len(o.NoRuns) > 0 {
-		for _, name := range o.NoRuns {
+	if kind == pkg.DefKindPipeline && len(o.DisableExecute) > 0 {
+		for _, name := range o.DisableExecute {
 			patchAction := pkg.PatchAction{
 				Action: "update",
 				Path:   fmt.Sprintf(`builds.#(name=="%s").run`, name),
@@ -722,7 +683,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 		}
 	}
 
-	for _, run := range o.Runs {
+	for _, run := range o.EnableExecute {
 		var found bool
 		for _, def := range project.ProjectDef.BuildDefs {
 			if run == def.BuildName {
@@ -736,7 +697,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 		}
 	}
 
-	for _, noRun := range o.NoRuns {
+	for _, noRun := range o.DisableExecute {
 		var found bool
 		for _, def := range project.ProjectDef.BuildDefs {
 			if noRun == def.BuildName {

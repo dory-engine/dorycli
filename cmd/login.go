@@ -33,19 +33,11 @@ func NewCmdLogin() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("login")
-	msgShort := fmt.Sprintf("login to dory-engine server")
-	msgLong := fmt.Sprintf("login first before use %s to control your dory-engine server, it will save dory-engine server settings in %s config file", baseName, baseName)
-	msgExample := fmt.Sprintf(`  # login with username and password input prompt
-  %s login --server-url http://dory.example.com:8080
 
-  # login without password input prompt
-  %s login --server-url http://dory.example.com:8080 --username test-user
-
-  # login without input prompt
-  %s login --server-url http://dory.example.com:8080 --username test-user --password xxx
-
-  # login with access token
-  %s login --server-url http://dory.example.com:8080 --token xxx`, baseName, baseName, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_login_short")
+	msgLong := OptCommon.TransLang("cmd_login_long", baseName, baseName)
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_login_example", baseName, baseName, baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -58,9 +50,9 @@ func NewCmdLogin() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVarP(&o.Username, "username", "U", "", "dory-engine server username")
-	cmd.Flags().StringVarP(&o.Password, "password", "P", "", "dory-engine server password")
-	cmd.Flags().IntVar(&o.ExpireDays, "expire-days", 90, "dory-engine server token expires days")
+	cmd.Flags().StringVarP(&o.Username, "username", "U", "", OptCommon.TransLang("param_login_username"))
+	cmd.Flags().StringVarP(&o.Password, "password", "P", "", OptCommon.TransLang("param_login_password"))
+	cmd.Flags().IntVar(&o.ExpireDays, "expire-days", 90, OptCommon.TransLang("param_login_expire_days"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

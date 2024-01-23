@@ -32,16 +32,11 @@ func NewCmdPipelineGet() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("get [pipelineName] ...")
-	msgShort := fmt.Sprintf("get pipeline resources")
-	msgLong := fmt.Sprintf(`get pipeline resources in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # get all pipeline resources
-  %s pipeline get
 
-  # get single pipeline resoure
-  %s pipeline get test-project1-develop
-
-  # get multiple pipeline resources
-  %s pipeline get test-project1-develop test-project1-ops`, baseName, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_pipeline_get_short")
+	msgLong := OptCommon.TransLang("cmd_pipeline_get_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_pipeline_get_example", baseName, baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -54,8 +49,8 @@ func NewCmdPipelineGet() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVarP(&o.ProjectNames, "projects", "p", "", "filters by projectNames, example: test-project1,test-project2")
-	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
+	cmd.Flags().StringVarP(&o.ProjectNames, "projects", "p", "", OptCommon.TransLang("param_pipeline_get_projects"))
+	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_pipeline_get_output"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

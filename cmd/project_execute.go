@@ -31,13 +31,11 @@ func NewCmdProjectExecute() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("execute [projectName] [opsBatchName]")
-	msgShort := fmt.Sprintf("execute project ops batch")
-	msgLong := fmt.Sprintf(`execute project ops batch in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # execute project ops batch
-  %s project execute test-project1 your-ops-batch-name
 
-  # execute project ops batch with params input
-  %s project execute test-project1 your-ops-batch-name --param=varName1=varValue1 --param=varName2=varValue2`, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_project_execute_short")
+	msgLong := OptCommon.TransLang("cmd_project_execute_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_project_execute_example", baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -50,7 +48,7 @@ func NewCmdProjectExecute() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringSliceVar(&o.Params, "params", []string{}, "project input params, example: varName=varValue")
+	cmd.Flags().StringSliceVar(&o.Params, "params", []string{}, OptCommon.TransLang("param_project_execute_params"))
 	CheckError(o.Complete(cmd))
 	return cmd
 }

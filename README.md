@@ -40,21 +40,42 @@
 dorycli -h
 ```
 
-- 子命令包括:
+- 子命令结构:
 
 ```text
-可用命令:
-  admin       管理配置信息，需要管理员权限
-  completion  启用自动完成功能，按键盘TAB键显示子命令和参数提示
-  def         管理项目定义配置
-  help        获取帮助
-  install     安装Dory-Engine
-  login       登录到dory-engine服务器
-  logout      注销登录
-  pipeline    查询或者运行流水线
-  project     查询项目信息或者执行ops流水线
-  run         查询流水线运行记录
-  version     查看版本信息
+dorycli
+├── admin # 配置项管理，需要管理员权限
+│   ├── apply # 把文件、目录或者stdin中的配置参数应用到Dory-Engine的配置项中，需要管理员权限
+│   ├── delete # 删除配置项，需要管理员权限
+│   └── get # 获取配置项，需要管理员权限
+├── def # 管理项目定义
+│   ├── apply # 应用项目定义配置项
+│   ├── clone # 把项目定义的模块复制到其他环境
+│   ├── delete # 删除项目定义中的模块
+│   ├── get # 获取项目定义
+│   └── patch # 通过补丁更新项目定义
+├── install # 把Dory-Engine安装在kubernetes集群或者docker主机上
+│   ├── check # 检查安装的前提条件
+│   ├── ha # 创建高可用kubernetes集群的负载均衡器
+│   │   ├── print # 打印高可用kubernetes集群负载均衡器安装配置的YAML文件
+│   │   └── script # 创建负载均衡器的配置文件、docker-compose文件以及高可用kubernetes集群的初始化配置文件
+│   ├── print # 打印安装配置YAML文件
+│   ├── pull # 拉取并构建相关容器镜像
+│   ├── run # 自动安装Dory-Engine
+│   └── script # 手动安装Dory-Engine
+├── login # 登录到Dory-Engine
+├── logout # 从Dory-Engine注销
+├── pipeline # 获取或者执行流水线
+│   ├── execute # 执行流水线
+│   └── get # 获取流水线
+├── project # 管理项目
+│   ├── execute # 执行项目批处理任务
+│   └── get # 获取项目信息
+├── run # 管理流水线运行记录
+│   ├── abort # 终止执行中的流水线
+│   ├── get # 查看流水线运行记录
+│   └── logs # 查看流水线运行日志
+└── version # 显示版本信息
 ```
 
 ## 安装 dorycli
@@ -108,4 +129,3 @@ which dorycli
 [🚀🚀🚀 Dory-Engine自定义上云流程 (https://www.bilibili.com/video/BV1Uj411n78S/)](https://www.bilibili.com/video/BV1Uj411n78S/)
 
 [🚀🚀🚀 Dory-Engine深入云原生应用部署 (https://www.bilibili.com/video/BV18g4y1D77S/)](https://www.bilibili.com/video/BV18g4y1D77S/)
-

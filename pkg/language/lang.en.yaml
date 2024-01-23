@@ -1,0 +1,712 @@
+cmd_short:
+  other: "command line toolkit to manage Dory-Engine"
+cmd_long:
+  other: "command line toolkit to install or manage Dory-Engine"
+cmd_example:
+  other: |-
+    # subcommands structure
+    {{._0}}
+    ├── admin # manage configurations, admin permission required
+    │   ├── apply # apply configurations, admin permission required
+    │   ├── delete # delete configurations, admin permission required
+    │   └── get # get configurations, admin permission required
+    ├── def # manage project definitions
+    │   ├── apply # apply project definitions
+    │   ├── clone # clone project definitions modules to another environments
+    │   ├── delete # delete modules from project definitions
+    │   ├── get # get project definitions
+    │   └── patch # patch project definitions
+    ├── install # install Dory-Engine in kubernetes or docker
+    │   ├── check # check install prerequisite
+    │   ├── ha # create high availability kubernetes cluster load balancer
+    │   │   ├── print # print high availability kubernetes cluster install settings YAML file
+    │   │   └── script # create load balancer config files and docker-compose files and kuberentes install files
+    │   ├── print # print install settings YAML file
+    │   ├── pull # pull and build all container images
+    │   ├── run # install Dory-Engine automatically
+    │   └── script # install Dory-Engine by manual
+    ├── login # login to Dory-Engine
+    ├── logout # logout from Dory-Engine
+    ├── pipeline # get or execute pipeline
+    │   ├── execute # execute pipeline
+    │   └── get # get pipelines
+    ├── project # manage projects
+    │   ├── execute # execute project ops batch
+    │   └── get # get projects
+    ├── run # manage pipeline runs
+    │   ├── abort # abort running pipeline
+    │   ├── get # get pipeline run history
+    │   └── logs # show pipeline run logs
+    └── version # show version info
+
+    # install Dory-Engine
+    {{._0}} install run -o readme-install -f install-config.yaml
+cmd_admin_short:
+  other: "manage configurations, admin permission required"
+cmd_admin_long:
+  other: "manage users, custom steps, kubernetes environments, component templates, docker build environments, repository configurations in Dory-Engine, admin permission required"
+cmd_admin_example:
+  other: |-
+    # get all users, custom steps, kubernetes environments and component templates, docker build environments, repository configurations, admin permission required
+    {{._0}} admin get {{._1}}
+
+    # apply multiple configurations from file or directory, admin permission required
+    {{._2}} admin apply -f users.yaml -f custom-steps.json
+
+    # delete configuration items, admin permission required
+    {{._3}} admin delete {{._4}} customStepName1
+cmd_admin_apply_short:
+  other: "apply configurations, admin permission required"
+cmd_admin_apply_long:
+  other: "apply configurations to Dory-Engine by file or directory or stdin, admin permission required"
+cmd_admin_apply_example:
+  other: |-
+    # support kind: componentTemplate, envK8s, customStepConf, user, dockerBuildEnv, gitRepoConfig, imageRepoConfig, artifactRepoConfig, scanCodeRepoConfig
+    # it will update or insert configurations items
+    # JSON and YAML formats are accepted.
+    # support apply multiple configurations at the same time.
+    # if [filename] is a directory, it will read all *.json and *.yaml and *.yml files in this directory.
+
+    # apply configurations from file, admin permission required
+    {{._0}} admin apply -f steps.yaml -f users.json
+
+    # apply configurations from stdin, admin permission required
+    cat users.yaml | {{._1}} admin apply -f -
+cmd_admin_delete_short:
+  other: "delete configurations, admin permission required"
+cmd_admin_delete_long:
+  other: "delete configurations in Dory-Engine, admin permission required"
+cmd_admin_delete_example:
+  other: |-
+    kind options: all, {{._0}}
+
+    # delete users, admin permission required
+    {{._1}} admin delete {{._2}} test-user01 test-user02
+  
+    # delete custom step configurations, admin permission required
+    {{._3}} admin delete {{._4}} customStepName1 customStepName2
+  
+    # delete kubernetes environment configurations, admin permission required
+    {{._5}} admin delete {{._6}} test uat
+  
+    # delete component template configurations, admin permission required
+    {{._7}} admin delete {{._8}} mysql-v8
+cmd_admin_get_short:
+  other: "get configurations, admin permission required"
+cmd_admin_get_long:
+  other: "get configurations in Dory-Engine, admin permission required"
+cmd_admin_get_example:
+  other: |-
+    kind options: all, {{._0}}
+  
+    # get all configurations, show with YAML format, admin permission required
+    {{._1}} admin get {{._2}} --output=yaml
+  
+    # get all configurations, show with YAML format and full version, admin permission required
+    {{._3}} admin get {{._4}} --output=yaml --full
+  
+    # get custom steps and component templates configurations, admin permission required
+    {{._5}} admin get {{._6}},{{._7}}
+  
+    # get users configurations, and filter by userNames, admin permission required
+    {{._8}} admin get {{._9}} test-user1 test-user2
+  
+    # get kubernetes environments configurations, and filter by envNames, admin permission required
+    {{._10}} admin get {{._11}} test uat prod
+cmd_def_short:
+  other: "manage project definitions"
+cmd_def_long:
+  other: "manage project definitions in Dory-Engine"
+cmd_def_example:
+  other: |-
+    # get project all definitions
+    {{._0}} def get test-project1 {{._1}}
+  
+    # apply project definitions from file or directory
+    {{._2}} def apply -f def1.yaml -f def2.json
+  
+    # clone project definitions deploy modules to another environments
+    {{._3}} def clone test-project1 {{._4}} --from-env=test --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod
+  
+    # delete modules from project build definitions
+    {{._5}} def delete test-project1 {{._6}} --modules=tp1-gin-demo,tp1-node-demo
+  
+    # patch project build modules definitions, update tp1-gin-demo,tp1-go-demo buildChecks commands
+    {{._7}} def patch test-project1 {{._8}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'
+cmd_def_apply_short:
+  other: "apply project definitions"
+cmd_def_apply_long:
+  other: |-
+    apply project definitions to Dory-Engine from file or directory or stdin.
+    # it will update or insert project definitions items
+    # JSON and YAML formats are accepted, the complete definitions must be provided.
+    # support apply multiple project definitions at the same time.
+    # if [filename] is a directory, it will read all *.json and *.yaml and *.yml files in this directory.
+cmd_def_apply_example:
+  other: |-
+    # apply project definitions from file or directory
+    {{._0}} def apply -f def1.yaml -f def2.json
+    
+    # apply project definitions from stdin
+    cat def1.yaml | {{._1}} def apply -f -
+cmd_def_clone_short:
+  other: "clone project definitions modules to another environments"
+cmd_def_clone_long:
+  other: "clone project definitions modules to another environments in Dory-Engine"
+cmd_def_clone_example:
+  other: |-
+    # kind options: {{._0}}
+    
+    # clone project definitions deploy modules to another environments
+    {{._1}} def clone test-project1 {{._2}} --from-env=test --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod
+    
+    # clone project definitions step modules to another environments
+    {{._3}} def clone test-project1 {{._4}} --from-env=test --step=customStepName2 --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod
+cmd_def_delete_short:
+  other: "delete modules from project definitions"
+cmd_def_delete_long:
+  other: "delete modules from project definitions in Dory-Engine"
+cmd_def_delete_example:
+  other: |-
+    # kind options: {{._0}}
+
+    # delete modules from project build definitions
+    {{._1}} def delete test-project1 {{._2}} --modules=tp1-gin-demo,tp1-node-demo
+  
+    # delete modules from project deploy definitions in envNames
+    {{._3}} def delete test-project1 {{._4}} --modules=tp1-gin-demo,tp1-node-demo --envs=test
+  
+    # delete modules from project step definitions in stepNames
+    {{._5}} def delete test-project1 {{._6}} --modules=tp1-gin-demo,tp1-node-demo --steps=customStepName1
+  
+    # delete modules from project step definitions in envNames and stepNames
+    {{._7}} def delete test-project1 {{._8}} --modules=tp1-gin-demo,tp1-node-demo --envs=test --steps=customStepName1
+cmd_def_get_short:
+  other: "get project definitions"
+cmd_def_get_long:
+  other: "get project definitions in Dory-Engine"
+cmd_def_get_example:
+  other: |-
+    # kind options: {{._0}}
+  
+    # get project definitions summary
+    {{._1}} def get test-project1
+  
+    # get project all definitions, with output format YAML
+    {{._2}} def get test-project1 {{._3}} --output=yaml
+  
+    # get project all definitions, with output format YAML, and show in full version
+    {{._4}} def get test-project1 {{._5}} --output=yaml --full
+  
+    # get project build and package modules definitions
+    {{._6}} def get test-project1 {{._7}},{{._8}}
+  
+    # get project deploy modules definitions, and filter by moduleNames and envNames
+    {{._9}} def get test-project1 {{._10}} --modules=tp1-go-demo,tp1-gin-demo --envs=test
+  
+    # get project pipeline definitions, and filter by branchNames
+    {{._11}} def get test-project1 {{._12}} --branches=develop,release
+  
+    # get project custom step modules definitions, and filter by envNames and stepNames
+    {{._13}} def get test-project1 {{._14}} --envs=test --steps=customStepName2
+cmd_def_patch_short:
+  other: "patch project definitions"
+cmd_def_patch_long:
+  other: "patch project definitions in Dory-Engine"
+cmd_def_patch_example:
+  other: |-
+    # kind options: {{._0}}
+  
+    # print current project build modules definitions for patched
+    {{._1}} def patch test-project1 {{._2}} --modules=tp1-go-demo,tp1-gin-demo -o yaml
+  
+    # patch project build modules definitions, update tp1-gin-demo,tp1-go-demo buildChecks commands
+    {{._3}} def patch test-project1 {{._4}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'
+  
+    # patch project deploy modules definitions, delete test environment tp1-go-demo,tp1-gin-demo deployResources settings
+    {{._5}} def patch test-project1 {{._6}} --modules=tp1-go-demo,tp1-gin-demo --envs=test --patch='[{"action": "delete", "path": "deployResources"}]'
+  
+    # patch project deploy modules definitions, delete test environment tp1-gin-demo deployNodePorts.0.nodePort to 30109
+    {{._7}} def patch test-project1 {{._8}} --modules=tp1-gin-demo --envs=test --patch='[{"action": "update", "path": "deployNodePorts.0.nodePort", "value": 30109}]'
+  
+    # patch project pipeline definitions, update builds dp1-gin-demo run setting to true 
+    {{._9}} def patch test-project1 {{._10}} --branches=develop,release --patch='[{"action": "update", "path": "builds.#(name==\"dp1-gin-demo\").run", "value": true}]'
+  
+    # patch project pipeline definitions, update builds dp1-gin-demo,dp1-go-demo run setting to true 
+    {{._11}} def patch test-project1 {{._12}} --branches=develop,release --runs=dp1-gin-demo,dp1-go-demo
+  
+    # patch project pipeline definitions, update builds dp1-gin-demo,dp1-go-demo run setting to false 
+    {{._13}} def patch test-project1 {{._14}} --branches=develop,release --no-runs=dp1-gin-demo,dp1-go-demo
+  
+    # patch project custom step modules definitions, update customStepName2 step in test environment tp1-gin-demo paramInputYaml
+    {{._15}} def patch test-project1 {{._16}} --envs=test --step=customStepName2 --modules=tp1-gin-demo --patch='[{"action": "update", "path": "paramInputYaml", "value": "path: Tests"}]'
+  
+    # patch project pipeline definitions from stdin, support JSON and YAML
+    cat << EOF | {{._17}} def patch test-project1 {{._18}} --branches=develop,release -f -
+    - action: update
+      path: builds
+      value:
+        - name: dp1-go-demo
+          run: true
+        - name: dp1-vue-demo
+          run: true
+    - action: update
+      path: pipelineStep.deploy.enable
+      value: false
+    - action: delete
+      value: customStepInsertDefs.build
+    EOF
+  
+    # patch project pipeline definitions from file, support JSON and YAML
+    {{._19}} def patch test-project1 {{._20}} --branches=develop,release -f patch.yaml
+cmd_install_short:
+  other: "install Dory-Engine in kubernetes or docker"
+cmd_install_long:
+  other: "install Dory-Engine and relative components in kubernetes cluster or docker host"
+cmd_install_example:
+  other: |-
+    {{._0}} install should run on a node be able to manage kubernetes cluster
+    
+    ##############################
+    # please follow these steps to install Dory-Engine in kubernetes (for production recommended):
+    
+    # 1. check installing Dory-Engine in kubernetes prerequisite, managed kubernetes cluster runtime is docker
+    {{._1}} install check --mode kubernetes --runtime docker
+    
+    # 2. print installing Dory-Engine in kubernetes settings YAML file, managed kubernetes cluster runtime is docker
+    {{._2}} install print --mode kubernetes --runtime docker > install-config-kubernetes.yaml
+    
+    # 3. modify installation config file by manual
+    vi install-config-kubernetes.yaml
+    
+    # 4. pull and build all container images required for installing Dory-Engine
+    {{._3}} install pull -f install-config-kubernetes.yaml
+    
+    # 5. (option 1) install Dory-Engine in kubernetes automatically
+    {{._4}} install run -o readme-install-kubernetes -f install-config-kubernetes.yaml
+    
+    # 5. (option 2) install Dory-Engine in kubernetes by manual, it will output readme files, deploy files and config files, follow the readme files to customize install Dory-Engine
+    {{._5}} install script -o readme-install-kubernetes -f install-config-kubernetes.yaml
+  
+    ##############################
+    please follow these steps to install Dory-Engine in docker (for test only):
+    
+    # 1. check installing Dory-Engine in docker prerequisite, managed kubernetes cluster runtime is docker
+    {{._6}} install check --mode docker --runtime docker
+    
+    # 2. print installing Dory-Engine in docker settings YAML file, managed kubernetes cluster runtime is docker
+    {{._7}} install print --mode docker --runtime docker > install-config-docker.yaml
+    
+    # 3. modify installation config file by manual
+    vi install-config-docker.yaml
+    
+    # 4. pull and build all container images required for installing Dory-Engine in docker
+    {{._8}} install pull -f install-config-docker.yaml
+    
+    # 5. (option 1) install Dory-Engine in docker automatically
+    {{._9}} install run -o readme-install-docker -f install-config-docker.yaml
+    
+    # 5. (option 2) install Dory-Engine in docker by manual, it will output readme files, deploy files and config files, follow the readme files to customize install Dory-Engine
+    {{._10}} install script -o readme-install-docker -f install-config-docker.yaml
+cmd_install_check_short:
+  other: "check install prerequisite"
+cmd_install_check_long:
+  other: "check installing Dory-Engine in kubernetes cluster or docker host prerequisite"
+cmd_install_check_example:
+  other: |-
+    # check installing Dory-Engine in kubernetes prerequisite, managed kubernetes cluster runtime is containerd
+    {{._0}} install check --mode kubernetes --runtime containerd
+  
+    # check installing Dory-Engine in docker prerequisite, managed kubernetes cluster runtime is containerd
+    {{._1}} install check --mode docker --runtime containerd
+cmd_install_ha_short:
+  other: "create high availability kubernetes cluster load balancer"
+cmd_install_ha_long:
+  other: "create high availability kubernetes cluster load balancer with keepalived and nginx, this command will create keepalived and nginx config files and docker-compose files and kuberentes install files"
+cmd_install_ha_example:
+  other: |-
+    high availability kubernetes cluster installation document please check:
+    https://github.com/cookeem/kubeadm-ha
+  
+    ##############################
+    # please follow these steps to create load balancer config files:
+    
+    # 1. print load balancer installation settings YAML file
+    {{._0}} install ha print > kubernetes-ha.yaml
+    
+    # 2. modify load balancer installation settings YAML file by manual
+    vi kubernetes-ha.yaml
+    
+    # 3. create load balancer config files and docker-compose files and kuberentes install files 
+    {{._1}} install ha script -o readme-kubernetes-ha -f kubernetes-ha.yaml
+cmd_install_ha_print_short:
+  other: "print high availability kubernetes cluster install settings YAML file"
+cmd_install_ha_print_long:
+  other: "print high availability kubernetes cluster install settings YAML file"
+cmd_install_ha_print_example:
+  other: |-
+    # print load balancer installation settings YAML file
+    {{._0}} install print
+cmd_install_ha_script_short:
+  other: "create load balancer config files and docker-compose files and kuberentes install files"
+cmd_install_ha_script_long:
+  other: "create keepalived and nginx load balancer config files and docker-compose files and kuberentes install files"
+cmd_install_ha_script_example:
+  other: |-
+    # create load balancer config files and docker-compose files and kuberentes install files
+    {{._0}} install ha script -o readme-kubernetes-ha -f kubernetes-ha.yaml
+    or
+    cat kubernetes-ha.yaml | {{._1}} install ha script -o readme-kubernetes-ha -f -
+cmd_install_print_short:
+  other: "print install settings YAML file"
+cmd_install_print_long:
+  other: "print Dory-Engine installation settings YAML file"
+cmd_install_print_example:
+  other: |-
+    # print installing Dory-Engine in kubernetes cluster settings YAML file, managed kubernetes cluster runtime is containerd
+    {{._0}} install print --mode kubernetes --runtime containerd
+    
+    # print installing Dory-Engine in docker host settings YAML file, managed kubernetes cluster runtime is docker
+    {{._1}} install print --mode docker --runtime docker
+cmd_install_pull_short:
+  other: "pull and build all container images"
+cmd_install_pull_long:
+  other: "pull and build all container images required for installation"
+cmd_install_pull_example:
+  other: |-
+    # if install harbor as image repository it will pull and build images
+    # if install nexus it will download nexus init data
+  
+    # pull and build all container images required for installing Dory-Engine
+    {{._0}} install pull -f install-config.yaml
+cmd_install_run_short:
+  other: "install Dory-Engine automatically"
+cmd_install_run_long:
+  other: "install Dory-Engine in kubernetes cluster or docker host automatically"
+cmd_install_run_example:
+  other: |-
+    # install Dory-Engine and all relative components in kubernetes cluster or docker host automatically
+    # readme file will save in readme-install directory
+    {{._0}} install run -o readme-install -f install-config.yaml
+cmd_install_script_short:
+  other: "install Dory-Engine by manual"
+cmd_install_script_long:
+  other: "create Dory-Engine install readme file and scripts and config files, follow the readme steps to finish Dory-Engine installation"
+cmd_install_script_example:
+  other: |-
+    # create Dory-Engine install readme file and scripts and config files
+    # readme file and scripts and config files will save in readme-install directory
+    {{._0}} install script -o readme-install -f install-config.yaml
+    or
+    cat install-config.yaml | {{._1}} install script -o readme-install -f -
+cmd_login_short:
+  other: "login to Dory-Engine"
+cmd_login_long:
+  other: "login first before use {{._0}} to manage Dory-Engine, it will save Dory-Engine connection settings in {{._1}} config file"
+cmd_login_example:
+  other: |-
+    # login with username and password input prompt
+    {{._0}} login --server-url http://dory.example.com:8080
+  
+    # login without username input prompt
+    {{._1}} login --server-url http://dory.example.com:8080 --username test-user
+  
+    # login without username and password input prompt
+    {{._2}} login --server-url http://dory.example.com:8080 --username test-user --password xxx
+  
+    # login with access token
+    {{._3}} login --server-url http://dory.example.com:8080 --token xxx
+cmd_logout_short:
+  other: "logout from Dory-Engine"
+cmd_logout_long:
+  other: "it will clear Dory-Engine connection settings from {{._0}} config file"
+cmd_logout_example:
+  other: |-
+    # logout from Dory-Engine
+    {{._0}} logout
+cmd_pipeline_short:
+  other: "get or execute pipeline"
+cmd_pipeline_long:
+  other: "get or execute pipeline"
+cmd_pipeline_example:
+  other: |-
+    # get all pipeline
+    {{._0}} pipeline get
+  
+    # execute pipeline
+    {{._1}} pipeline execute test-project1-develop
+cmd_pipeline_execute_short:
+  other: "execute pipeline"
+cmd_pipeline_execute_long:
+  other: "execute pipeline"
+cmd_pipeline_execute_example:
+  other: |-
+    # execute pipeline
+    {{._0}} pipeline execute test-project1-develop
+  
+    # execute pipeline with batch input automatically
+    {{._1}} pipeline execute test-project1-ops --batch "develop::test::inputCheckDeploy::tp1-gin-demo,tp1-go-demo"
+  
+    # execute pipeline with request params
+    {{._2}} pipeline execute test-project1-ops --param=varName1=varValue1 --param=varName2=varValue2
+cmd_pipeline_get_short:
+  other: "get pipelines"
+cmd_pipeline_get_long:
+  other: "get pipelines"
+cmd_pipeline_get_example:
+  other: |-
+    # get all pipelines
+    {{._0}} pipeline get
+  
+    # get single pipeline
+    {{._1}} pipeline get test-project1-develop
+  
+    # get multiple pipelines
+    {{._2}} pipeline get test-project1-develop test-project1-ops
+cmd_project_short:
+  other: "manage projects"
+cmd_project_long:
+  other: "manage projects"
+cmd_project_example:
+  other: |-
+    # get project info
+    {{._0}} project get
+  
+    # execute project ops batch
+    {{._1}} project execute test-project1 your-ops-batch-name
+cmd_project_execute_short:
+  other: "execute project ops batch"
+cmd_project_execute_long:
+  other: "execute project ops batch pipeline"
+cmd_project_execute_example:
+  other: |-
+    # execute project ops batch
+    {{._0}} project execute test-project1 your-ops-batch-name
+  
+    # execute project ops batch with request params
+    {{._1}} project execute test-project1 your-ops-batch-name --param=varName1=varValue1 --param=varName2=varValue2
+cmd_project_get_short:
+  other: "get projects"
+cmd_project_get_long:
+  other: "get projects"
+cmd_project_get_example:
+  other: |-
+    # get all projects
+    {{._0}} project get
+  
+    # get single project
+    {{._1}} project get test-project1
+  
+    # get multiple projects
+    {{._2}} project get test-project1 test-project2
+cmd_run_short:
+  other: "manage pipeline runs"
+cmd_run_long:
+  other: "manage pipeline runs"
+cmd_run_example:
+  other: |-
+    # get all pipelines run history
+    {{._0}} run get
+    
+    # show pipeline run logs
+    {{._1}} run logs test-project1-develop-1
+    
+    # abort running pipeline
+    {{._2}} run abort test-project1-develop-1
+cmd_run_abort_short:
+  other: "abort running pipeline"
+cmd_run_abort_long:
+  other: "abort running pipeline"
+cmd_run_abort_example:
+  other: |-
+    # abort running pipeline
+    {{._0}} run abort test-project1-develop-1
+cmd_run_get_short:
+  other: "get pipeline run history"
+cmd_run_get_long:
+  other: "get pipeline run history"
+cmd_run_get_example:
+  other: |-
+    # get all pipelines run history
+    {{._0}} run get
+  
+    # get single pipeline run history
+    {{._1}} run get test-project1-develop-1
+cmd_run_logs_short:
+  other: "show pipeline run logs"
+cmd_run_logs_long:
+  other: "show pipeline run logs"
+cmd_run_logs_example:
+  other: |-
+    # show pipeline run logs
+    {{._0}} run logs test-project1-develop-1
+cmd_version_short:
+  other: "show version info"
+cmd_version_long:
+  other: "show {{._0}} and Dory-Engine version info"
+cmd_version_example:
+  other: |-
+    # show {{._0}} and Dory-Engine version info
+    {{._1}} version
+##################################################
+param_config:
+  other: "{{._0}} config.yaml config file, it can set by system environment variable {{._1}} (default is $HOME/{{._2}}/{{._3}})"
+param_server_url:
+  other: "Dory-Engine URL, example: https://dory.example.com:8080"
+param_insecure:
+  other: "if true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure"
+param_timeout:
+  other: "Dory-Engine connection timeout seconds settings"
+param_token:
+  other: "Dory-Engine access token"
+param_language:
+  other: "language settings (options: zh / en)"
+param_admin_apply_output:
+  other: "output format (options: yaml / json)"
+param_admin_apply_recursive:
+  other: "process the directory used in -f, --files recursively"
+param_admin_apply_full:
+  other: "output configurations in full version, use with --output option"
+param_admin_apply_files:
+  other: "configurations file name or directory, support *.json and *.yaml and *.yml files"
+param_admin_apply_try:
+  other: "try to check input configurations only, not apply to Dory-Engine, use with --output option"
+param_admin_get_output:
+  other: "output format (options: yaml / json)"
+param_admin_get_full:
+  other: "output configurations in full version, use with --output option"
+param_def_apply_output:
+  other: "output format (options: yaml / json)"
+param_def_apply_recursive:
+  other: "process the directory used in -f, --files recursively"
+param_def_apply_full:
+  other: "output project definitions in full version, use with --output option"
+param_def_apply_files:
+  other: "project definitions file name or directory, support *.json and *.yaml and *.yml files"
+param_def_apply_try:
+  other: "try to check input project definitions only, not apply to Dory-Engine, use with --output option"
+param_def_clone_from_env:
+  other: "which environment modules clone from"
+param_def_clone_step:
+  other: "which step modules clone from, required if kind is {{._0}}"
+param_def_clone_modules:
+  other: "which modules to clone"
+param_def_clone_to_envs:
+  other: "which environments modules clone to"
+param_def_clone_output:
+  other: "output format (options: yaml / json)"
+param_def_clone_full:
+  other: "output project definitions in full version, use with --output option"
+param_def_clone_try:
+  other: "try to check input project definitions only, not apply to Dory-Engine, use with --output option"
+param_def_delete_modules:
+  other: "moduleNames to delete"
+param_def_delete_envs:
+  other: "filter project definitions by envNames, required if kind is {{._0}} / {{._1}} / {{._2}}"
+param_def_delete_steps:
+  other: "filter project definitions by stepNames, required if kind is {{._0}}"
+param_def_delete_output:
+  other: "output format (options: yaml / json)"
+param_def_delete_full:
+  other: "output project definitions in full version, use with --output option"
+param_def_delete_try:
+  other: "try to check input project definitions only, not apply to Dory-Engine, use with --output option"
+param_def_get_modules:
+  other: "filter project definitions items by moduleNames"
+param_def_get_envs:
+  other: "filter project definitions by envNames"
+param_def_get_branches:
+  other: "filter project pipeline definitions by branchNames"
+param_def_get_steps:
+  other: "filter project definitions by stepNames"
+param_def_get_output:
+  other: "output format (options: yaml / json)"
+param_def_get_full:
+  other: "output project definitions in full version, use with --output option"
+param_def_patch_modules:
+  other: "filter moduleNames to patch"
+param_def_patch_envs:
+  other: "filter envNames to patch, required if kind is {{._0}} / {{._1}} / {{._2}} / {{._3}}"
+param_def_patch_branches:
+  other: "filter branchNames to patch, required if kind is {{._0}}"
+param_def_patch_step:
+  other: "filter stepName to patch, required if kind is {{._0}}"
+param_def_patch_patch:
+  other: |-
+    patch actions in JSON format, example: [{"action": "update", "path": "paramInputYaml", "value": "path: Tests"}]
+param_def_patch_file:
+  other: "project definitions patch file name, support *.json and *.yaml and *.yml file"
+param_def_patch_enable_execute:
+  other: "set pipeline definition which build modules enable execute, only uses with kind is {{._0}}"
+param_def_patch_disable_execute:
+  other: "set pipeline definition which build modules disable execute, only uses with kind is {{._0}}"
+param_def_patch_try:
+  other: "try to check input project definitions only, not apply to Dory-Engine, use with --output option"
+param_def_patch_output:
+  other: "output format (options: yaml / json)"
+param_def_patch_full:
+  other: "output project definitions in full version, use with --output option"
+param_install_check_mode:
+  other: "Dory-Engine install mode, install in kubernetes cluster or docker host, options: kubernetes, docker"
+param_install_check_runtime:
+  other: "Dory-Engine managed kubernetes cluster container runtime, options: docker, containerd, crio"
+param_install_ha_script_file:
+  other: "high availability kubernetes load balancer install settings YAML file"
+param_install_ha_script_output:
+  other: "README, script and config files output directory"
+param_install_print_mode:
+  other: "Dory-Engine install mode, install in kubernetes cluster or docker host, options: kubernetes, docker"
+param_install_print_runtime:
+  other: "Dory-Engine managed kubernetes cluster container runtime, options: docker, containerd, crio"
+param_install_print_full:
+  other: "install Dory-Engine and all optional repository tools. include git repository, artifact repository, image repository and scan code repository"
+param_install_pull_file:
+  other: "Dory-Engine install settings YAML file"
+param_install_pull_force_download:
+  other: "force download nexus init data"
+param_install_run_file:
+  other: "Dory-Engine install settings YAML file"
+param_install_run_output:
+  other: "Dory-Engine install README, script and config files output directory"
+param_install_script_file:
+  other: "Dory-Engine install settings YAML file"
+param_install_script_output:
+  other: "Dory-Engine install README, script and config files output directory"
+param_login_username:
+  other: "Dory-Engine login username"
+param_login_password:
+  other: "Dory-Engine login password"
+param_login_expire_days:
+  other: "Dory-Engine token will expires in how many days"
+param_pipeline_execute_batch:
+  other: "send input params automatically, pipeline without prompt waiting for input, batch values split with ::, example: develop::test::inputCheckDeploy::tp1-gin-demo,tp1-go-demo"
+param_pipeline_execute_params:
+  other: "execute pipeline with request params, example: varName=varValue"
+param_pipeline_get_projects:
+  other: "filters by projectNames, example: test-project1,test-project2"
+param_pipeline_get_output:
+  other: "output format (options: yaml / json)"
+param_project_execute_params:
+  other: "execute project batch pipeline with request params, example: varName=varValue"
+param_project_get_team:
+  other: "filters by projectTeam"
+param_project_get_output:
+  other: "output format (options: yaml / json)"
+param_run_abort_logs:
+  other: "show pipeline run logs"
+param_run_get_projects:
+  other: "filters by projectNames, example: test-project1,test-project2"
+param_run_get_pipelines:
+  other: "filters by pipelineNames, example: test-project1-develop,test-project2-ops"
+param_run_get_statuses:
+  other: "filters by pipeline run statuses, example: SUCCESS,FAIL (options: SUCCESS / FAIL / ABORT / RUNNING / INPUT)"
+param_run_get_start:
+  other: "filters by pipeline run startTime, example: 2022-01-01"
+param_run_get_end:
+  other: "filters by pipeline run endTime, example: 2022-01-31"
+param_run_get_page:
+  other: "pagination number"
+param_run_get_number:
+  other: "show how many items each page"
+param_run_get_output:
+  other: "output format (options: yaml / json)"

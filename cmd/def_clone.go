@@ -6,6 +6,7 @@ import (
 	"github.com/dory-engine/dorycli/pkg"
 	"github.com/spf13/cobra"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -39,17 +40,15 @@ func NewCmdDefClone() *cobra.Command {
 		pkg.DefKindIstio,
 		pkg.DefKindCustomStep,
 	}
+	sort.Strings(defCmdKinds)
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`clone [projectName] [kind] [--from-env=envName] [--step=stepName] [--modules=moduleName1,moduleName2] [--to-envs=envName1,envName2] [--output=json|yaml]
-# kind options: %s`, strings.Join(defCmdKinds, " / "))
-	msgShort := fmt.Sprintf("clone project definitions modules to another environments")
-	msgLong := fmt.Sprintf(`clone project definitions modules to another environments in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # clone project definitions deploy modules to another environments
-  %s def clone test-project1 %s --from-env=test --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod
+	msgUse := fmt.Sprintf(`clone [projectName] [kind] [--from-env=envName] [--step=stepName] [--modules=moduleName1,moduleName2] [--to-envs=envName1,envName2] [--output=json|yaml]`)
 
-  # clone project definitions step modules to another environments
-  %s def clone test-project1 %s --from-env=test --step=customStepName2 --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod`, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindCustomStep)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_def_clone_short")
+	msgLong := OptCommon.TransLang("cmd_def_clone_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_def_clone_example", strings.Join(defCmdKinds, " / "), baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindCustomStep))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -62,13 +61,13 @@ func NewCmdDefClone() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVar(&o.FromEnvName, "from-env", "", "which environment modules clone from")
-	cmd.Flags().StringVar(&o.StepName, "step", "", fmt.Sprintf("which step modules clone from, required if kind is %s", pkg.DefKindCustomStep))
-	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, "which modules to clone")
-	cmd.Flags().StringSliceVar(&o.ToEnvNames, "to-envs", []string{}, "which environments modules clone to")
-	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
-	cmd.Flags().BoolVar(&o.Full, "full", false, "output project definitions in full version, use with --output option")
-	cmd.Flags().BoolVar(&o.Try, "try", false, "try to check input project definitions only, not apply to dory-engine server, use with --output option")
+	cmd.Flags().StringVar(&o.FromEnvName, "from-env", "", OptCommon.TransLang("param_def_clone_from_env"))
+	cmd.Flags().StringVar(&o.StepName, "step", "", OptCommon.TransLang("param_def_clone_step", pkg.DefKindCustomStep))
+	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, OptCommon.TransLang("param_def_clone_modules"))
+	cmd.Flags().StringSliceVar(&o.ToEnvNames, "to-envs", []string{}, OptCommon.TransLang("param_def_clone_to_envs"))
+	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_def_clone_output"))
+	cmd.Flags().BoolVar(&o.Full, "full", false, OptCommon.TransLang("param_def_clone_full"))
+	cmd.Flags().BoolVar(&o.Try, "try", false, OptCommon.TransLang("param_def_clone_try"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

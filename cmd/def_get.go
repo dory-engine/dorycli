@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -39,32 +40,15 @@ func NewCmdDefGet() *cobra.Command {
 	for k, _ := range pkg.DefCmdKinds {
 		defCmdKinds = append(defCmdKinds, k)
 	}
+	sort.Strings(defCmdKinds)
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`get [projectName] [kind],[kind]... [--output=json|yaml] [--modules=moduleName1,moduleName2] [--envs=envName1,envName2] [--branches=branchName1,branchName2] [--steps=stepName1,stepName2]
-  # kind options: %s`, strings.Join(defCmdKinds, " / "))
-	msgShort := fmt.Sprintf("get project definitions")
-	msgLong := fmt.Sprintf(`get project definitions in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # get project definitions summary
-  %s def get test-project1
+	msgUse := fmt.Sprintf(`get [projectName] [kind],[kind]... [--output=json|yaml] [--modules=moduleName1,moduleName2] [--envs=envName1,envName2] [--branches=branchName1,branchName2] [--steps=stepName1,stepName2]`)
 
-  # get project all definitions
-  %s def get test-project1 %s --output=yaml
-
-  # get project all definitions, and show in full version
-  %s def get test-project1 %s --output=yaml --full
-
-  # get project build and package modules definitions
-  %s def get test-project1 %s,%s
-
-  # get project deploy modules definitions, and filter by moduleNames and envNames
-  %s def get test-project1 %s --modules=tp1-go-demo,tp1-gin-demo --envs=test
-
-  # get project pipeline definitions, and filter by branchNames
-  %s def get test-project1 %s --branches=develop,release
-
-  # get project custom step modules definitions, and filter by envNames and stepNames
-  %s def get test-project1 %s --envs=test --steps=customStepName2`, baseName, baseName, pkg.DefKindAll, baseName, pkg.DefKindAll, baseName, pkg.DefKindBuild, pkg.DefKindPackage, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindCustomStep)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_def_get_short")
+	msgLong := OptCommon.TransLang("cmd_def_get_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_def_get_example", strings.Join(defCmdKinds, " / "), baseName, baseName, pkg.DefKindAll, baseName, pkg.DefKindAll, baseName, pkg.DefKindBuild, pkg.DefKindPackage, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindPipeline, baseName, pkg.DefKindCustomStep))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -77,12 +61,12 @@ func NewCmdDefGet() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, "filter project definitions items by moduleNames")
-	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, "filter project definitions by envNames")
-	cmd.Flags().StringSliceVar(&o.BranchNames, "branches", []string{}, "filter project pipeline definitions by branchNames")
-	cmd.Flags().StringSliceVar(&o.StepNames, "steps", []string{}, "filter project definitions by stepNames")
-	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
-	cmd.Flags().BoolVar(&o.Full, "full", false, "output project definitions in full version, use with --output option")
+	cmd.Flags().StringSliceVar(&o.ModuleNames, "modules", []string{}, OptCommon.TransLang("param_def_get_modules"))
+	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, OptCommon.TransLang("param_def_get_envs"))
+	cmd.Flags().StringSliceVar(&o.BranchNames, "branches", []string{}, OptCommon.TransLang("param_def_get_branches"))
+	cmd.Flags().StringSliceVar(&o.StepNames, "steps", []string{}, OptCommon.TransLang("param_def_get_steps"))
+	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_def_get_output"))
+	cmd.Flags().BoolVar(&o.Full, "full", false, OptCommon.TransLang("param_def_get_full"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

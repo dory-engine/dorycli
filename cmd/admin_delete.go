@@ -27,21 +27,11 @@ func NewCmdAdminDelete() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf(`delete [kind] [itemName1] [itemName2]...`)
-	msgShort := fmt.Sprintf("delete configurations, admin permission required")
-	msgLong := fmt.Sprintf(`delete configurations in dory-engine server, admin permission required`)
-	msgExample := fmt.Sprintf(`kind: all, %s
 
-  # delete users, admin permission required
-  %s admin delete %s test-user01 test-user02
-
-  # delete custom step configurations, admin permission required
-  %s admin delete %s customStepName1 customStepName2
-
-  # delete kubernetes environment configurations, admin permission required
-  %s admin delete %s test uat
-
-  # delete component template configurations, admin permission required
-  %s admin delete %s mysql-v8`, strings.Join(pkg.AdminKinds, ", "), baseName, pkg.AdminKindUser, baseName, pkg.AdminKindCustomStep, baseName, pkg.AdminKindEnvK8s, baseName, pkg.AdminKindComponentTemplate)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_admin_delete_short")
+	msgLong := OptCommon.TransLang("cmd_admin_delete_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_admin_delete_example", strings.Join(pkg.AdminKinds, ", "), baseName, pkg.AdminKindUser, baseName, pkg.AdminKindCustomStep, baseName, pkg.AdminKindEnvK8s, baseName, pkg.AdminKindComponentTemplate))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,

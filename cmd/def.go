@@ -5,27 +5,18 @@ import (
 	"github.com/dory-engine/dorycli/pkg"
 	"github.com/spf13/cobra"
 	"os"
+	"sort"
+	"strings"
 )
 
 func NewCmdDef() *cobra.Command {
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("def")
-	msgShort := fmt.Sprintf("manage project definitions")
-	msgLong := fmt.Sprintf(`manage project definitions in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # get project all definitions
-  %s def get test-project1 %s
 
-  # apply project definitions from file or directory
-  %s def apply -f def1.yaml -f def2.json
-
-  # clone project definitions deploy modules to another environments
-  %s def clone test-project1 %s --from-env=test --modules=tp1-gin-demo,tp1-node-demo --to-envs=uat,prod
-
-  # delete modules from project build definitions
-  %s def delete test-project1 %s --modules=tp1-gin-demo,tp1-node-demo
-
-  # patch project build modules definitions, update tp1-gin-demo,tp1-go-demo buildChecks commands
-  %s def patch test-project1 %s --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'`, baseName, pkg.DefKindAll, baseName, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindBuild, baseName, pkg.DefKindBuild)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_def_short")
+	msgLong := OptCommon.TransLang("cmd_def_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_def_example", baseName, pkg.DefKindAll, baseName, baseName, pkg.DefKindDeployContainer, baseName, pkg.DefKindBuild, baseName, pkg.DefKindBuild))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -37,6 +28,21 @@ func NewCmdDef() *cobra.Command {
 			if len(args) == 0 {
 				cmd.Help()
 				os.Exit(0)
+			} else {
+				var found bool
+				subcommands := []string{"get", "apply", "delete", "clone", "patch"}
+				sort.Strings(subcommands)
+				for _, subcommand := range subcommands {
+					if args[0] == subcommand {
+						found = true
+						break
+					}
+				}
+				if !found {
+					log.Error(fmt.Sprintf("subcommand options: %s\n", strings.Join(subcommands, " / ")))
+					cmd.Help()
+					os.Exit(0)
+				}
 			}
 		},
 	}

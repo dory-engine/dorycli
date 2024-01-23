@@ -24,13 +24,11 @@ func NewCmdInstallPrint() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("print")
-	msgShort := fmt.Sprintf("print install settings YAML file")
-	msgLong := fmt.Sprintf(`print docker or kubernetes install settings YAML file`)
-	msgExample := fmt.Sprintf(`  # print installing dory in kubernetes settings YAML file, with dory managed kubernetes cluster over containerd runtime
-  %s install print --mode kubernetes --runtime containerd
 
-  # print installing dory in docker settings YAML file, with dory managed kubernetes cluster over docker runtime
-  %s install print --mode docker --runtime docker`, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_install_print_short")
+	msgLong := OptCommon.TransLang("cmd_install_print_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_print_example", baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -43,9 +41,9 @@ func NewCmdInstallPrint() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVar(&o.Mode, "mode", "", "install mode, options: docker, kubernetes")
-	cmd.Flags().StringVar(&o.Runtime, "runtime", "", "dory managed kubernetes cluster's container runtime, options: docker, containerd, crio")
-	cmd.Flags().BoolVarP(&o.Full, "full", "", false, "install DORY and all optional repositories")
+	cmd.Flags().StringVar(&o.Mode, "mode", "", OptCommon.TransLang("param_install_print_mode"))
+	cmd.Flags().StringVar(&o.Runtime, "runtime", "", OptCommon.TransLang("param_install_print_runtime"))
+	cmd.Flags().BoolVarP(&o.Full, "full", "", false, OptCommon.TransLang("param_install_print_full"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

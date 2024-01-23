@@ -22,10 +22,11 @@ func NewCmdLogout() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("logout")
-	msgShort := fmt.Sprintf("logout from dory-engine server")
-	msgLong := fmt.Sprintf("it will clear dory-engine server settings from %s config file", baseName)
-	msgExample := fmt.Sprintf(`  # logout from dory-engine server
-  %s logout`, baseName)
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_logout_short")
+	msgLong := OptCommon.TransLang("cmd_logout_long", baseName)
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_logout_example", baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,

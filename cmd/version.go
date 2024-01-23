@@ -22,10 +22,11 @@ func NewCmdVersion() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("version")
-	msgShort := fmt.Sprintf("show %s version info", baseName)
-	msgLong := fmt.Sprintf(`show %s and isntall dory-engine, dory-console version info`, baseName)
-	msgExample := fmt.Sprintf(`  # show %s and dory-engine, dory-console version info:
-  %s version`, baseName, baseName)
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_version_short")
+	msgLong := OptCommon.TransLang("cmd_version_long", baseName)
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_version_example", baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -58,10 +59,10 @@ func (o *OptionsVersionRun) Run(args []string) error {
 	var err error
 	baseName := pkg.GetCmdBaseName()
 	fmt.Println(fmt.Sprintf("%s version: %s", baseName, pkg.VersionDoryCli))
-	fmt.Println(fmt.Sprintf("install dory-engine version: %s", pkg.VersionDoryEngine))
-	fmt.Println(fmt.Sprintf("install dory-console version: %s", pkg.VersionDoryFrontend))
+	fmt.Println(fmt.Sprintf("# install dory-engine version: %s", pkg.VersionDoryEngine))
+	fmt.Println(fmt.Sprintf("# install dory-console version: %s", pkg.VersionDoryFrontend))
 	if o.ServerURL != "" {
-		fmt.Println(fmt.Sprintf("serverURL: %s", o.ServerURL))
+		fmt.Println(fmt.Sprintf("connected Dory-Engine URL: %s", o.ServerURL))
 		if o.AccessToken != "" {
 			param := map[string]interface{}{}
 			result, _, err := o.QueryAPI(fmt.Sprintf("api/public/about"), http.MethodGet, "", param, false)
@@ -70,7 +71,7 @@ func (o *OptionsVersionRun) Run(args []string) error {
 			}
 			appInfo := result.Get("data.app").String()
 			versionInfo := result.Get("data.version").String()
-			fmt.Println(fmt.Sprintf("versionInfo: %s/%s", appInfo, versionInfo))
+			fmt.Println(fmt.Sprintf("connected Dory-Engine version: %s/%s", appInfo, versionInfo))
 		}
 	}
 

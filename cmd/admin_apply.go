@@ -40,18 +40,11 @@ func NewCmdAdminApply() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf(`apply -f [filename]`)
-	msgShort := fmt.Sprintf("apply configurations, admin permission required")
-	msgLong := fmt.Sprintf(`apply configurations in dory-engine server by file or stdin, admin permission required
-# support kind: componentTemplate, envK8s, customStepConf, user, dockerBuildEnv, gitRepoConfig, imageRepoConfig, artifactRepoConfig, scanCodeRepoConfig
-# it will update or insert configurations items
-# JSON and YAML formats are accepted.
-# support apply multiple configurations at the same time.
-# if [filename] is a directory, it will read all *.json and *.yaml and *.yml files in this directory.`)
-	msgExample := fmt.Sprintf(`  # apply configurations from file or directory, admin permission required
-  %s admin apply -f steps.yaml -f users.json
 
-  # apply configurations from stdin, admin permission required
-  cat users.yaml | %s admin apply -f -`, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_admin_apply_short")
+	msgLong := OptCommon.TransLang("cmd_admin_apply_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_admin_apply_example", baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -64,11 +57,11 @@ func NewCmdAdminApply() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
-	cmd.Flags().BoolVarP(&o.Recursive, "recursive", "r", false, "process the directory used in -f, --files recursively")
-	cmd.Flags().BoolVar(&o.Full, "full", false, "output configurations in full version, use with --output option")
-	cmd.Flags().StringSliceVarP(&o.FileNames, "files", "f", []string{}, "configurations file name or directory, support *.json and *.yaml and *.yml files")
-	cmd.Flags().BoolVar(&o.Try, "try", false, "try to check input configurations only, not apply to dory-engine server, use with --output option")
+	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_admin_apply_output"))
+	cmd.Flags().BoolVarP(&o.Recursive, "recursive", "r", false, OptCommon.TransLang("param_admin_apply_recursive"))
+	cmd.Flags().BoolVar(&o.Full, "full", false, OptCommon.TransLang("param_admin_apply_full"))
+	cmd.Flags().StringSliceVarP(&o.FileNames, "files", "f", []string{}, OptCommon.TransLang("param_admin_apply_files"))
+	cmd.Flags().BoolVar(&o.Try, "try", false, OptCommon.TransLang("param_admin_apply_try"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

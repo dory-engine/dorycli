@@ -30,13 +30,11 @@ func NewCmdInstallScript() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("script")
-	msgShort := fmt.Sprintf("create dory-engine install scripts and config files")
-	msgLong := fmt.Sprintf(`create dory-engine install scripts and config files, run the scripts by manual, for experts`)
-	msgExample := fmt.Sprintf(`  # create dory-engine install scripts and config files with docker-compose or kubernetes
-  %s install script -o readme-install -f install-config.yaml
-  or
-  cat install-config.yaml | %s install script -o readme-install -f -
-`, baseName, baseName)
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_install_script_short")
+	msgLong := OptCommon.TransLang("cmd_install_script_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_script_example", baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -49,8 +47,8 @@ func NewCmdInstallScript() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", "install settings YAML file")
-	cmd.Flags().StringVarP(&o.OutputDir, "output", "o", "", "output README, script and config files directory")
+	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", OptCommon.TransLang("param_install_script_file"))
+	cmd.Flags().StringVarP(&o.OutputDir, "output", "o", "", OptCommon.TransLang("param_install_script_output"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

@@ -5,21 +5,18 @@ import (
 	"github.com/dory-engine/dorycli/pkg"
 	"github.com/spf13/cobra"
 	"os"
+	"sort"
+	"strings"
 )
 
 func NewCmdRun() *cobra.Command {
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("run")
-	msgShort := fmt.Sprintf("manage pipeline run resources")
-	msgLong := fmt.Sprintf(`manage pipeline run resources in dory-engine server`)
-	msgExample := fmt.Sprintf(`  # get pipeline run resources
-  %s run get
-  
-  # show pipeline run logs
-  %s run logs test-project1-develop-1
-  
-  # delete run, project maintainer permission required
-  %s run abort test-project1-develop-1`, baseName, baseName, baseName)
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_run_short")
+	msgLong := OptCommon.TransLang("cmd_run_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_run_example", baseName, baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -31,6 +28,21 @@ func NewCmdRun() *cobra.Command {
 			if len(args) == 0 {
 				cmd.Help()
 				os.Exit(0)
+			} else {
+				var found bool
+				subcommands := []string{"get", "logs", "abort"}
+				sort.Strings(subcommands)
+				for _, subcommand := range subcommands {
+					if args[0] == subcommand {
+						found = true
+						break
+					}
+				}
+				if !found {
+					log.Error(fmt.Sprintf("subcommand options: %s\n", strings.Join(subcommands, " / ")))
+					cmd.Help()
+					os.Exit(0)
+				}
 			}
 		},
 	}

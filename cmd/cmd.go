@@ -12,8 +12,10 @@ import (
 	"github.com/dory-engine/dorycli/pkg"
 	"github.com/fatih/color"
 	"github.com/gorilla/websocket"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
+	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
 	"io/fs"
 	"io/ioutil"
@@ -33,6 +35,7 @@ type OptionsCommon struct {
 	ConfigFile   string `yaml:"configFile" json:"configFile" bson:"configFile" validate:""`
 	Verbose      bool   `yaml:"verbose" json:"verbose" bson:"verbose" validate:""`
 	ConfigExists bool   `yaml:"configExists" json:"configExists" bson:"configExists" validate:""`
+	LangBundle   *i18n.Bundle
 }
 
 type Log struct {
@@ -138,6 +141,17 @@ func PrettyJson(strJson string) (string, error) {
 
 func NewOptionsCommon() *OptionsCommon {
 	var o OptionsCommon
+	bsEN, _ := pkg.FsLanguage.ReadFile(fmt.Sprintf("language/lang.en.yaml"))
+
+	bsZH, _ := pkg.FsLanguage.ReadFile(fmt.Sprintf("language/lang.zh.yaml"))
+
+	bundle := i18n.NewBundle(language.English)
+	bundle.RegisterUnmarshalFunc("yaml", yaml.Unmarshal)
+	bundle.MustParseMessageFileBytes(bsEN, "lang.en.yaml")
+	bundle.MustParseMessageFileBytes(bsZH, "lang.zh.yaml")
+
+	o.LangBundle = bundle
+
 	return &o
 }
 
@@ -147,11 +161,12 @@ var log Log
 func NewCmdRoot() *cobra.Command {
 	o := OptCommon
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf("%s is a command line toolkit", baseName)
-	msgShort := fmt.Sprintf("command line toolkit")
-	msgLong := fmt.Sprintf(`%s is a command line toolkit to manage dory-engine`, baseName)
-	msgExample := fmt.Sprintf(`  # install dory-engine
-  %s install run -o readme-install -f install-config.yaml`, baseName)
+	msgUse := baseName
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_short")
+	msgLong := OptCommon.TransLang("cmd_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_example", baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -167,13 +182,13 @@ func NewCmdRoot() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&o.ConfigFile, "config", "c", "", fmt.Sprintf("%s config.yaml config file, it can set by system environment variable %s (default is $HOME/%s/%s)", baseName, pkg.EnvVarConfigFile, pkg.ConfigDirDefault, pkg.ConfigFileDefault))
-	cmd.PersistentFlags().StringVarP(&o.ServerURL, "server-url", "s", "", "dory-engine server URL, example: https://dory.example.com:8080")
-	cmd.PersistentFlags().BoolVar(&o.Insecure, "insecure", false, "if true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure")
-	cmd.PersistentFlags().IntVar(&o.Timeout, "timeout", pkg.TimeoutDefault, "dory-engine server connection timeout seconds settings")
-	cmd.PersistentFlags().StringVar(&o.AccessToken, "token", "", fmt.Sprintf("dory-engine server access token"))
-	cmd.PersistentFlags().StringVar(&o.Language, "language", "", fmt.Sprintf("language settings (options: zh / en)"))
-	cmd.PersistentFlags().BoolVarP(&o.Verbose, "verbose", "v", false, "show logs in verbose mode")
+	cmd.PersistentFlags().StringVarP(&o.ConfigFile, "config", "c", "", OptCommon.TransLang("param_config", baseName, pkg.EnvVarConfigFile, pkg.ConfigDirDefault, pkg.ConfigFileDefault))
+	cmd.PersistentFlags().StringVarP(&o.ServerURL, "server-url", "s", "", OptCommon.TransLang("param_server_url"))
+	cmd.PersistentFlags().BoolVar(&o.Insecure, "insecure", false, OptCommon.TransLang("param_insecure"))
+	cmd.PersistentFlags().IntVar(&o.Timeout, "timeout", pkg.TimeoutDefault, OptCommon.TransLang("param_timeout"))
+	cmd.PersistentFlags().StringVar(&o.AccessToken, "token", "", OptCommon.TransLang("param_token"))
+	cmd.PersistentFlags().StringVar(&o.Language, "language", "", OptCommon.TransLang("param_language"))
+	cmd.PersistentFlags().BoolVarP(&o.Verbose, "verbose", "v", false, fmt.Sprintf("show logs in verbose mode"))
 
 	cmd.AddCommand(NewCmdLogin())
 	cmd.AddCommand(NewCmdLogout())
@@ -187,6 +202,34 @@ func NewCmdRoot() *cobra.Command {
 
 	CheckError(o.Complete(cmd))
 	return cmd
+}
+
+func (o *OptionsCommon) TransLang(msg string, args ...interface{}) string {
+	var err error
+	var s string
+	m := map[string]interface{}{}
+	if o.Language != "en" && o.Language != "zh" {
+		o.Language = "en"
+	}
+	for i, arg := range args {
+		m[fmt.Sprintf("_%d", i)] = arg
+	}
+	loc := i18n.NewLocalizer(o.LangBundle, o.Language)
+	s, err = loc.Localize(&i18n.LocalizeConfig{
+		MessageID:    msg,
+		TemplateData: m,
+	})
+	if err != nil {
+		loc = i18n.NewLocalizer(o.LangBundle, "en")
+		s, err = loc.Localize(&i18n.LocalizeConfig{
+			MessageID:    msg,
+			TemplateData: m,
+		})
+		if err != nil {
+			s = err.Error()
+		}
+	}
+	return s
 }
 
 func (o *OptionsCommon) CheckConfigFile() error {

@@ -8,11 +8,13 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/gorilla/websocket v1.5.1
+	github.com/nicksnyder/go-i18n/v2 v2.3.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.8.0
 	github.com/tidwall/gjson v1.17.0
 	github.com/tidwall/sjson v1.2.5
 	golang.org/x/crypto v0.18.0
+	golang.org/x/text v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -38,5 +40,4 @@ require (
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/term v0.16.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
 )

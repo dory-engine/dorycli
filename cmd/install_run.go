@@ -30,10 +30,11 @@ func NewCmdInstallRun() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("run")
-	msgShort := fmt.Sprintf("run install dory-engine with docker or kubernetes")
-	msgLong := fmt.Sprintf(`run install dory-engine and relative components with docker-compose or kubernetes`)
-	msgExample := fmt.Sprintf(`  # run install dory-engine and relative components with docker-compose or kubernetes
-  %s install run -o readme-install -f install-config.yaml`, baseName)
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_install_run_short")
+	msgLong := OptCommon.TransLang("cmd_install_run_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_run_example", baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -46,8 +47,8 @@ func NewCmdInstallRun() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", "install settings YAML file")
-	cmd.Flags().StringVarP(&o.OutputDir, "output", "o", "", "output README files directory")
+	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", OptCommon.TransLang("param_install_run_file"))
+	cmd.Flags().StringVarP(&o.OutputDir, "output", "o", "", OptCommon.TransLang("param_install_run_output"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

@@ -436,3 +436,13 @@ func GetDockerImages(installConfig InstallConfig) (InstallDockerImages, error) {
 	}
 	return dockerImages, err
 }
+
+func Indent(s string) string {
+	var str string
+	arr := strings.Split(s, "\n")
+	for i, a := range arr {
+		arr[i] = fmt.Sprintf("%s%s", "  ", a)
+	}
+	str = strings.Join(arr, "\n")
+	return str
+}

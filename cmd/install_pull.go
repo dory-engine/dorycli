@@ -15,7 +15,7 @@ import (
 type OptionsInstallPull struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
 	FileName       string `yaml:"fileName" json:"fileName" bson:"fileName" validate:""`
-	DownloadAgain  bool   `yaml:"downloadAgain" json:"downloadAgain" bson:"downloadAgain" validate:""`
+	ForceDownload  bool   `yaml:"forceDownload" json:"forceDownload" bson:"forceDownload" validate:""`
 }
 
 func NewOptionsInstallPull() *OptionsInstallPull {
@@ -29,16 +29,11 @@ func NewCmdInstallPull() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("pull")
-	msgShort := fmt.Sprintf("pull and build all container images")
-	msgLong := fmt.Sprintf(`pull and build all container images required for installation`)
-	msgExample := fmt.Sprintf(`  # if install or use harbor as image repository it will pull and build images
-  # if install nexus it will download nexus init data 
 
-  # pull and build all container images required for installing dory
-  %s install pull -f install-config.yaml
-
-  # pull and build all container images required for installing dory
-  %s install pull -f install-config.yaml`, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_install_pull_short")
+	msgLong := OptCommon.TransLang("cmd_install_pull_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_pull_example", baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -52,8 +47,8 @@ func NewCmdInstallPull() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", "install settings YAML file")
-	cmd.Flags().BoolVarP(&o.DownloadAgain, "download-again", "d", false, "download nexus init data again even file exists")
+	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", OptCommon.TransLang("param_install_pull_file"))
+	cmd.Flags().BoolVar(&o.ForceDownload, "force-download", false, OptCommon.TransLang("param_install_pull_force_download"))
 
 	CheckError(o.Complete(cmd))
 	return cmd
@@ -277,7 +272,7 @@ func (o *OptionsInstallPull) Run(args []string) error {
 			fi, err := os.Stat(pkg.NexusInitData)
 			if err == nil {
 				if !fi.IsDir() {
-					if o.DownloadAgain {
+					if o.ForceDownload {
 						isDownloadNexus = true
 					}
 				} else {

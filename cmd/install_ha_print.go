@@ -21,10 +21,11 @@ func NewCmdInstallHaPrint() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("print")
-	msgShort := fmt.Sprintf("print ha install settings YAML file")
-	msgLong := fmt.Sprintf(`print load balancer installation settings YAML file`)
-	msgExample := fmt.Sprintf(`  # print installing dory in kubernetes settings YAML file, with dory managed kubernetes cluster over containerd runtime
-  %s install print`, baseName)
+
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_install_ha_print_short")
+	msgLong := OptCommon.TransLang("cmd_install_ha_print_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_ha_print_example", baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,

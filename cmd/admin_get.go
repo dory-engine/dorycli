@@ -33,24 +33,11 @@ func NewCmdAdminGet() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf(`get [kind],[kind]... [itemName1] [itemName2]... [--output=json|yaml]`)
-	msgShort := fmt.Sprintf("get configurations, admin permission required")
-	msgLong := fmt.Sprintf(`get users, custom steps, kubernetes environments and component templates configurations in dory-engine server, admin permission required`)
-	msgExample := fmt.Sprintf(`kind: all, %s
 
-  # get all configurations, admin permission required
-  %s admin get %s --output=yaml
-
-  # get all configurations, and show in full version, admin permission required
-  %s admin get %s --output=yaml --full
-
-  # get custom steps and component templates configurations, admin permission required
-  %s admin get %s,%s
-
-  # get users configurations, and filter by userNames, admin permission required
-  %s admin get %s test-user1 test-user2
-
-  # get kubernetes environments configurations, and filter by envNames, admin permission required
-  %s admin get %s test uat prod`, strings.Join(pkg.AdminKinds, ", "), baseName, pkg.AdminKindAll, baseName, pkg.AdminKindAll, baseName, pkg.AdminKindCustomStep, pkg.AdminKindComponentTemplate, baseName, pkg.AdminKindUser, baseName, pkg.AdminKindEnvK8s)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_admin_get_short")
+	msgLong := OptCommon.TransLang("cmd_admin_get_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_admin_get_example", strings.Join(pkg.AdminKinds, ", "), baseName, pkg.AdminKindAll, baseName, pkg.AdminKindAll, baseName, pkg.AdminKindCustomStep, pkg.AdminKindComponentTemplate, baseName, pkg.AdminKindUser, baseName, pkg.AdminKindEnvK8s))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -63,8 +50,8 @@ func NewCmdAdminGet() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVarP(&o.Output, "output", "o", "", "output format (options: yaml / json)")
-	cmd.Flags().BoolVar(&o.Full, "full", false, "output project configurations in full version, use with --output option")
+	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_admin_get_output"))
+	cmd.Flags().BoolVar(&o.Full, "full", false, OptCommon.TransLang("param_admin_get_full"))
 
 	CheckError(o.Complete(cmd))
 	return cmd

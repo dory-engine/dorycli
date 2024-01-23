@@ -26,13 +26,11 @@ func NewCmdInstallCheck() *cobra.Command {
 
 	baseName := pkg.GetCmdBaseName()
 	msgUse := fmt.Sprintf("check")
-	msgShort := fmt.Sprintf("check install prerequisite")
-	msgLong := fmt.Sprintf(`check installing dory in docker or kubernetes prerequisite`)
-	msgExample := fmt.Sprintf(`  # check installing dory in kubernetes prerequisite, with dory managed kubernetes cluster over containerd runtime
-  %s install check --mode kubernetes --runtime containerd
 
-  # check installing dory in docker prerequisite, with dory managed kubernetes cluster over docker runtime
-  %s install check --mode docker --runtime docker`, baseName, baseName)
+	_ = OptCommon.GetOptionsCommon()
+	msgShort := OptCommon.TransLang("cmd_install_check_short")
+	msgLong := OptCommon.TransLang("cmd_install_check_long")
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_check_example", baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -45,8 +43,8 @@ func NewCmdInstallCheck() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVar(&o.Mode, "mode", "", "install dory in docker or kubernetes, options: docker, kubernetes")
-	cmd.Flags().StringVar(&o.Runtime, "runtime", "", "dory managed kubernetes cluster's container runtime, options: docker, containerd, crio")
+	cmd.Flags().StringVar(&o.Mode, "mode", "", OptCommon.TransLang("param_install_check_mode"))
+	cmd.Flags().StringVar(&o.Runtime, "runtime", "", OptCommon.TransLang("param_install_check_runtime"))
 
 	CheckError(o.Complete(cmd))
 	return cmd
