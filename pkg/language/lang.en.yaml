@@ -664,6 +664,10 @@ param_install_pull_file:
   other: "Dory-Engine install settings YAML file"
 param_install_pull_force_download:
   other: "force download nexus init data"
+param_install_pull_build:
+  other: "build docker image from official image"
+param_install_pull_yes:
+  other: "auto input YES without prompt"
 param_install_run_file:
   other: "Dory-Engine install settings YAML file"
 param_install_run_output:

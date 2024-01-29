@@ -664,6 +664,10 @@ param_install_pull_file:
   other: "Dory-Engine安装配置YAML文件"
 param_install_pull_force_download:
   other: "强制下载nexus初始化安装数据"
+param_install_pull_build:
+  other: "使用官方镜像构建目标镜像"
+param_install_pull_yes:
+  other: "不显示提示，直接输入YES确认"
 param_install_run_file:
   other: "Dory-Engine安装配置YAML文件"
 param_install_run_output:

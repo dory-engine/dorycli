@@ -55,7 +55,7 @@ kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }
 kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
 ```
 
-## x86架构和arm64架构容器镜像交叉构建需求 (可选)
+## x86架构和arm64架构容器镜像交叉构建
 
 - {{ if eq $.mode "docker" }}本节点{{ else }}所有部署DORY的节点{{ end }}都安装`qemu-user-static`，以保证这些节点都能够运行x86架构和arm64架构容器镜像
 - 文档参见以下链接: https://github.com/multiarch/qemu-user-static

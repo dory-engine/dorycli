@@ -55,7 +55,7 @@ kubectl -n kube-system get secret admin-user-secret -o jsonpath='{ .data.token }
 kubectl config view --raw -o=jsonpath='{.clusters[0].cluster.certificate-authority-data}'
 ```
 
-## X86 architecture and arm64 architecture container image cross-build requirements (optional)
+## X86 architecture and arm64 architecture container image cross-build requirements
 
 - {{ if eq $.mode "docker" }}this node{{ else }}all nodes deploying DORY{{ end }} install `qemu-user-static` to ensure that these nodes can run x86 architecture and arm64 architecture container images
 - see the following link for documentation: https://github.com/multiarch/qemu-user-static

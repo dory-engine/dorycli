@@ -10,6 +10,8 @@
 
 - dorycli install pull 命令在默认安装情况下，不进行镜像的拉取、构建和推送到内部镜像仓库
 
+- dorycli 支持中文子命令说明和参数说明
+
 - dory-engine v2.5.2 数据结构升级
 
 - dory-engine 支持使用外部制品仓库，支持ftp sftp http方式上传制品
