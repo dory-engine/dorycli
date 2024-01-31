@@ -139,7 +139,7 @@ spec:
     {{- end }}
     secretRef:
       name: cephfs-secret
-      namespace: {{ $.kubernetes.project.projectInfo.projectName }}
+      namespace: {{ $.currentNamespace }}
     readOnly: false
   {{- else if $.kubernetes.pvConfigNfs.nfsServer }}
   nfs:
