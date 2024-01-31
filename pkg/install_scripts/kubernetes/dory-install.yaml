@@ -92,7 +92,7 @@ deploys:
     {{- else }}
     deployImage: {{ $.dory.gitRepo.internal.image }}
     {{- end }}
-    deployNodePort:
+    deployLocalPort:
       - port: 80
     deployReplicas: 1
     {{- if $.dory.nodeSelector }}
