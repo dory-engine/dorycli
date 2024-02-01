@@ -98,7 +98,7 @@ app:
   # 自定义步骤输出文件查看URI
   customStepOutputUri: /assets/custom-step-output
   # 接口请求超时设置，单位(秒)
-  requestTimeoutSeconds: 5
+  requestTimeoutSeconds: 15
   # 上传下载请求超时设置，单位(秒)
   uploadDownloadTimeoutSeconds: 180
   # istio网格发布保留多少个deployment，至少为2，包含default和new部署
@@ -673,7 +673,7 @@ dockerBuildSettings:
 # 调试容器docker镜像设置
 componentDebugEnvs:
   # 调试容器镜像地址
-  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ else }}doryengine/{{ end }}debug-ubuntu:v1.0.0"
+  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ end }}doryengine/debug-ubuntu:v1.0.0"
 
 # 流水线各个步骤使用的docker镜像设置
 stepDockerEnvs:

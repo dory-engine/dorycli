@@ -370,17 +370,37 @@ func (o *OptionsInstallRun) DoryCreateConfig(installConfig pkg.InstallConfig) er
 	_ = os.MkdirAll(fmt.Sprintf("%s/tmp", doryengineDir), 0700)
 
 	log.Info(fmt.Sprintf("copy zoneinfo to %s/dory-data/zoneinfo", doryengineDir))
-	_, _, err = pkg.CommandExec(fmt.Sprintf("cp -r /usr/share/zoneinfo %s/dory-data", doryengineDir), doryengineDir)
+	_, _, err = pkg.CommandExec(fmt.Sprintf("cp -rp /usr/share/zoneinfo %s/dory-data", doryengineDir), doryengineDir)
 	if err != nil {
 		err = fmt.Errorf("copy zoneinfo to %s/dory-data/zoneinfo error: %s", doryengineDir, err.Error())
+		return err
+	}
+	_, _, err = pkg.CommandExec(fmt.Sprintf("find %s/dory-data/zoneinfo -type f -exec chmod a+r {} \\;", doryengineDir), doryengineDir)
+	if err != nil {
+		err = fmt.Errorf("chmod a+r %s/dory-data/zoneinfo error: %s", doryengineDir, err.Error())
+		return err
+	}
+	_, _, err = pkg.CommandExec(fmt.Sprintf("find %s/dory-data/zoneinfo -type d -exec chmod a+rx {} \\;", doryengineDir), doryengineDir)
+	if err != nil {
+		err = fmt.Errorf("chmod a+rx %s/dory-data/zoneinfo error: %s", doryengineDir, err.Error())
 		return err
 	}
 	log.Success(fmt.Sprintf("copy zoneinfo to %s/dory-data/zoneinfo success", doryengineDir))
 
 	log.Info(fmt.Sprintf("copy zoneinfo to %s/timezone", installConfig.RootDir))
-	_, _, err = pkg.CommandExec(fmt.Sprintf("mkdir -p %s/timezone && cp -r /usr/share/zoneinfo %s/timezone && echo '%s' > %s/timezone/timezone", installConfig.RootDir, installConfig.RootDir, installConfig.Kubernetes.Timezone, installConfig.RootDir), doryengineDir)
+	_, _, err = pkg.CommandExec(fmt.Sprintf("mkdir -p %s/timezone && cp -rp /usr/share/zoneinfo %s/timezone && echo '%s' > %s/timezone/timezone", installConfig.RootDir, installConfig.RootDir, installConfig.Kubernetes.Timezone, installConfig.RootDir), doryengineDir)
 	if err != nil {
 		err = fmt.Errorf("copy zoneinfo to %s/timezone error: %s", installConfig.RootDir, err.Error())
+		return err
+	}
+	_, _, err = pkg.CommandExec(fmt.Sprintf("find %s/timezone -type f -exec chmod a+r {} \\;", installConfig.RootDir), doryengineDir)
+	if err != nil {
+		err = fmt.Errorf("chmod a+r %s/timezone error: %s", installConfig.RootDir, err.Error())
+		return err
+	}
+	_, _, err = pkg.CommandExec(fmt.Sprintf("find %s/timezone -type d -exec chmod a+rx {} \\;", installConfig.RootDir), doryengineDir)
+	if err != nil {
+		err = fmt.Errorf("chmod a+rx %s/timezone error: %s", installConfig.RootDir, err.Error())
 		return err
 	}
 	log.Success(fmt.Sprintf("copy zoneinfo to %s/timezone success", installConfig.RootDir))
@@ -637,6 +657,20 @@ func (o *OptionsInstallRun) DoryCreateDirs(installConfig pkg.InstallConfig) erro
 		err = fmt.Errorf("create directory and chown error: %s", err.Error())
 		return err
 	}
+
+	if installConfig.Dory.ScanCodeRepo.Type == "sonarqube" && installConfig.Dory.ScanCodeRepo.Internal.Image != "" {
+		_ = os.RemoveAll(fmt.Sprintf("%s/sonarqube-web", doryDir))
+		_ = os.MkdirAll(fmt.Sprintf("%s/sonarqube-web/data", doryDir), 0700)
+		_ = os.MkdirAll(fmt.Sprintf("%s/sonarqube-web/extensions", doryDir), 0700)
+		_ = os.MkdirAll(fmt.Sprintf("%s/sonarqube-web/logs", doryDir), 0700)
+		_ = os.MkdirAll(fmt.Sprintf("%s/sonarqube-web/temp", doryDir), 0700)
+		_, _, err = pkg.CommandExec(fmt.Sprintf("sudo chown -R 1000:1000 %s/sonarqube-web", doryDir), doryDir)
+		if err != nil {
+			err = fmt.Errorf("create directory and chown error: %s", err.Error())
+			return err
+		}
+	}
+
 	_, _, err = pkg.CommandExec(fmt.Sprintf("sudo chown -R 1000:1000 %s/dory-engine", doryDir), doryDir)
 	if err != nil {
 		err = fmt.Errorf("create directory and chown error: %s", err.Error())

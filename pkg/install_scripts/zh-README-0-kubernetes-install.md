@@ -38,7 +38,16 @@ cp -rp {{ $.dory.namespace }}/dory-engine {{ $.rootDir }}/{{ $.dory.namespace }}
 {{- if and (eq $.dory.gitRepo.type "gitlab") $.dory.gitRepo.internal.image }}
 cp -rp {{ $.dory.namespace }}/nginx-gitlab {{ $.rootDir }}/{{ $.dory.namespace }}/
 {{- end }}
-cp -r /usr/share/zoneinfo {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data
+{{- if and (eq $.dory.scanCodeRepo.type "sonarqube") $.dory.scanCodeRepo.internal.image }}
+mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/sonarqube-web/data
+mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/sonarqube-web/extensions
+mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/sonarqube-web/logs
+mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/sonarqube-web/temp
+chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/sonarqube-web
+{{- end }}
+cp -rp /usr/share/zoneinfo {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data
+find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type f -exec chmod a+r {} \;
+find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type d -exec chmod a+rx {} \;
 mkdir -p {{ $.rootDir }}/timezone
 echo '{{ $.kubernetes.timezone }}' > {{ $.rootDir }}/timezone/timezone
 cp -rp /usr/share/zoneinfo {{ $.rootDir }}/timezone
@@ -46,6 +55,8 @@ mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/mongo-dory
 chown -R 999:999 {{ $.rootDir }}/{{ $.dory.namespace }}/mongo-dory
 ls -alh {{ $.rootDir }}/{{ $.dory.namespace }}
 chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine
+find {{ $.rootDir }}/timezone -type f -exec chmod a+r {} \;
+find {{ $.rootDir }}/timezone -type d -exec chmod a+rx {} \;
 ```
 
 {{ $certPath := "" }}{{- if eq $.kubernetes.runtime "docker" }}{{ $certPath = "/etc/docker" }}{{- else if eq $.kubernetes.runtime "containerd" }}{{ $certPath = "/etc/containerd" }}{{- else if eq $.kubernetes.runtime "crio" }}{{ $certPath = "/etc/containers" }}{{- end }}

@@ -12,7 +12,9 @@
 # copy all scripts and config files to install root directory
 mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/certs/openldap
 cp -rp * {{ $.rootDir }}
-cp -r /usr/share/zoneinfo {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data
+cp -rp /usr/share/zoneinfo {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data
+find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type f -exec chmod a+r {} \;
+find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type d -exec chmod a+rx {} \;
 
 {{- if $.artifactRepoInternal }}
 # extract nexus init data
@@ -112,6 +114,13 @@ chown -R 999:999 mongo-dory
 mkdir -p dory-engine/dory-data
 mkdir -p dory-engine/tmp
 chown -R 1000:1000 dory-engine
+{{- if and (eq $.dory.scanCodeRepo.type "sonarqube") $.dory.scanCodeRepo.internal.image }}
+mkdir -p sonarqube-web/data
+mkdir -p sonarqube-web/extensions
+mkdir -p sonarqube-web/logs
+mkdir -p sonarqube-web/temp
+chown -R 1000:1000 sonarqube-web
+{{- end }}
 ls -alh
 
 # start all dory services with docker-compose
