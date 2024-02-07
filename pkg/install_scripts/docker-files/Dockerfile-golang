@@ -2,7 +2,7 @@ FROM {{ $.source }}
 LABEL maintainer="cookeem"
 LABEL email="cookeem@qq.com"
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
-    apk --update add ca-certificates git curl zip jq tree htop && \
+    apk --update add gcc musl-dev ca-certificates git curl zip jq tree htop && \
     update-ca-certificates
 
 # docker build -t {{ $.target }}{{ if $.isArm64}}-arm64v8{{ end }} -f Dockerfile-golang-{{ $.tagName }}{{ if $.isArm64}}-arm64v8{{ end }} .
