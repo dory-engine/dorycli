@@ -810,7 +810,7 @@ func (o *OptionsInstallScript) ScriptWithKubernetes(installConfig pkg.InstallCon
 		err = fmt.Errorf("create dory install yaml error: %s", err.Error())
 		return err
 	}
-	err = os.WriteFile(fmt.Sprintf("%s/%s", outputDir, step04NetworkPolicyName), []byte(strStep04NetworkPolicy), 0600)
+	err = os.WriteFile(fmt.Sprintf("%s/%s", doryInstallDir, step04NetworkPolicyName), []byte(strStep04NetworkPolicy), 0600)
 	if err != nil {
 		err = fmt.Errorf("create dory install yaml error: %s", err.Error())
 		return err
