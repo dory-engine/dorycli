@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 type OptionsAdminApply struct {
@@ -625,6 +626,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 								if userProject.ProjectName != "" {
 									if userProject.AccessLevel != roleName {
 										// update project member
+										time.Sleep(time.Second * 2)
 										param = map[string]interface{}{
 											"projectName": projectName,
 											"accessLevel": roleName,
@@ -638,6 +640,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 									}
 								} else {
 									// add project member
+									time.Sleep(time.Second * 2)
 									param = map[string]interface{}{
 										"projectName": projectName,
 										"accessLevel": roleName,
