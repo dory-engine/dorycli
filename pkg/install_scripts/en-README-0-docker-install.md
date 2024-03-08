@@ -12,9 +12,6 @@
 # copy all scripts and config files to install root directory
 mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/certs/openldap
 cp -rp * {{ $.rootDir }}
-cp -rp /usr/share/zoneinfo {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data
-find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type f -exec chmod a+r {} \;
-find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type d -exec chmod a+rx {} \;
 
 {{- if $.artifactRepoInternal }}
 # extract nexus init data

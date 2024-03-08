@@ -62,60 +62,6 @@ data:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ $.currentNamespace }}-timezone-pv
-  labels:
-    app: {{ $.currentNamespace }}-timezone
-spec:
-  storageClassName: {{ $.currentNamespace }}-timezone-pv
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadOnlyMany
-  {{- if $.kubernetes.pvConfigLocal.localPath }}
-  hostPath:
-    path: {{ $.kubernetes.pvConfigLocal.localPath }}/timezone
-    type: DirectoryOrCreate
-  {{- else if $.kubernetes.pvConfigCephfs.cephPath }}
-  cephfs:
-    path: {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone
-    user: {{ $.kubernetes.pvConfigCephfs.cephUser }}
-    monitors:
-    {{- range $_, $monitor := $.kubernetes.pvConfigCephfs.cephMonitors }}
-    - {{ $monitor | quote }}
-    {{- end }}
-    secretRef:
-      name: cephfs-secret
-      namespace: {{ $.currentNamespace }}
-    readOnly: true
-  {{- else if $.kubernetes.pvConfigNfs.nfsServer }}
-  nfs:
-    path: {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone
-    server: {{ $.kubernetes.pvConfigNfs.nfsServer }}
-    readOnly: true
-  {{- end }}
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ $.currentNamespace }}-timezone-pvc
-  namespace: {{ $.currentNamespace }}
-spec:
-  accessModes:
-    - ReadOnlyMany
-  volumeMode: Filesystem
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: {{ $.currentNamespace }}-timezone-pv
-  selector:
-    matchLabels:
-      app: {{ $.currentNamespace }}-timezone
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
   name: {{ $.currentNamespace }}-pv
   labels:
     app: {{ $.currentNamespace }}

@@ -174,8 +174,6 @@ app:
     expireYears: 10
     expireMonths: 0
     expireDays: 0
-  # timezone files zoneinfo directory
-  zoneInfoDir: dory-data/zoneinfo
   # frontend display title and logo settings
   frontend:
     # frontend display images directory, if you need to customize the displayed pictures, you need to put the relevant pictures in this directory

@@ -45,18 +45,10 @@ mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/sonarqube-web/logs
 mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/sonarqube-web/temp
 chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/sonarqube-web
 {{- end }}
-cp -rp /usr/share/zoneinfo {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data
-find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type f -exec chmod a+r {} \;
-find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type d -exec chmod a+rx {} \;
-mkdir -p {{ $.rootDir }}/timezone
-echo '{{ $.kubernetes.timezone }}' > {{ $.rootDir }}/timezone/timezone
-cp -rp /usr/share/zoneinfo {{ $.rootDir }}/timezone
 mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/mongo-dory
 chown -R 999:999 {{ $.rootDir }}/{{ $.dory.namespace }}/mongo-dory
 ls -alh {{ $.rootDir }}/{{ $.dory.namespace }}
 chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine
-find {{ $.rootDir }}/timezone -type f -exec chmod a+r {} \;
-find {{ $.rootDir }}/timezone -type d -exec chmod a+rx {} \;
 ```
 
 {{ $certPath := "" }}{{- if eq $.kubernetes.runtime "docker" }}{{ $certPath = "/etc/docker" }}{{- else if eq $.kubernetes.runtime "containerd" }}{{ $certPath = "/etc/containerd" }}{{- else if eq $.kubernetes.runtime "crio" }}{{ $certPath = "/etc/containers" }}{{- end }}
@@ -68,7 +60,6 @@ find {{ $.rootDir }}/timezone -type d -exec chmod a+rx {} \;
 # 创建 {{ $.dory.imageRepo.type }} 名字空间与pv
 kubectl delete ns {{ $.dory.imageRepo.internal.namespace }}
 kubectl delete pv {{ $.dory.imageRepo.internal.namespace }}-pv
-kubectl delete pv {{ $.dory.imageRepo.internal.namespace }}-timezone-pv
 kubectl apply -f {{ $.dory.imageRepo.internal.namespace }}/step01-namespace-pv.yaml
 
 # 使用helm安装 {{ $.dory.imageRepo.type }}
@@ -127,7 +118,6 @@ curl -k -X POST -H 'Content-Type: application/json' -d '{"project_name": "quay",
 # 创建 {{ $.dory.namespace }} 组件的名字空间与pv
 kubectl delete ns {{ $.dory.namespace }}
 kubectl delete pv {{ $.dory.namespace }}-pv
-kubectl delete pv {{ $.dory.namespace }}-timezone-pv
 kubectl apply -f {{ $.dory.namespace }}/step01-namespace-pv.yaml
 
 # 创建 docker executor 自签名证书

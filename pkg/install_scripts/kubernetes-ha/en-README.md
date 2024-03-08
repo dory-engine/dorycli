@@ -35,5 +35,5 @@ ssh {{ $host.hostname }} "cd ${LB_DIR}/nginx-lb/ && docker-compose stop && docke
 {{ $firstHost := first $.masterHosts }}
 
 # Execute kubernetes controll-plane initialization on the first master node
-ssh {{ $firstHost.hostname }} "kubeadm init --config=kubeadm-config.yaml --upload-certs"
+kubeadm init --config=kubeadm-config.yaml --upload-certs
 ```

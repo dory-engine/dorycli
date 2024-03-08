@@ -369,42 +369,6 @@ func (o *OptionsInstallRun) DoryCreateConfig(installConfig pkg.InstallConfig) er
 	_ = os.MkdirAll(fmt.Sprintf("%s/dory-data/certs/openldap", doryengineDir), 0700)
 	_ = os.MkdirAll(fmt.Sprintf("%s/tmp", doryengineDir), 0700)
 
-	log.Info(fmt.Sprintf("copy zoneinfo to %s/dory-data/zoneinfo", doryengineDir))
-	_, _, err = pkg.CommandExec(fmt.Sprintf("cp -rp /usr/share/zoneinfo %s/dory-data", doryengineDir), doryengineDir)
-	if err != nil {
-		err = fmt.Errorf("copy zoneinfo to %s/dory-data/zoneinfo error: %s", doryengineDir, err.Error())
-		return err
-	}
-	_, _, err = pkg.CommandExec(fmt.Sprintf("find %s/dory-data/zoneinfo -type f -exec chmod a+r {} \\;", doryengineDir), doryengineDir)
-	if err != nil {
-		err = fmt.Errorf("chmod a+r %s/dory-data/zoneinfo error: %s", doryengineDir, err.Error())
-		return err
-	}
-	_, _, err = pkg.CommandExec(fmt.Sprintf("find %s/dory-data/zoneinfo -type d -exec chmod a+rx {} \\;", doryengineDir), doryengineDir)
-	if err != nil {
-		err = fmt.Errorf("chmod a+rx %s/dory-data/zoneinfo error: %s", doryengineDir, err.Error())
-		return err
-	}
-	log.Success(fmt.Sprintf("copy zoneinfo to %s/dory-data/zoneinfo success", doryengineDir))
-
-	log.Info(fmt.Sprintf("copy zoneinfo to %s/timezone", installConfig.RootDir))
-	_, _, err = pkg.CommandExec(fmt.Sprintf("mkdir -p %s/timezone && cp -rp /usr/share/zoneinfo %s/timezone && echo '%s' > %s/timezone/timezone", installConfig.RootDir, installConfig.RootDir, installConfig.Kubernetes.Timezone, installConfig.RootDir), doryengineDir)
-	if err != nil {
-		err = fmt.Errorf("copy zoneinfo to %s/timezone error: %s", installConfig.RootDir, err.Error())
-		return err
-	}
-	_, _, err = pkg.CommandExec(fmt.Sprintf("find %s/timezone -type f -exec chmod a+r {} \\;", installConfig.RootDir), doryengineDir)
-	if err != nil {
-		err = fmt.Errorf("chmod a+r %s/timezone error: %s", installConfig.RootDir, err.Error())
-		return err
-	}
-	_, _, err = pkg.CommandExec(fmt.Sprintf("find %s/timezone -type d -exec chmod a+rx {} \\;", installConfig.RootDir), doryengineDir)
-	if err != nil {
-		err = fmt.Errorf("chmod a+rx %s/timezone error: %s", installConfig.RootDir, err.Error())
-		return err
-	}
-	log.Success(fmt.Sprintf("copy zoneinfo to %s/timezone success", installConfig.RootDir))
-
 	// create config.yaml
 	bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s/%s-%s", pkg.DirInstallScripts, doryengineScriptDir, o.Language, doryengineConfigName))
 	if err != nil {
@@ -713,8 +677,7 @@ func (o *OptionsInstallRun) DoryCreateKubernetesDataPod(installConfig pkg.Instal
 	log.Info(fmt.Sprintf("clear project-data-pod pv begin"))
 	cmdClearPv := fmt.Sprintf(`(kubectl -n %s delete sts project-data-pod || true) && \
 		(kubectl -n %s delete pvc project-data-pvc || true) && \
-		(kubectl delete pv project-data-pv || true) && \
-		(kubectl delete pv project-data-timezone-pv || true)`, installConfig.Dory.Namespace, installConfig.Dory.Namespace)
+		(kubectl delete pv project-data-pv || true)`, installConfig.Dory.Namespace, installConfig.Dory.Namespace)
 	_, _, err = pkg.CommandExec(cmdClearPv, doryDir)
 	if err != nil {
 		err = fmt.Errorf("create project-data-pod in kubernetes error: %s", err.Error())
@@ -1186,8 +1149,7 @@ func (o *OptionsInstallRun) InstallWithKubernetes(installConfig pkg.InstallConfi
 
 		log.Info(fmt.Sprintf("create harbor namespace and pv pvc begin"))
 		cmdClearPv := fmt.Sprintf(`(kubectl delete namespace %s || true) && \
-		(kubectl delete pv %s-pv || true) && \
-		(kubectl delete pv %s-timezone-pv || true)`, installConfig.Dory.ImageRepo.Internal.Namespace, installConfig.Dory.ImageRepo.Internal.Namespace, installConfig.Dory.ImageRepo.Internal.Namespace)
+		(kubectl delete pv %s-pv || true)`, installConfig.Dory.ImageRepo.Internal.Namespace, installConfig.Dory.ImageRepo.Internal.Namespace)
 		_, _, err = pkg.CommandExec(cmdClearPv, outputDir)
 		if err != nil {
 			err = fmt.Errorf("create harbor namespace and pv pvc error: %s", err.Error())
@@ -1319,8 +1281,7 @@ func (o *OptionsInstallRun) InstallWithKubernetes(installConfig pkg.InstallConfi
 
 	log.Info(fmt.Sprintf("create dory namespace and pv pvc begin"))
 	cmdClearPv := fmt.Sprintf(`(kubectl delete namespace %s || true) && \
-		(kubectl delete pv %s-pv || true) && \
-		(kubectl delete pv %s-timezone-pv || true)`, installConfig.Dory.Namespace, installConfig.Dory.Namespace, installConfig.Dory.Namespace)
+		(kubectl delete pv %s-pv || true)`, installConfig.Dory.Namespace, installConfig.Dory.Namespace)
 	_, _, err = pkg.CommandExec(cmdClearPv, outputDir)
 	if err != nil {
 		err = fmt.Errorf("create dory namespace and pv pvc error: %s", err.Error())

@@ -22,8 +22,6 @@ istioNamespace: {{ $.kubernetes.istioNamespace | quote }}
 ingressControllerNamespace: {{ $.kubernetes.ingressControllerNamespace | quote }}
 # 环境所属的时区
 timezone: {{ $.kubernetes.timezone | quote }}
-# 环境是否使用本地路径的/usr/share/zoneinfo
-hostPathZoneInfo: false
 # kubernetes环境可以为项目分配的nodePort可用端口范围
 nodePortRange:
   # 可用nodePort开始端口

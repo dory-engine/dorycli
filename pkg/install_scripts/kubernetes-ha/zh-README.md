@@ -35,5 +35,5 @@ ssh {{ $host.hostname }} "cd ${LB_DIR}/nginx-lb/ && docker-compose stop && docke
 {{ $firstHost := first $.masterHosts }}
 
 # 在第一个master节点执行kubernetes controll-plane 初始化
-ssh {{ $firstHost.hostname }} "kubeadm init --config=kubeadm-config.yaml --upload-certs"
+kubeadm init --config=kubeadm-config.yaml --upload-certs
 ```

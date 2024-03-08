@@ -12,9 +12,6 @@
 # 复制所有脚本、配置文件到安装目录
 mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/certs/openldap
 cp -rp * {{ $.rootDir }}
-cp -rp /usr/share/zoneinfo {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data
-find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type f -exec chmod a+r {} \;
-find {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/dory-data/zoneinfo -type d -exec chmod a+rx {} \;
 
 {{- if $.artifactRepoInternal }}
 # 解压nexus初始化数据

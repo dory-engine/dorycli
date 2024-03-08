@@ -9,6 +9,9 @@
 
 详细参见官方网站: [https://doryengine.com](https://doryengine.com)
 
+- [Github dory-engine](https://github.com/dory-engine/dory-engine)
+- [Gitee dory-engine](https://gitee.com/dory-engine/dory-engine)
+
 ## 什么是`Dory-Engine`
 
 [🚀🚀🚀 Dory-Engine平台工程最佳实践 (https://www.bilibili.com/video/BV1oM4y117Pj/)](https://www.bilibili.com/video/BV1oM4y117Pj/)

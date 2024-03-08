@@ -1173,7 +1173,6 @@ type EnvK8s struct {
 	IstioNamespace             string `yaml:"istioNamespace" json:"istioNamespace" bson:"istioNamespace" validate:"required"`
 	IngressControllerNamespace string `yaml:"ingressControllerNamespace" json:"ingressControllerNamespace" bson:"ingressControllerNamespace" validate:"required"`
 	Timezone                   string `yaml:"timezone" json:"timezone" bson:"timezone" validate:"required"`
-	HostPathZoneInfo           bool   `yaml:"hostPathZoneInfo" json:"hostPathZoneInfo" bson:"hostPathZoneInfo" validate:""`
 	NodePortRange              struct {
 		NodePortRangeStart int `yaml:"nodePortRangeStart" json:"nodePortRangeStart" bson:"nodePortRangeStart" validate:"required"`
 		NodePortRangeEnd   int `yaml:"nodePortRangeEnd" json:"nodePortRangeEnd" bson:"nodePortRangeEnd" validate:"required"`

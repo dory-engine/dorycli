@@ -43,9 +43,10 @@ spec:
           items:
           - key: timezone
             path: timezone
-      - name: {{ $.dory.namespace }}-timezone-pvc
-        persistentVolumeClaim:
-          claimName: {{ $.dory.namespace }}-timezone-pvc
+      - name: zoneinfo
+        hostPath:
+          path: /usr/share/zoneinfo
+          type: Directory
       {{ $vps := list }}
       {{- range $_, $volume := $deploy.deployVolumes }}
       {{ $vps = append $vps $volume.pvc | uniq }}
@@ -126,13 +127,12 @@ spec:
             readOnly: true
             subPath: timezone
           - mountPath: /etc/localtime
-            name: {{ $.dory.namespace }}-timezone-pvc
+            name: zoneinfo
             readOnly: true
-            subPath: zoneinfo/{{ $.kubernetes.timezone }}
+            subPath: {{ $.kubernetes.timezone }}
           - mountPath: /usr/share/zoneinfo
-            name: {{ $.dory.namespace }}-timezone-pvc
+            name: zoneinfo
             readOnly: true
-            subPath: zoneinfo
           {{- range $_, $volume := $deploy.deployVolumes }}
           {{- if $volume.pvc }}
           - name: {{ $volume.pvc }}

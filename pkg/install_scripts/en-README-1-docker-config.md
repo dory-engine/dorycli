@@ -2,48 +2,6 @@
 
 ## dory-engine settings after installed
 
-### create directory in kubernetes shared storage
-
-- create directory
-
-{{- if $.kubernetes.pvConfigLocal.localPath }}
-```shell script
-# create directory in kubernetes local storage
-mkdir -p {{ $.kubernetes.pvConfigLocal.localPath }}/timezone
-rm -rf {{ $.kubernetes.pvConfigLocal.localPath }}/timezone/*
-# copy timezone files to this folder
-echo '{{ $.kubernetes.timezone }}' > {{ $.kubernetes.pvConfigLocal.localPath }}/timezone/timezone
-cp -rp /usr/share/zoneinfo {{ $.kubernetes.pvConfigLocal.localPath }}/timezone
-```
-{{- else if $.kubernetes.pvConfigNfs.nfsPath }}
-```shell script
-# create directory in kubernetes nfs storage
-mkdir -p {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone
-rm -rf {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone/*
-# copy timezone files to this folder
-echo '{{ $.kubernetes.timezone }}' > {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone/timezone
-cp -rp /usr/share/zoneinfo {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone
-```
-{{- else if $.kubernetes.pvConfigCephfs.cephPath }}
-```shell script
-# create directory in kubernetes cephfs storage
-mkdir -p {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone
-rm -rf {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone/*
-# copy timezone files to this folder
-echo '{{ $.kubernetes.timezone }}' > {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone/timezone
-cp -rp /usr/share/zoneinfo {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone
-```
-{{- end }}
-
-- restart project-data-pod-0 pods
-
-```shell script
-kubectl -n {{ $.dory.namespace }} delete pods project-data-pod-0
-
-# check project-data-pod-0 pod status is ready
-kubectl -n {{ $.dory.namespace }} get pods project-data-pod-0
-```
-
 {{- if $.dory.gitRepo.internal.image }}
 
 ### finish {{ $.dory.gitRepo.type }} install and update dory config.yaml

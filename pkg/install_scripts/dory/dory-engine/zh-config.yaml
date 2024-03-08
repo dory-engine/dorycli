@@ -174,8 +174,6 @@ app:
     expireYears: 10
     expireMonths: 0
     expireDays: 0
-  # 时区文件zoneinfo的所在目录
-  zoneInfoDir: dory-data/zoneinfo
   # 前端界面的显示名字和logo设置
   frontend:
     # 前端显示的图片文件所在目录，如果需要自定义显示的图片，需要把相关图片放在该目录下

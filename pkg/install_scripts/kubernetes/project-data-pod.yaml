@@ -62,60 +62,6 @@ data:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: project-data-timezone-pv
-  labels:
-    app: project-data-timezone
-spec:
-  storageClassName: project-data-timezone-pv
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadOnlyMany
-  {{- if $.kubernetes.pvConfigLocal.localPath }}
-  hostPath:
-    path: {{ $.kubernetes.pvConfigLocal.localPath }}/timezone
-    type: DirectoryOrCreate
-  {{- else if $.kubernetes.pvConfigCephfs.cephPath }}
-  cephfs:
-    path: {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone
-    user: {{ $.kubernetes.pvConfigCephfs.cephUser }}
-    monitors:
-    {{- range $_, $monitor := $.kubernetes.pvConfigCephfs.cephMonitors }}
-    - {{ $monitor | quote }}
-    {{- end }}
-    secretRef:
-      name: cephfs-secret
-      namespace: {{ $.dory.namespace }}
-    readOnly: true
-  {{- else if $.kubernetes.pvConfigNfs.nfsServer }}
-  nfs:
-    path: {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone
-    server: {{ $.kubernetes.pvConfigNfs.nfsServer }}
-    readOnly: true
-  {{- end }}
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: project-data-timezone-pvc
-  namespace: {{ $.dory.namespace }}
-spec:
-  accessModes:
-    - ReadOnlyMany
-  volumeMode: Filesystem
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: project-data-timezone-pv
-  selector:
-    matchLabels:
-      app: project-data-timezone
-
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
   name: project-data-pv
   labels:
     app: project-data
@@ -218,13 +164,12 @@ spec:
               readOnly: true
               subPath: timezone
             - mountPath: /etc/localtime
-              name: project-data-timezone-pvc
+              name: zoneinfo
               readOnly: true
-              subPath: zoneinfo/{{ $.kubernetes.timezone }}
+              subPath: {{ $.kubernetes.timezone }}
             - mountPath: /usr/share/zoneinfo
-              name: project-data-timezone-pvc
+              name: zoneinfo
               readOnly: true
-              subPath: zoneinfo
             - mountPath: /project-data
               name: project-data-pvc
               subPath: .
@@ -242,9 +187,10 @@ spec:
             items:
               - key: timezone
                 path: timezone
-        - name: project-data-timezone-pvc
-          persistentVolumeClaim:
-            claimName: project-data-timezone-pvc
+        - name: zoneinfo
+          hostPath:
+            path: /usr/share/zoneinfo
+            type: Directory
         - name: project-data-pvc
           persistentVolumeClaim:
             claimName: project-data-pvc

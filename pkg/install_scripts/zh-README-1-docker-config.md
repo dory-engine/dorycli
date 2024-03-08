@@ -2,48 +2,6 @@
 
 ## 安装完成后必须进行dory-engine配置
 
-### 在kubernetes的共享存储中创建目录
-
-- 创建目录
-
-{{- if $.kubernetes.pvConfigLocal.localPath }}
-```shell script
-# 在kubernetes的本地存储创建目录
-mkdir -p {{ $.kubernetes.pvConfigLocal.localPath }}/timezone
-rm -rf {{ $.kubernetes.pvConfigLocal.localPath }}/timezone/*
-# 复制timezone文件到该目录
-echo '{{ $.kubernetes.timezone }}' > {{ $.kubernetes.pvConfigLocal.localPath }}/timezone/timezone
-cp -rp /usr/share/zoneinfo {{ $.kubernetes.pvConfigLocal.localPath }}/timezone
-```
-{{- else if $.kubernetes.pvConfigNfs.nfsPath }}
-```shell script
-# 在kubernetes的nfs存储创建目录
-mkdir -p {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone
-rm -rf {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone/*
-# 复制timezone文件到该目录
-echo '{{ $.kubernetes.timezone }}' > {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone/timezone
-cp -rp /usr/share/zoneinfo {{ $.kubernetes.pvConfigNfs.nfsPath }}/timezone
-```
-{{- else if $.kubernetes.pvConfigCephfs.cephPath }}
-```shell script
-# 在kubernetes的cephfs存储创建目录
-mkdir -p {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone
-rm -rf {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone/*
-# 复制timezone文件到该目录
-echo '{{ $.kubernetes.timezone }}' > {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone/timezone
-cp -rp /usr/share/zoneinfo {{ $.kubernetes.pvConfigCephfs.cephPath }}/timezone
-```
-{{- end }}
-
-- 重启project-data-alpine-0
-
-```shell script
-kubectl -n {{ $.dory.namespace }} delete pods project-data-pod-0
-
-# 检查project-data-alpine-0是否正常
-kubectl -n {{ $.dory.namespace }} get pods project-data-pod-0
-```
-
 {{- if $.dory.gitRepo.internal.image }}
 
 ### 完成 {{ $.dory.gitRepo.type }} 安装并更新dory的config.yaml配置

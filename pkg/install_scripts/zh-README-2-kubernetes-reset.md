@@ -15,13 +15,10 @@ helm -n {{ $.dory.imageRepo.internal.namespace }} uninstall {{ $.dory.imageRepo.
 ```shell script
 kubectl delete namespace {{ $.dory.namespace }}
 kubectl delete pv {{ $.dory.namespace }}-pv
-kubectl delete pv {{ $.dory.namespace }}-timezone-pv
 kubectl delete pv project-data-pv
-kubectl delete pv project-data-timezone-pv
 {{- if $.imageRepoInternal }}
 kubectl delete namespace {{ $.dory.imageRepo.internal.namespace }}
 kubectl delete pv {{ $.dory.imageRepo.internal.namespace }}-pv
-kubectl delete pv {{ $.dory.imageRepo.internal.namespace }}-timezone-pv
 {{- end }}
 ```
 
