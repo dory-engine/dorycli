@@ -273,8 +273,11 @@ cmd_install_example:
     # 1. check installing Dory-Engine in kubernetes prerequisite, managed kubernetes cluster runtime is docker
     {{._1}} install check --mode kubernetes --runtime docker
     
-    # 2. print installing Dory-Engine in kubernetes settings YAML file, managed kubernetes cluster runtime is docker
+    # 2. (option 1) print installing Dory-Engine in kubernetes settings YAML file, managed kubernetes cluster runtime is docker. (install Dory-Engine basic components only)
     {{._2}} install print --mode kubernetes --runtime docker > install-config-kubernetes.yaml
+    
+    # 2. (option 2) print installing Dory-Engine in kubernetes settings YAML file, managed kubernetes cluster runtime is docker. (install all git repository, image repository, artifact repository and scan code repository)
+    {{._2}} install print --mode kubernetes --runtime docker --full > install-config-kubernetes.yaml
     
     # 3. modify installation config file by manual
     vi install-config-kubernetes.yaml

@@ -115,6 +115,53 @@ which dorycli
 
 ## 使用 `dorycli` 安装 `Dory-Engine`
 
+```shell script
+  ##############################
+  # 请根据以下步骤指引把Dory-Engine安装到kubernetes集群中 (生产用途，推荐安装方式):
+  
+  # 1. 检查把Dory-Engine安装到kubernetes集群的前提条件，被接管的kubernetes集群的容器运行时为docker
+  dorycli install check --mode kubernetes --runtime docker
+  
+  # 2. (选项1) 打印把Dory-Engine安装到kubernetes集群的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（快速安装模式，仅安装Dory-Engine基础组件）
+  dorycli install print --mode kubernetes --runtime docker > install-config-kubernetes.yaml
+  
+  # 2. (选项2) 打印把Dory-Engine安装到kubernetes集群的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（完整安装模式，同时会安装代码仓库、镜像仓库、依赖与制品仓库以及代码扫描仓库）
+  dorycli install print --mode kubernetes --runtime docker --full > install-config-kubernetes.yaml
+
+  # 3. 根据安装配置文件说明，手工修改安装配置文件
+  vi install-config-kubernetes.yaml
+  
+  # 4. 拉取并构建安装Dory-Engine所需要的容器镜像
+  dorycli install pull -f install-config-kubernetes.yaml
+  
+  # 5. (选项1) 把Dory-Engine自动安装到kubernetes集群
+  dorycli install run -o readme-install-kubernetes -f install-config-kubernetes.yaml
+  
+  # 5. (选项2) 以手动的方式安装Dory-Engine到kubernetes集群，执行命令将会输出安装说明文件以及所有部署清单和配置文件，参照说明文件，以自定义方式安装Dory-Engine
+  dorycli install script -o readme-install-kubernetes -f install-config-kubernetes.yaml
+  
+  ##############################
+  # 请根据以下步骤指引把Dory-Engine安装到docker主机中 (测试用途):
+  
+  # 1. 检查把Dory-Engine安装到docker主机的前提条件，被接管的kubernetes集群的容器运行时为docker
+  dorycli install check --mode docker --runtime docker
+  
+  # 2. 打印把Dory-Engine安装到docker主机的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker
+  dorycli install print --mode docker --runtime docker > install-config-docker.yaml
+  
+  # 3. 根据安装配置文件说明，手工修改安装配置文件
+  vi install-config-docker.yaml
+  
+  # 4. 拉取并构建安装Dory-Engine所需要的容器镜像
+  dorycli install pull -f install-config-docker.yaml
+  
+  # 5. (选项 1) 把Dory-Engine自动安装到docker主机
+  dorycli install run -o readme-install-docker -f install-config-docker.yaml
+  
+  # 5. (选项 2) 以手动的方式安装Dory-Engine到docker主机，执行命令将会输出安装说明文件以及所有部署清单和配置文件，参照说明文件，以自定义方式安装Dory-Engine
+  dorycli install script -o readme-install-docker -f install-config-docker.yaml
+```
+
 [🚀🚀🚀 使用dorycli快速安装Dory-Engine (https://www.bilibili.com/video/BV1aG411D7Sj/)](https://www.bilibili.com/video/BV1aG411D7Sj/)
 
 ## Dory-Engine的使用演示
