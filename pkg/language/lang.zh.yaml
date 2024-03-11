@@ -297,8 +297,11 @@ cmd_install_example:
     # 1. 检查把Dory-Engine安装到docker主机的前提条件，被接管的kubernetes集群的容器运行时为docker
     {{._6}} install check --mode docker --runtime docker
     
-    # 2. 打印把Dory-Engine安装到docker主机的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker
+    # 2. (选项1) 打印把Dory-Engine安装到docker主机的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（快速安装模式，仅安装Dory-Engine基础组件）
     {{._7}} install print --mode docker --runtime docker > install-config-docker.yaml
+    
+    # 2. (选项2) 打印把Dory-Engine安装到kubernetes集群的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（完整安装模式，同时会安装代码仓库、镜像仓库、依赖与制品仓库以及代码扫描仓库）
+    {{._7}} install print --mode docker --runtime docker --full > install-config-docker.yaml
     
     # 3. 根据安装配置文件说明，手工修改安装配置文件
     vi install-config-docker.yaml
