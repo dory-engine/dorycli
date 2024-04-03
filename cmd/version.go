@@ -71,7 +71,7 @@ func (o *OptionsVersionRun) Run(args []string) error {
 			}
 			appInfo := result.Get("data.app").String()
 			versionInfo := result.Get("data.version").String()
-			fmt.Println(fmt.Sprintf("connected Dory-Engine version: %s/%s", appInfo, versionInfo))
+			fmt.Println(fmt.Sprintf("connected Dory-Engine version: %s:%s", appInfo, versionInfo))
 		}
 	}
 

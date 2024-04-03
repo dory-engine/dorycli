@@ -108,11 +108,12 @@ deploys:
         subPath: {{ $.dory.gitRepo.type }}/logs
       - mountPath: /var/opt/gitlab
         subPath: {{ $.dory.gitRepo.type }}/data
+    deployShmSize: 512Mi
     deployHealthCheck:
       checkPort: 80
       readinessDelaySeconds: 60
       readinessPeriodSeconds: 5
-      livenessDelaySeconds: 300
+      livenessDelaySeconds: 600
       livenessPeriodSeconds: 30
 
   - deployName: nginx-{{ $.dory.gitRepo.type }}

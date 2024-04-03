@@ -62,6 +62,11 @@ dockerImages:
     dockerFile: Dockerfile-python
     built: doryengine/python:3.10.10-alpine3.17-dory
     arm64: arm64v8/python:3.10.10-alpine3.17
+  - source: node:16.20.2-alpine3.18
+    target: public/node:16.20.2-alpine3.18-dory
+    dockerFile: Dockerfile-node
+    built: doryengine/node:16.20.2-alpine3.18-dory
+    arm64: arm64v8/node:16.20.2-alpine3.18
   - source: node:18.17.1-alpine3.18
     target: public/node:18.17.1-alpine3.18-dory
     dockerFile: Dockerfile-node

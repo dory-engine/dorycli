@@ -238,18 +238,21 @@ type InstallConfig struct {
 }
 
 type QuotaPod struct {
-	MemoryRequest string `yaml:"memoryRequest" json:"memoryRequest" bson:"memoryRequest" validate:"required"`
-	CpuRequest    string `yaml:"cpuRequest" json:"cpuRequest" bson:"cpuRequest" validate:"required"`
-	MemoryLimit   string `yaml:"memoryLimit" json:"memoryLimit" bson:"memoryLimit" validate:"required"`
-	CpuLimit      string `yaml:"cpuLimit" json:"cpuLimit" bson:"cpuLimit" validate:"required"`
+	MemoryRequest string      `yaml:"memoryRequest" json:"memoryRequest" bson:"memoryRequest" validate:"required"`
+	CpuRequest    string      `yaml:"cpuRequest" json:"cpuRequest" bson:"cpuRequest" validate:"required"`
+	MemoryLimit   string      `yaml:"memoryLimit" json:"memoryLimit" bson:"memoryLimit" validate:"required"`
+	CpuLimit      string      `yaml:"cpuLimit" json:"cpuLimit" bson:"cpuLimit" validate:"required"`
+	ExtraRequest  []NameValue `yaml:"extraRequest" json:"extraRequest" bson:"extraRequest" validate:""`
+	ExtraLimit    []NameValue `yaml:"extraLimit" json:"extraLimit" bson:"extraLimit" validate:""`
 }
 
 type QuotaResource struct {
-	MemoryRequest string `yaml:"memoryRequest" json:"memoryRequest" bson:"memoryRequest" validate:"required"`
-	CpuRequest    string `yaml:"cpuRequest" json:"cpuRequest" bson:"cpuRequest" validate:"required"`
-	MemoryLimit   string `yaml:"memoryLimit" json:"memoryLimit" bson:"memoryLimit" validate:"required"`
-	CpuLimit      string `yaml:"cpuLimit" json:"cpuLimit" bson:"cpuLimit" validate:"required"`
-	PodsLimit     int    `yaml:"podsLimit" json:"podsLimit" bson:"podsLimit" validate:"required"`
+	MemoryRequest string      `yaml:"memoryRequest" json:"memoryRequest" bson:"memoryRequest" validate:"required"`
+	CpuRequest    string      `yaml:"cpuRequest" json:"cpuRequest" bson:"cpuRequest" validate:"required"`
+	MemoryLimit   string      `yaml:"memoryLimit" json:"memoryLimit" bson:"memoryLimit" validate:"required"`
+	CpuLimit      string      `yaml:"cpuLimit" json:"cpuLimit" bson:"cpuLimit" validate:"required"`
+	PodsLimit     int         `yaml:"podsLimit" json:"podsLimit" bson:"podsLimit" validate:"required"`
+	ExtraQuotas   []NameValue `yaml:"extraQuotas" json:"extraQuotas" bson:"extraQuotas" validate:""`
 }
 
 type KubePodState struct {
@@ -508,11 +511,18 @@ type BuildDef struct {
 	IsPatch            bool     `yaml:"isPatch" json:"isPatch" bson:"isPatch" validate:""`
 }
 
+type ExtraPushImage struct {
+	ImagePath string `yaml:"imagePath" json:"imagePath" bson:"imagePath" validate:"required"`
+	Username  string `yaml:"username" json:"username" bson:"username" validate:"required"`
+	Password  string `yaml:"password" json:"password" bson:"password" validate:"required"`
+}
+
 type PackageDef struct {
-	PackageName   string   `yaml:"packageName" json:"packageName" bson:"packageName" validate:"required"`
-	RelatedBuilds []string `yaml:"relatedBuilds" json:"relatedBuilds" bson:"relatedBuilds" validate:"required"`
-	DockerFile    string   `yaml:"dockerFile" json:"dockerFile" bson:"dockerFile" validate:"required"`
-	IsPatch       bool     `yaml:"isPatch" json:"isPatch" bson:"isPatch" validate:""`
+	PackageName     string           `yaml:"packageName" json:"packageName" bson:"packageName" validate:"required"`
+	RelatedBuilds   []string         `yaml:"relatedBuilds" json:"relatedBuilds" bson:"relatedBuilds" validate:"required"`
+	DockerFile      string           `yaml:"dockerFile" json:"dockerFile" bson:"dockerFile" validate:"required"`
+	ExtraPushImages []ExtraPushImage `yaml:"extraPushImages" json:"extraPushImages" bson:"extraPushImages" validate:""`
+	IsPatch         bool             `yaml:"isPatch" json:"isPatch" bson:"isPatch" validate:""`
 }
 
 type ArtifactDef struct {
@@ -591,6 +601,7 @@ type DeployVolume struct {
 type DeployContainerDef struct {
 	DeployName          string            `yaml:"deployName" json:"deployName" bson:"deployName" validate:"required"`
 	RelatedPackage      string            `yaml:"relatedPackage" json:"relatedPackage" bson:"relatedPackage" validate:"required"`
+	DeployImagePath     string            `yaml:"deployImagePath" json:"deployImagePath" bson:"deployImagePath" validate:""`
 	DeployImageTag      string            `yaml:"deployImageTag" json:"deployImageTag" bson:"deployImageTag" validate:""`
 	DeployLabels        map[string]string `yaml:"deployLabels" json:"deployLabels" bson:"deployLabels" validate:""`
 	DeployType          string            `yaml:"deployType" json:"deployType" bson:"deployType" validate:""`
@@ -830,9 +841,10 @@ type ScanCodeStepDef struct {
 }
 
 type PackageImageStepDef struct {
-	Enable  bool `yaml:"enable" json:"enable" bson:"enable" validate:""`
-	Timeout int  `yaml:"timeout" json:"timeout" bson:"timeout" validate:""`
-	Retry   int  `yaml:"retry" json:"retry" bson:"retry" validate:""`
+	Enable    bool `yaml:"enable" json:"enable" bson:"enable" validate:""`
+	Timeout   int  `yaml:"timeout" json:"timeout" bson:"timeout" validate:""`
+	Retry     int  `yaml:"retry" json:"retry" bson:"retry" validate:""`
+	ExtraPush bool `yaml:"extraPush" json:"extraPush" bson:"extraPush" validate:""`
 }
 
 type ScanImageStepDef struct {

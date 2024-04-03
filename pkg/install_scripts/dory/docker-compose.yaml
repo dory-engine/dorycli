@@ -68,6 +68,7 @@ services:
       - ./{{ $.dory.gitRepo.type }}/data:/var/opt/gitlab
     environment:
       TZ: {{ $.kubernetes.timezone }}
+    shm_size: '512m'
     restart: always
 
   nginx-{{ $.dory.gitRepo.type }}:

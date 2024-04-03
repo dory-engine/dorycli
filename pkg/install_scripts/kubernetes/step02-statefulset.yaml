@@ -85,6 +85,11 @@ spec:
       - name: {{ $.dory.namespace }}-pvc
         persistentVolumeClaim:
           claimName: {{ $.dory.namespace }}-pvc
+      {{- if $deploy.deployShmSize }}
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: {{ $deploy.deployShmSize }}
+      {{- end }}
       {{- if eq $.dory.imageRepo.type "harbor" }}
       imagePullSecrets:
         - name: {{ $.imageRepoDomainName }}
@@ -154,6 +159,10 @@ spec:
             mountPath: {{ $volume.mountPath }}
             subPath: {{ $volume.subPath }}
           {{- end }}
+          {{- end }}
+          {{- if $deploy.deployShmSize }}
+          - name: cache-volume
+            mountPath: /dev/shm
           {{- end }}
           env:
           - name: TZ

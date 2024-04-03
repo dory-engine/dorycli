@@ -587,6 +587,14 @@ dockerBuildSettings:
       mountExtraCacheDirs: []
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
+    - buildEnvName: npm-node16
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:16.20.2-alpine3.18-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: false
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
     - buildEnvName: go-1.20
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}golang:1.20.0-alpine3.17-dory"
       buildArches: ["amd64", "arm64v8"]

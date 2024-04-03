@@ -45,8 +45,8 @@ dory:
     # 自动部署代码仓库（internal、external只能选一种部署方式）
     internal:
       # 镜像名
-      # 假如类型为gitlab，建议使用镜像 gitlab/gitlab-ce:15.11.2-ce.0
-      image: gitea/gitea:1.19.3
+      # 假如类型为gitlab，建议使用镜像 gitlab/gitlab-ce:16.9.2-ce.0
+      image: gitea/gitea:1.21.8
       # gitea 数据库镜像名，gitea情况下必须填写(选填)
       imageDB: mysql:8.0.20
       # # gitlab 代理镜像名，gitlab情况下必须填写(选填)

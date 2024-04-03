@@ -45,8 +45,8 @@ dory:
     # deploy git repository automatically (internal or external only accept one deploy way)
     internal:
       # git repository image name
-      # if git repository type is gitlab, recommend image is gitlab/gitlab-ce:15.11.2-ce.0
-      image: gitea/gitea:1.19.0
+      # if git repository type is gitlab, recommend image is gitlab/gitlab-ce:16.9.2-ce.0
+      image: gitea/gitea:1.21.8
       # gitea repository database image name, if type is gitea this setting required
       imageDB: mysql:8.0.20
       # # gitlab repository nginx proxy image name, if type is gitlab this setting required
