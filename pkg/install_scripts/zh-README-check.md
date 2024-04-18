@@ -149,7 +149,7 @@ EOF
 - 在kubernetes所有master节点部署traefik: 
 ```shell script
 # 拉取 traefik helm repo
-helm repo add traefik https://helm.traefik.io/traefik
+helm repo add traefik https://traefik.github.io/charts
 helm fetch traefik/traefik --untar
 
 # 在kubernetes的master节点以daemonset方式部署traefik
@@ -158,12 +158,7 @@ deployment:
   kind: DaemonSet
 image:
   name: traefik
-  tag: v2.10.5
-pilot:
-  enabled: true
-experimental:
-  plugins:
-    enabled: true
+  tag: v2.11.2
 ports:
   web:
     hostPort: 80
