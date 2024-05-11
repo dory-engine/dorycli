@@ -337,6 +337,9 @@ type EnvDebugSpec struct {
 
 type ProjectAvailableEnv struct {
 	EnvName                   string               `yaml:"envName" json:"envName" bson:"envName" validate:"required"`
+	Privileged                bool                 `yaml:"privileged" json:"privileged" bson:"privileged" validate:""`
+	DisabledDefs              []string             `yaml:"disabledDefs" json:"disabledDefs" bson:"disabledDefs" validate:""`
+	DisabledPatches           []string             `yaml:"disabledPatches" json:"disabledPatches" bson:"disabledPatches" validate:""`
 	DeployContainerDefs       []DeployContainerDef `yaml:"deployContainerDefs" json:"deployContainerDefs" bson:"deployContainerDefs" validate:""`
 	UpdateDeployContainerDefs bool                 `yaml:"updateDeployContainerDefs" json:"updateDeployContainerDefs" bson:"updateDeployContainerDefs" validate:""`
 	DeployArtifactDefs        []DeployArtifactDef  `yaml:"deployArtifactDefs" json:"deployArtifactDefs" bson:"deployArtifactDefs" validate:""`
@@ -598,6 +601,24 @@ type DeployVolume struct {
 	Pvc       string `yaml:"pvc" json:"pvc" bson:"pvc" validate:""`
 }
 
+type HostAlias struct {
+	Ip        string   `yaml:"ip" json:"ip" bson:"ip" validate:"required,ip"`
+	Hostnames []string `yaml:"hostnames" json:"hostnames" bson:"hostnames" validate:"required"`
+}
+
+type SecurityContext struct {
+	RunAsUser  int `yaml:"runAsUser" json:"runAsUser" bson:"runAsUser" validate:""`
+	RunAsGroup int `yaml:"runAsGroup" json:"runAsGroup" bson:"runAsGroup" validate:""`
+}
+
+type HpaConfig struct {
+	MaxReplicas                 int    `yaml:"maxReplicas" json:"maxReplicas" bson:"maxReplicas" validate:""`
+	MemoryAverageValue          string `yaml:"memoryAverageValue" json:"memoryAverageValue" bson:"memoryAverageValue" validate:""`
+	MemoryAverageRequestPercent int    `yaml:"memoryAverageRequestPercent" json:"memoryAverageRequestPercent" bson:"memoryAverageRequestPercent" validate:""`
+	CpuAverageValue             string `yaml:"cpuAverageValue" json:"cpuAverageValue" bson:"cpuAverageValue" validate:""`
+	CpuAverageRequestPercent    int    `yaml:"cpuAverageRequestPercent" json:"cpuAverageRequestPercent" bson:"cpuAverageRequestPercent" validate:""`
+}
+
 type DeployContainerDef struct {
 	DeployName          string            `yaml:"deployName" json:"deployName" bson:"deployName" validate:"required"`
 	RelatedPackage      string            `yaml:"relatedPackage" json:"relatedPackage" bson:"relatedPackage" validate:"required"`
@@ -615,20 +636,14 @@ type DeployContainerDef struct {
 	DeployNodePorts                     []DeployNodePort  `yaml:"deployNodePorts" json:"deployNodePorts" bson:"deployNodePorts" validate:"dive"`
 	DeployLocalPorts                    []DeployLocalPort `yaml:"deployLocalPorts" json:"deployLocalPorts" bson:"deployLocalPorts" validate:"dive"`
 	DeployReplicas                      int               `yaml:"deployReplicas" json:"deployReplicas" bson:"deployReplicas" validate:"required"`
-	HpaConfig                           struct {
-		MaxReplicas                 int    `yaml:"maxReplicas" json:"maxReplicas" bson:"maxReplicas" validate:""`
-		MemoryAverageValue          string `yaml:"memoryAverageValue" json:"memoryAverageValue" bson:"memoryAverageValue" validate:""`
-		MemoryAverageRequestPercent int    `yaml:"memoryAverageRequestPercent" json:"memoryAverageRequestPercent" bson:"memoryAverageRequestPercent" validate:""`
-		CpuAverageValue             string `yaml:"cpuAverageValue" json:"cpuAverageValue" bson:"cpuAverageValue" validate:""`
-		CpuAverageRequestPercent    int    `yaml:"cpuAverageRequestPercent" json:"cpuAverageRequestPercent" bson:"cpuAverageRequestPercent" validate:""`
-	} `yaml:"hpaConfig" json:"hpaConfig" bson:"hpaConfig" validate:""`
-	DeployEnvs        []string       `yaml:"deployEnvs" json:"deployEnvs" bson:"deployEnvs" validate:""`
-	DeployCommand     string         `yaml:"deployCommand" json:"deployCommand" bson:"deployCommand" validate:""`
-	DeployCmds        []string       `yaml:"deployCmds" json:"deployCmds" bson:"deployCmds" validate:""`
-	DeployArgs        []string       `yaml:"deployArgs" json:"deployArgs" bson:"deployArgs" validate:""`
-	DeployResources   QuotaPod       `yaml:"deployResources" json:"deployResources" bson:"deployResources" validate:""`
-	DeployVolumes     []DeployVolume `yaml:"deployVolumes" json:"deployVolumes" bson:"deployVolumes" validate:"dive"`
-	DeployHealthCheck struct {
+	HpaConfig                           HpaConfig         `yaml:"hpaConfig" json:"hpaConfig" bson:"hpaConfig" validate:""`
+	DeployEnvs                          []string          `yaml:"deployEnvs" json:"deployEnvs" bson:"deployEnvs" validate:""`
+	DeployCommand                       string            `yaml:"deployCommand" json:"deployCommand" bson:"deployCommand" validate:""`
+	DeployCmds                          []string          `yaml:"deployCmds" json:"deployCmds" bson:"deployCmds" validate:""`
+	DeployArgs                          []string          `yaml:"deployArgs" json:"deployArgs" bson:"deployArgs" validate:""`
+	DeployResources                     QuotaPod          `yaml:"deployResources" json:"deployResources" bson:"deployResources" validate:""`
+	DeployVolumes                       []DeployVolume    `yaml:"deployVolumes" json:"deployVolumes" bson:"deployVolumes" validate:"dive"`
+	DeployHealthCheck                   struct {
 		CheckPort              int           `yaml:"checkPort" json:"checkPort" bson:"checkPort" validate:""`
 		Exec                   string        `yaml:"exec" json:"exec" bson:"exec" validate:""`
 		ExecCmds               []string      `yaml:"execCmds" json:"execCmds" bson:"execCmds" validate:""`
@@ -645,14 +660,8 @@ type DeployContainerDef struct {
 		DependPort int    `yaml:"dependPort" json:"dependPort" bson:"dependPort" validate:"required"`
 		DependType string `yaml:"dependType" json:"dependType" bson:"dependType" validate:"oneof=TCP UDP"`
 	} `yaml:"dependServices" json:"dependServices" bson:"dependServices" validate:"dive"`
-	HostAliases []struct {
-		Ip        string   `yaml:"ip" json:"ip" bson:"ip" validate:"required,ip"`
-		Hostnames []string `yaml:"hostnames" json:"hostnames" bson:"hostnames" validate:"required"`
-	} `yaml:"hostAliases" json:"hostAliases" bson:"hostAliases" validate:"dive"`
-	SecurityContext struct {
-		RunAsUser  int `yaml:"runAsUser" json:"runAsUser" bson:"runAsUser" validate:""`
-		RunAsGroup int `yaml:"runAsGroup" json:"runAsGroup" bson:"runAsGroup" validate:""`
-	} `yaml:"securityContext" json:"securityContext" bson:"securityContext" validate:""`
+	HostAliases          []HostAlias       `yaml:"hostAliases" json:"hostAliases" bson:"hostAliases" validate:"dive"`
+	SecurityContext      SecurityContext   `yaml:"securityContext" json:"securityContext" bson:"securityContext" validate:""`
 	DeployConfigSettings []ConfigPath      `yaml:"deployConfigSettings" json:"deployConfigSettings" bson:"deployConfigSettings" validate:""`
 	DeployConfigMaps     []DeployConfigMap `yaml:"deployConfigMaps" json:"deployConfigMaps" bson:"deployConfigMaps" validate:""`
 	DeploySecrets        []DeploySecret    `yaml:"deploySecrets" json:"deploySecrets" bson:"deploySecrets" validate:""`
@@ -1004,7 +1013,6 @@ type ProjectInfo struct {
 	ProjectShortName string `yaml:"projectShortName" json:"projectShortName" bson:"projectShortName" validate:""`
 	ShortName        string `yaml:"shortName" json:"shortName" bson:"shortName" validate:""`
 	ProjectArch      string `yaml:"projectArch" json:"projectArch" bson:"projectArch" validate:""`
-	Privileged       bool   `yaml:"privileged" json:"privileged" bson:"privileged" validate:""`
 	DefaultPv        string `yaml:"defaultPv" json:"defaultPv" bson:"defaultPv" validate:""`
 	ProjectDesc      string `yaml:"projectDesc" json:"projectDesc" bson:"projectDesc" validate:""`
 	ProjectTeam      string `yaml:"projectTeam" json:"projectTeam" bson:"projectTeam" validate:""`
@@ -1216,6 +1224,8 @@ type EnvK8s struct {
 	} `yaml:"pvConfigNfs" json:"pvConfigNfs" bson:"pvConfigNfs" validate:""`
 	ProjectNodeSelector map[string]string `yaml:"projectNodeSelector" json:"projectNodeSelector" bson:"projectNodeSelector" validate:""`
 	QuotaConfig         QuotaConfig       `yaml:"quotaConfig" json:"quotaConfig" bson:"quotaConfig" validate:"required"`
+	DisabledDefs        []string          `yaml:"disabledDefs" json:"disabledDefs" bson:"disabledDefs" validate:""`
+	DisabledPatches     []string          `yaml:"disabledPatches" json:"disabledPatches" bson:"disabledPatches" validate:""`
 }
 
 type EnvK8sDetail struct {
@@ -1342,19 +1352,13 @@ type DeploySpecStatic struct {
 			CertPath       string `yaml:"certPath" json:"certPath" bson:"certPath" validate:""`
 		} `yaml:"ingress" json:"ingress" bson:"ingress" validate:""`
 	} `yaml:"deployLocalPorts" json:"deployLocalPorts" bson:"deployLocalPorts" validate:"dive"`
-	DeployReplicas int `yaml:"deployReplicas" json:"deployReplicas" bson:"deployReplicas" validate:"required"`
-	HpaConfig      struct {
-		MaxReplicas                 int    `yaml:"maxReplicas" json:"maxReplicas" bson:"maxReplicas" validate:""`
-		MemoryAverageValue          string `yaml:"memoryAverageValue" json:"memoryAverageValue" bson:"memoryAverageValue" validate:""`
-		MemoryAverageRequestPercent int    `yaml:"memoryAverageRequestPercent" json:"memoryAverageRequestPercent" bson:"memoryAverageRequestPercent" validate:""`
-		CpuAverageValue             string `yaml:"cpuAverageValue" json:"cpuAverageValue" bson:"cpuAverageValue" validate:""`
-		CpuAverageRequestPercent    int    `yaml:"cpuAverageRequestPercent" json:"cpuAverageRequestPercent" bson:"cpuAverageRequestPercent" validate:""`
-	} `yaml:"hpaConfig" json:"hpaConfig" bson:"hpaConfig" validate:""`
-	DeployEnvs      []string `yaml:"deployEnvs" json:"deployEnvs" bson:"deployEnvs" validate:""`
-	DeployCommand   string   `yaml:"deployCommand" json:"deployCommand" bson:"deployCommand" validate:""`
-	DeployCmds      []string `yaml:"deployCmds" json:"deployCmds" bson:"deployCmds" validate:""`
-	DeployArgs      []string `yaml:"deployArgs" json:"deployArgs" bson:"deployArgs" validate:""`
-	DeployResources QuotaPod `yaml:"deployResources" json:"deployResources" bson:"deployResources" validate:""`
+	DeployReplicas  int       `yaml:"deployReplicas" json:"deployReplicas" bson:"deployReplicas" validate:"required"`
+	HpaConfig       HpaConfig `yaml:"hpaConfig" json:"hpaConfig" bson:"hpaConfig" validate:""`
+	DeployEnvs      []string  `yaml:"deployEnvs" json:"deployEnvs" bson:"deployEnvs" validate:""`
+	DeployCommand   string    `yaml:"deployCommand" json:"deployCommand" bson:"deployCommand" validate:""`
+	DeployCmds      []string  `yaml:"deployCmds" json:"deployCmds" bson:"deployCmds" validate:""`
+	DeployArgs      []string  `yaml:"deployArgs" json:"deployArgs" bson:"deployArgs" validate:""`
+	DeployResources QuotaPod  `yaml:"deployResources" json:"deployResources" bson:"deployResources" validate:""`
 	DeployVolumes   []struct {
 		PathInPod string `yaml:"pathInPod" json:"pathInPod" bson:"pathInPod" validate:"required"`
 		PathInPv  string `yaml:"pathInPv" json:"pathInPv" bson:"pathInPv" validate:"required"`
@@ -1377,16 +1381,10 @@ type DeploySpecStatic struct {
 		DependPort int    `yaml:"dependPort" json:"dependPort" bson:"dependPort" validate:"required"`
 		DependType string `yaml:"dependType" json:"dependType" bson:"dependType" validate:"oneof=TCP UDP"`
 	} `yaml:"dependServices" json:"dependServices" bson:"dependServices" validate:"dive"`
-	HostAliases []struct {
-		Ip        string   `yaml:"ip" json:"ip" bson:"ip" validate:"required,ip"`
-		Hostnames []string `yaml:"hostnames" json:"hostnames" bson:"hostnames" validate:"required"`
-	} `yaml:"hostAliases" json:"hostAliases" bson:"hostAliases" validate:"dive"`
-	SecurityContext struct {
-		RunAsUser  int `yaml:"runAsUser" json:"runAsUser" bson:"runAsUser" validate:""`
-		RunAsGroup int `yaml:"runAsGroup" json:"runAsGroup" bson:"runAsGroup" validate:""`
-	} `yaml:"securityContext" json:"securityContext" bson:"securityContext" validate:""`
-	DeployConfigBranch   string       `yaml:"deployConfigBranch" json:"deployConfigBranch" bson:"deployConfigBranch" validate:""`
-	DeployConfigSettings []ConfigPath `yaml:"deployConfigSettings" json:"deployConfigSettings" bson:"deployConfigSettings" validate:""`
+	HostAliases          []HostAlias     `yaml:"hostAliases" json:"hostAliases" bson:"hostAliases" validate:"dive"`
+	SecurityContext      SecurityContext `yaml:"securityContext" json:"securityContext" bson:"securityContext" validate:""`
+	DeployConfigBranch   string          `yaml:"deployConfigBranch" json:"deployConfigBranch" bson:"deployConfigBranch" validate:""`
+	DeployConfigSettings []ConfigPath    `yaml:"deployConfigSettings" json:"deployConfigSettings" bson:"deployConfigSettings" validate:""`
 	Lifecycle            struct {
 		PostStart struct {
 			Exec     string        `yaml:"exec" json:"exec" bson:"exec" validate:""`

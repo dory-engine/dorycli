@@ -290,7 +290,7 @@ services:
       - /usr/share/zoneinfo/{{ $.kubernetes.timezone }}:/etc/localtime
       - ./dory-engine/config:/dory-engine/config
       - ./dory-engine/dory-data:/dory-engine/dory-data
-      - ./dory-engine/tmp:/dory-engine/tmp
+      - ./dory-engine/logs:/dory-engine/logs
       - ./{{ $.dory.docker.dockerName }}/certs:/certs/docker:ro
     environment:
       TZ: {{ $.kubernetes.timezone }}

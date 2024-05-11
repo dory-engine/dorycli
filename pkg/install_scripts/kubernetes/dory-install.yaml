@@ -479,8 +479,8 @@ deploys:
         subPath: dory-engine/config
       - mountPath: /dory-engine/dory-data
         subPath: dory-engine/dory-data
-      - mountPath: /dory-engine/tmp
-        subPath: dory-engine/tmp
+      - mountPath: /dory-engine/logs
+        subPath: dory-engine/logs
       - mountPath: /certs/docker
         secret:
           secretName: {{ $.dory.docker.dockerName }}-tls

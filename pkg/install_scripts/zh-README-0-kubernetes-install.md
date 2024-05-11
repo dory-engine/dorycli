@@ -31,7 +31,7 @@ cp ca.crt ldap.crt ldap.key {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/d
 cd ../../.. 
 
 # 创建 dory 组件相关目录并设置目录权限
-mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/tmp
+mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/logs
 cp -rp {{ $.dory.namespace }}/{{ $.dory.docker.dockerName }} {{ $.rootDir }}/{{ $.dory.namespace }}/
 cp -rp {{ $.dory.namespace }}/{{ $.dory.openldap.serviceName }} {{ $.rootDir }}/{{ $.dory.namespace }}/
 cp -rp {{ $.dory.namespace }}/dory-engine {{ $.rootDir }}/{{ $.dory.namespace }}/

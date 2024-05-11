@@ -31,7 +31,7 @@ cp ca.crt ldap.crt ldap.key {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/d
 cd ../../.. 
 
 # create dory root directory
-mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/tmp
+mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine/logs
 cp -rp {{ $.dory.namespace }}/{{ $.dory.docker.dockerName }} {{ $.rootDir }}/{{ $.dory.namespace }}/
 cp -rp {{ $.dory.namespace }}/{{ $.dory.openldap.serviceName }} {{ $.rootDir }}/{{ $.dory.namespace }}/
 cp -rp {{ $.dory.namespace }}/dory-engine {{ $.rootDir }}/{{ $.dory.namespace }}/

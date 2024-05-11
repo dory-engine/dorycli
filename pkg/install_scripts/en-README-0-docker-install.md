@@ -109,7 +109,7 @@ cd {{ $.rootDir }}/{{ $.dory.namespace }}
 mkdir -p mongo-dory
 chown -R 999:999 mongo-dory
 mkdir -p dory-engine/dory-data
-mkdir -p dory-engine/tmp
+mkdir -p dory-engine/logs
 chown -R 1000:1000 dory-engine
 {{- if and (eq $.dory.scanCodeRepo.type "sonarqube") $.dory.scanCodeRepo.internal.image }}
 mkdir -p sonarqube-web/data

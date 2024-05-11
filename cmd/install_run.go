@@ -367,7 +367,7 @@ func (o *OptionsInstallRun) DoryCreateConfig(installConfig pkg.InstallConfig) er
 	_ = os.RemoveAll(doryengineConfigDir)
 	_ = os.MkdirAll(doryengineConfigDir, 0700)
 	_ = os.MkdirAll(fmt.Sprintf("%s/dory-data/certs/openldap", doryengineDir), 0700)
-	_ = os.MkdirAll(fmt.Sprintf("%s/tmp", doryengineDir), 0700)
+	_ = os.MkdirAll(fmt.Sprintf("%s/logs", doryengineDir), 0700)
 
 	// create config.yaml
 	bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s/%s-%s", pkg.DirInstallScripts, doryengineScriptDir, o.Language, doryengineConfigName))
