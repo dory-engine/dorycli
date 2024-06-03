@@ -3,9 +3,9 @@ package pkg
 import "embed"
 
 const (
-	VersionDoryCli      = "v1.6.2"
-	VersionDoryEngine   = "v2.6.2"
-	VersionDoryFrontend = "v2.6.2"
+	VersionDoryCli      = "v1.6.3"
+	VersionDoryEngine   = "v2.6.3"
+	VersionDoryFrontend = "v2.6.3"
 
 	NexusInitData = "nexus-data-init.tar.gz"
 
