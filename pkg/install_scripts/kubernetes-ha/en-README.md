@@ -25,12 +25,14 @@
 export LB_DIR=/data/k8s-lb
 {{ range $i, $host := $.masterHosts }}
 # Copy the load balancer configuration file to {{ $host.hostname }} node
-ssh {{ $host.hostname }} mkdir -p ${LB_DIR}
-scp -r {{ $host.hostname }}/nginx-lb {{ $host.hostname }}/keepalived root@{{ $host.hostname }}:${LB_DIR}
+ssh {{ $host.hostname }} mkdir -p ${LB_DIR} && \
+scp -r {{ $host.hostname }}/nginx-lb {{ $host.hostname }}/keepalived root@{{ $host.hostname }}:${LB_DIR} && \
+pwd
 
 # Start load balancer on {{ $host.hostname }} node
-ssh {{ $host.hostname }} "cd ${LB_DIR}/keepalived/ && docker-compose stop && docker-compose rm -f && docker-compose up -d"
-ssh {{ $host.hostname }} "cd ${LB_DIR}/nginx-lb/ && docker-compose stop && docker-compose rm -f && docker-compose up -d"
+ssh {{ $host.hostname }} "cd ${LB_DIR}/keepalived/ && docker-compose stop && docker-compose rm -f && docker-compose up -d" && \
+ssh {{ $host.hostname }} "cd ${LB_DIR}/nginx-lb/ && docker-compose stop && docker-compose rm -f && docker-compose up -d" && \
+pwd
 {{ end }}
 {{ $firstHost := first $.masterHosts }}
 

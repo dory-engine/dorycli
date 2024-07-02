@@ -19,6 +19,9 @@ chown -R 999:999 {{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }}/datab
 chown -R 10000:10000 {{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }}/jobservice
 chown -R 999:999 {{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }}/redis
 chown -R 10000:10000 {{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }}/registry
+find {{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }} -type d -exec chmod a+rx {} \;
+find {{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }} -type f -exec chmod a+r {} \;
+
 ls -alh {{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }}
 {{- end }}
 

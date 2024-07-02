@@ -25,12 +25,14 @@
 export LB_DIR=/data/k8s-lb
 {{ range $i, $host := $.masterHosts }}
 # 把load balancer配置文件复制到 {{ $host.hostname }} 节点上
-ssh {{ $host.hostname }} mkdir -p ${LB_DIR}
-scp -r {{ $host.hostname }}/nginx-lb {{ $host.hostname }}/keepalived root@{{ $host.hostname }}:${LB_DIR}
+ssh {{ $host.hostname }} mkdir -p ${LB_DIR} && \
+scp -r {{ $host.hostname }}/nginx-lb {{ $host.hostname }}/keepalived root@{{ $host.hostname }}:${LB_DIR} && \
+pwd
 
 # 在 {{ $host.hostname }} 节点上启动load balancer
-ssh {{ $host.hostname }} "cd ${LB_DIR}/keepalived/ && docker-compose stop && docker-compose rm -f && docker-compose up -d"
-ssh {{ $host.hostname }} "cd ${LB_DIR}/nginx-lb/ && docker-compose stop && docker-compose rm -f && docker-compose up -d"
+ssh {{ $host.hostname }} "cd ${LB_DIR}/keepalived/ && docker-compose stop && docker-compose rm -f && docker-compose up -d" && \
+ssh {{ $host.hostname }} "cd ${LB_DIR}/nginx-lb/ && docker-compose stop && docker-compose rm -f && docker-compose up -d" && \
+pwd
 {{ end }}
 {{ $firstHost := first $.masterHosts }}
 

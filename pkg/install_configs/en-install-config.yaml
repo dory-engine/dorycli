@@ -33,7 +33,7 @@ dory:
   # example: "type: worker"
   nodeSelector: {}
   {{- end }}
-  # dory-engine license key, emtpy means free trial mode
+  # dory-engine license key, emtpy means community edition
   licenseKey: ""
   {{- if $.full }}
   # git repository settings
@@ -50,7 +50,7 @@ dory:
       # gitea repository database image name, if type is gitea this setting required
       imageDB: mysql:8.0.20
       # # gitlab repository nginx proxy image name, if type is gitlab this setting required
-      # imageNginx: nginx:1.23.3-alpine
+      # imageNginx: nginx:1.27.0-alpine
       # expose service port (kubernetes node port)
       port: 30001
     # # use external git repository, do not deploy git repository automatically (internal or external only accept one deploy way)
@@ -296,7 +296,7 @@ dory:
   # docker executors deploy settings
   docker:
     # docker executor image name
-    image: docker:20.10.14-dind
+    image: docker:27.0.2-dind
     # service name of docker executor (in docker-compose or kubernetes)
     dockerName: docker
     # how many docker executors will deploy in docker-compose or with kubernetes

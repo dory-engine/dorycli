@@ -1185,6 +1185,18 @@ func (o *OptionsInstallRun) InstallWithKubernetes(installConfig pkg.InstallConfi
 			return err
 		}
 		log.Success(fmt.Sprintf("create harbor directory and chown %s success", harborDir))
+		_, _, err = pkg.CommandExec(fmt.Sprintf("sudo find %s -type d -exec chmod a+rx {} \\;", harborDir), harborDir)
+		if err != nil {
+			err = fmt.Errorf("create harbor directory and chown error: %s", err.Error())
+			return err
+		}
+		log.Success(fmt.Sprintf("create harbor directory and chown %s success", harborDir))
+		_, _, err = pkg.CommandExec(fmt.Sprintf("sudo find %s -type f -exec chmod a+r {} \\;", harborDir), harborDir)
+		if err != nil {
+			err = fmt.Errorf("create harbor directory and chown error: %s", err.Error())
+			return err
+		}
+		log.Success(fmt.Sprintf("create harbor directory and chown %s success", harborDir))
 
 		_, _, err = pkg.CommandExec(fmt.Sprintf("kubectl apply -f %s", step01NamespacePvName), outputDir)
 		if err != nil {
