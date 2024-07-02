@@ -1,4 +1,4 @@
-# dorycli changelog v1.6.3
+# dorycli changelog v1.6.4
 
 **新特性:**
 
