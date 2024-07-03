@@ -296,7 +296,7 @@ dory:
   # docker executor部署设置
   docker:
     # 镜像名
-    image: docker:20.10.14-dind
+    image: docker:27.0.2-dind
     # docker executor在docker-compose或者kubernetes中部署的服务名
     dockerName: docker
     # 启动多少个docker executor实例

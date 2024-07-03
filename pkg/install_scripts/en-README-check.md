@@ -158,7 +158,7 @@ deployment:
   kind: DaemonSet
 image:
   name: traefik
-  tag: v2.11.2
+  tag: v2.10.5
 ports:
   web:
     hostPort: 80

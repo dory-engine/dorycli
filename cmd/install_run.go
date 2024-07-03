@@ -641,6 +641,17 @@ func (o *OptionsInstallRun) DoryCreateDirs(installConfig pkg.InstallConfig) erro
 		return err
 	}
 
+	_, _, err = pkg.CommandExec(fmt.Sprintf("sudo find %s -type d -exec chmod a+rx {} \\;", doryDir), doryDir)
+	if err != nil {
+		err = fmt.Errorf("create directory and chown error: %s", err.Error())
+		return err
+	}
+	_, _, err = pkg.CommandExec(fmt.Sprintf("sudo find %s -type f -exec chmod a+r {} \\;", doryDir), doryDir)
+	if err != nil {
+		err = fmt.Errorf("create directory and chown error: %s", err.Error())
+		return err
+	}
+
 	log.Success(fmt.Sprintf("create directory and chown %s success", doryDir))
 
 	return err

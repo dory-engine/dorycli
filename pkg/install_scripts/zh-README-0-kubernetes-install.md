@@ -51,6 +51,8 @@ mkdir -p {{ $.rootDir }}/{{ $.dory.namespace }}/mongo-dory
 chown -R 999:999 {{ $.rootDir }}/{{ $.dory.namespace }}/mongo-dory
 ls -alh {{ $.rootDir }}/{{ $.dory.namespace }}
 chown -R 1000:1000 {{ $.rootDir }}/{{ $.dory.namespace }}/dory-engine
+find {{ $.rootDir }}/{{ $.dory.namespace }} -type d -exec chmod a+rx {} \;
+find {{ $.rootDir }}/{{ $.dory.namespace }} -type f -exec chmod a+r {} \;
 ```
 
 {{ $certPath := "" }}{{- if eq $.kubernetes.runtime "docker" }}{{ $certPath = "/etc/docker" }}{{- else if eq $.kubernetes.runtime "containerd" }}{{ $certPath = "/etc/containerd" }}{{- else if eq $.kubernetes.runtime "crio" }}{{ $certPath = "/etc/containers" }}{{- end }}
