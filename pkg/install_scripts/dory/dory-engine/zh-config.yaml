@@ -669,7 +669,7 @@ dockerBuildSettings:
       commandsAfterCheck: []
     - buildEnvName: ansible-2.12
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}ansible:2.12.2-alpine-dory"
-      buildArches: ["arm64v8"]
+      buildArches: ["amd64", "arm64v8"]
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: []

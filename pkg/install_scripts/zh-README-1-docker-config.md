@@ -118,6 +118,7 @@ docker start dory-engine dory-console
 
 - url: https://{{ $.imageRepoDomainName }}
 - user: admin / {{ $.imageRepoPassword }} (管理员用户)
+- 打开`系统设置`: `https://{{ $.imageRepoDomainName }}/harbor/configs/setting`，`项目创建` 选择 `仅管理员`，并保存
 - 数据存放在: `{{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }}`
 {{- end }}
 

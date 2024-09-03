@@ -300,6 +300,17 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		}
 	}
 
+	var foundKindAw bool
+	foundKindAw = o.Param.IsAllKind
+	for _, kind := range o.Param.Kinds {
+		if foundKindAw {
+			break
+		} else if kind == pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook] {
+			foundKindAw = true
+			break
+		}
+	}
+
 	adminKindList := pkg.AdminKindList{
 		Kind: "list",
 	}
@@ -340,7 +351,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		}
 		for _, user := range userFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = pkg.AdminKindUser
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindUser]
 			adminKind.Metadata.Name = user.Username
 			var userProjects []string
 			for _, up := range user.UserProjects {
@@ -385,7 +396,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 
 		for _, csc := range stepFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = "customStepConf"
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindCustomStep]
 			adminKind.Metadata.Name = csc.CustomStepName
 			adminKind.Metadata.Annotations = map[string]string{
 				"projectNames": strings.Join(csc.ProjectNames, ","),
@@ -416,7 +427,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 
 		for _, envK8s := range envFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = "envK8s"
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindEnvK8s]
 			adminKind.Metadata.Name = envK8s.EnvName
 			adminKind.Metadata.Annotations = map[string]string{
 				"ingressVersion": envK8s.ResourceVersion.IngressVersion,
@@ -465,7 +476,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 
 		for _, ct := range ctFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = "componentTemplate"
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate]
 			adminKind.Metadata.Name = ct.ComponentTemplateName
 			adminKind.Spec = ct
 			adminKinds = append(adminKinds, adminKind)
@@ -506,7 +517,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 
 		for _, dbe := range dbeFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = "dockerBuildEnv"
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv]
 			adminKind.Metadata.Name = dbe.BuildEnvName
 			adminKind.Spec = dbe
 			adminKinds = append(adminKinds, adminKind)
@@ -548,7 +559,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 
 		for _, grc := range grcFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = "gitRepoConfig"
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig]
 			adminKind.Metadata.Name = grc.RepoName
 			adminKind.Spec = grc
 			adminKinds = append(adminKinds, adminKind)
@@ -590,7 +601,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 
 		for _, irc := range ircFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = "imageRepoConfig"
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig]
 			adminKind.Metadata.Name = irc.RepoName
 			adminKind.Spec = irc
 			adminKinds = append(adminKinds, adminKind)
@@ -632,7 +643,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 
 		for _, arc := range arcFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = "artifactRepoConfig"
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig]
 			adminKind.Metadata.Name = arc.RepoName
 			adminKind.Spec = arc
 			adminKinds = append(adminKinds, adminKind)
@@ -674,9 +685,49 @@ func (o *OptionsAdminGet) Run(args []string) error {
 
 		for _, scrc := range scrcFilters {
 			var adminKind pkg.AdminKind
-			adminKind.Kind = "scanCodeRepoConfig"
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig]
 			adminKind.Metadata.Name = scrc.RepoName
 			adminKind.Spec = scrc
+			adminKinds = append(adminKinds, adminKind)
+		}
+	}
+
+	awFilters := []pkg.AdminWebhook{}
+	if foundKindAw {
+		param := map[string]interface{}{}
+		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/adminWebhooks"), http.MethodGet, "", param, false)
+		if err != nil {
+			return err
+		}
+		adminWebhooks := []pkg.AdminWebhook{}
+		err = json.Unmarshal([]byte(result.Get("data.adminWebhooks").Raw), &adminWebhooks)
+		if err != nil {
+			return err
+		}
+
+		for _, adminWebhook := range adminWebhooks {
+			var found bool
+			if len(o.Param.ItemNames) == 0 {
+				found = true
+			} else {
+				for _, name := range o.Param.ItemNames {
+					if name == adminWebhook.AdminWebhookID {
+						found = true
+						break
+					}
+				}
+			}
+			if found {
+				awFilters = append(awFilters, adminWebhook)
+			}
+		}
+		for _, adminWebhook := range awFilters {
+			var adminKind pkg.AdminKind
+			adminKind.Kind = pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook]
+			adminKind.Metadata.Name = adminWebhook.AdminWebhookID
+			adminKind.Metadata.Annotations = map[string]string{}
+			spec := adminWebhook
+			adminKind.Spec = spec
 			adminKinds = append(adminKinds, adminKind)
 		}
 	}
@@ -708,11 +759,11 @@ func (o *OptionsAdminGet) Run(args []string) error {
 				for _, up := range item.UserProjects {
 					ups = append(ups, fmt.Sprintf("%s:%s", up.ProjectName, up.AccessLevel))
 				}
-				dataRow := []string{fmt.Sprintf("user/%s", item.Username), item.TenantCode, strings.Join(item.TenantAdmins, ","), item.Name, item.Mail, fmt.Sprintf("%v", item.IsAdmin), fmt.Sprintf("%v", item.IsActive), strings.Join(ups, "\n")}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindUser], item.Username), item.Name, item.Mail, fmt.Sprintf("%v", item.IsAdmin), fmt.Sprintf("%v", item.IsActive), strings.Join(ups, "\n"), item.TenantCode, strings.Join(item.TenantAdmins, ",")}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Username", "TenantCode", "TenantAdmins", "Name", "Mail", "Admin", "Active", "Projects"}
+			dataHeader := []string{"Username", "Name", "Mail", "Admin", "Active", "Projects", "TenantCode", "TenantAdmins"}
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader(dataHeader)
 			table.SetAutoWrapText(false)
@@ -735,7 +786,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(stepFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range stepFilters {
-				dataRow := []string{fmt.Sprintf("customStepConf/%s", item.CustomStepName), item.TenantCode, item.CustomStepActionDesc, fmt.Sprintf("%v", item.IsEnvDiff), strings.Join(item.ProjectNames, ","), item.ParamInputYamlDef}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindCustomStep], item.CustomStepName), item.TenantCode, item.CustomStepActionDesc, fmt.Sprintf("%v", item.IsEnvDiff), strings.Join(item.ProjectNames, ","), item.ParamInputYamlDef}
 				dataRows = append(dataRows, dataRow)
 			}
 
@@ -763,7 +814,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range envFilters {
 				arches := strings.Join(item.Arches, ",")
-				dataRow := []string{fmt.Sprintf("envK8s/%s", item.EnvName), item.TenantCode, item.EnvDesc, fmt.Sprintf("https://%s:%d", item.Host, item.Port), arches, item.ResourceVersion.IngressVersion, item.ResourceVersion.HpaVersion, item.ResourceVersion.IstioVersion}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindEnvK8s], item.EnvName), item.TenantCode, item.EnvDesc, fmt.Sprintf("https://%s:%d", item.Host, item.Port), arches, item.ResourceVersion.IngressVersion, item.ResourceVersion.HpaVersion, item.ResourceVersion.IstioVersion}
 				dataRows = append(dataRows, dataRow)
 			}
 
@@ -790,7 +841,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(ctFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range ctFilters {
-				dataRow := []string{fmt.Sprintf("componentTemplate/%s", item.ComponentTemplateName), item.TenantCode, item.ComponentTemplateDesc, item.DeploySpecStatic.DeployImage, fmt.Sprintf("%d", item.DeploySpecStatic.DeployReplicas)}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate], item.ComponentTemplateName), item.TenantCode, item.ComponentTemplateDesc, item.DeploySpecStatic.DeployImage, fmt.Sprintf("%d", item.DeploySpecStatic.DeployReplicas)}
 				dataRows = append(dataRows, dataRow)
 			}
 
@@ -817,7 +868,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(dbeFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range dbeFilters {
-				dataRow := []string{fmt.Sprintf("dockerBuildEnv/%s", item.BuildEnvName), item.TenantCode, item.Image, strings.Join(item.BuildArches, ",")}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv], item.BuildEnvName), item.TenantCode, item.Image, strings.Join(item.BuildArches, ",")}
 				dataRows = append(dataRows, dataRow)
 			}
 
@@ -844,7 +895,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(grcFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range grcFilters {
-				dataRow := []string{fmt.Sprintf("gitRepoConfig/%s", item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
 				dataRows = append(dataRows, dataRow)
 			}
 
@@ -871,7 +922,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(ircFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range ircFilters {
-				dataRow := []string{fmt.Sprintf("imageRepoConfig/%s", item.RepoName), item.TenantCode, item.Kind, item.Hostname}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.Hostname}
 				dataRows = append(dataRows, dataRow)
 			}
 
@@ -898,7 +949,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(arcFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range arcFilters {
-				dataRow := []string{fmt.Sprintf("artifactRepoConfig/%s", item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
 				dataRows = append(dataRows, dataRow)
 			}
 
@@ -925,11 +976,38 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(scrcFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range scrcFilters {
-				dataRow := []string{fmt.Sprintf("scanCodeRepoConfig/%s", item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
 				dataRows = append(dataRows, dataRow)
 			}
 
 			dataHeader := []string{"Name", "TenantCode", "Kind", "ViewUrl"}
+			table := tablewriter.NewWriter(os.Stdout)
+			table.SetHeader(dataHeader)
+			table.SetAutoWrapText(false)
+			table.SetAutoFormatHeaders(true)
+			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+			table.SetAlignment(tablewriter.ALIGN_LEFT)
+			table.SetCenterSeparator("")
+			table.SetColumnSeparator("")
+			table.SetRowSeparator("")
+			table.SetHeaderLine(false)
+			table.SetBorder(false)
+			table.SetTablePadding("\t")
+			table.SetNoWhiteSpace(true)
+			table.AppendBulk(dataRows)
+			table.Render()
+			fmt.Println("------------")
+			fmt.Println()
+		}
+
+		if len(awFilters) > 0 {
+			dataRows := [][]string{}
+			for _, item := range awFilters {
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook], item.AdminWebhookID), item.AdminAction, item.TenantCode, item.WebhookUrl, item.WebhookMethod}
+				dataRows = append(dataRows, dataRow)
+			}
+
+			dataHeader := []string{"ID", "AdminAction", "TenantCode", "Url", "Method"}
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader(dataHeader)
 			table.SetAutoWrapText(false)

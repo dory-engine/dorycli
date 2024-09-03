@@ -1023,15 +1023,47 @@ type ModuleRun struct {
 	ModuleEnable bool   `yaml:"moduleEnable" json:"moduleEnable" bson:"moduleEnable" validate:""`
 }
 
+type PipelineCron struct {
+	CrontabMinute int `yaml:"crontabMinute" json:"crontabMinute" bson:"crontabMinute" validate:""`
+	CrontabHour   int `yaml:"crontabHour" json:"crontabHour" bson:"crontabHour" validate:""`
+	CrontabDay    int `yaml:"crontabDay" json:"crontabDay" bson:"crontabDay" validate:""`
+	CrontabMonth  int `yaml:"crontabMonth" json:"crontabMonth" bson:"crontabMonth" validate:""`
+	CrontabWeek   int `yaml:"crontabWeek" json:"crontabWeek" bson:"crontabWeek" validate:""`
+}
+type WebhookNameVale NameValue
+type PipelineTrigger struct {
+	StepAction           string            `yaml:"stepAction" json:"stepAction" bson:"stepAction" validate:""`
+	BeforeExecute        bool              `yaml:"beforeExecute" json:"beforeExecute" bson:"beforeExecute" validate:""`
+	StatusResults        []string          `yaml:"statusResults" json:"statusResults" bson:"statusResults" validate:""`
+	Enable               bool              `yaml:"enable" json:"enable" bson:"enable" validate:""`
+	CheckVarToIgnore     string            `yaml:"checkVarToIgnore" json:"checkVarToIgnore" bson:"checkVarToIgnore" validate:""`
+	WebhookUrl           string            `yaml:"webhookUrl" json:"webhookUrl" bson:"webhookUrl" validate:""`
+	Insecure             bool              `yaml:"insecure" json:"insecure" bson:"insecure" validate:""`
+	WebhookMethod        string            `yaml:"webhookMethod" json:"webhookMethod" bson:"webhookMethod" validate:""`
+	WebhookHeaders       []WebhookNameVale `yaml:"webhookHeaders" json:"webhookHeaders" bson:"webhookHeaders" validate:""`
+	WebhookQueryParams   []WebhookNameVale `yaml:"webhookQueryParams" json:"webhookQueryParams" bson:"webhookQueryParams" validate:""`
+	WebhookForms         []WebhookNameVale `yaml:"webhookForms" json:"webhookForms" bson:"webhookForms" validate:""`
+	WebhookBody          string            `yaml:"webhookBody" json:"webhookBody" bson:"webhookBody" validate:""`
+	MailTitle            string            `yaml:"mailTitle" json:"mailTitle" bson:"mailTitle" validate:""`
+	MailContent          string            `yaml:"mailContent" json:"mailContent" bson:"mailContent" validate:""`
+	MailAttachmentFormat string            `yaml:"mailAttachmentFormat" json:"mailAttachmentFormat" bson:"mailAttachmentFormat" validate:""`
+	MailCommittees       bool              `yaml:"mailCommittees" json:"mailCommittees" bson:"mailCommittees" validate:""`
+	MailReceivers        []string          `yaml:"mailReceivers" json:"mailReceivers" bson:"mailReceivers" validate:""`
+	NoticeCommittees     bool              `yaml:"noticeCommittees" json:"noticeCommittees" bson:"noticeCommittees" validate:""`
+	NoticeUsernames      []string          `yaml:"noticeUsernames" json:"noticeUsernames" bson:"noticeUsernames" validate:""`
+}
 type ProjectPipeline struct {
-	BranchName        string      `yaml:"branchName" json:"branchName" bson:"branchName" validate:"required"`
-	IsDefault         bool        `yaml:"isDefault" json:"isDefault" bson:"isDefault" validate:""`
-	WebhookPushEvent  bool        `yaml:"webhookPushEvent" json:"webhookPushEvent" bson:"webhookPushEvent" validate:""`
-	Envs              []string    `yaml:"envs" json:"envs" bson:"envs" validate:""`
-	EnvProductions    []string    `yaml:"envProductions" json:"envProductions" bson:"envProductions" validate:""`
-	PipelineDef       PipelineDef `yaml:"pipelineDef" json:"pipelineDef" bson:"pipelineDef" validate:""`
-	UpdatePipelineDef bool        `yaml:"updatePipelineDef" json:"updatePipelineDef" bson:"updatePipelineDef" validate:""`
-	ErrMsgPipelineDef string      `yaml:"errMsgPipelineDef" json:"errMsgPipelineDef" bson:"errMsgPipelineDef" validate:""`
+	BranchName        string            `yaml:"branchName" json:"branchName" bson:"branchName" validate:"required"`
+	SourceBranch      string            `yaml:"sourceBranch" json:"sourceBranch" bson:"sourceBranch" validate:""`
+	IsDefault         bool              `yaml:"isDefault" json:"isDefault" bson:"isDefault" validate:""`
+	WebhookPushEvent  bool              `yaml:"webhookPushEvent" json:"webhookPushEvent" bson:"webhookPushEvent" validate:""`
+	Envs              []string          `yaml:"envs" json:"envs" bson:"envs" validate:""`
+	EnvProductions    []string          `yaml:"envProductions" json:"envProductions" bson:"envProductions" validate:""`
+	PipelineCrons     []PipelineCron    `yaml:"pipelineCrons" json:"pipelineCrons" bson:"pipelineCrons" validate:""`
+	PipelineTriggers  []PipelineTrigger `yaml:"pipelineTriggers" json:"pipelineTriggers" bson:"pipelineTriggers" validate:""`
+	PipelineDef       PipelineDef       `yaml:"pipelineDef" json:"pipelineDef" bson:"pipelineDef" validate:""`
+	UpdatePipelineDef bool              `yaml:"updatePipelineDef" json:"updatePipelineDef" bson:"updatePipelineDef" validate:""`
+	ErrMsgPipelineDef string            `yaml:"errMsgPipelineDef" json:"errMsgPipelineDef" bson:"errMsgPipelineDef" validate:""`
 }
 
 type CustomStepConfOutput struct {
@@ -1325,6 +1357,21 @@ type ScanCodeRepoConfig struct {
 	Token      string `yaml:"token" json:"token" bson:"token" validate:"required"`
 }
 
+type AdminWebhook struct {
+	AdminWebhookID     string            `yaml:"adminWebhookID" json:"adminWebhookID" bson:"adminWebhookID" validate:""`
+	TenantCode         string            `yaml:"tenantCode" json:"tenantCode" bson:"tenantCode" validate:""`
+	AdminAction        string            `yaml:"adminAction" json:"adminAction" bson:"adminAction" validate:""`
+	Enable             bool              `yaml:"enable" json:"enable" bson:"enable" validate:""`
+	WebhookUrl         string            `yaml:"webhookUrl" json:"webhookUrl" bson:"webhookUrl" validate:""`
+	Insecure           bool              `yaml:"insecure" json:"insecure" bson:"insecure" validate:""`
+	WebhookMethod      string            `yaml:"webhookMethod" json:"webhookMethod" bson:"webhookMethod" validate:""`
+	WebhookHeaders     []WebhookNameVale `yaml:"webhookHeaders" json:"webhookHeaders" bson:"webhookHeaders" validate:""`
+	WebhookQueryParams []WebhookNameVale `yaml:"webhookQueryParams" json:"webhookQueryParams" bson:"webhookQueryParams" validate:""`
+	WebhookForms       []WebhookNameVale `yaml:"webhookForms" json:"webhookForms" bson:"webhookForms" validate:""`
+	WebhookBody        string            `yaml:"webhookBody" json:"webhookBody" bson:"webhookBody" validate:""`
+	Username           string            `yaml:"username" json:"username" bson:"username" validate:""`
+}
+
 type DeploySpecStatic struct {
 	DeployName          string `yaml:"deployName" json:"deployName" bson:"deployName" validate:""`
 	DeployImage         string `yaml:"deployImage" json:"deployImage" bson:"deployImage" validate:"required"`
@@ -1413,7 +1460,7 @@ type ComponentTemplate struct {
 	DeploySpecStatic      DeploySpecStatic `yaml:"deploySpecStatic" json:"deploySpecStatic" bson:"deploySpecStatic" validate:"required"`
 }
 
-type ProjectSummary struct {
+type DefProjectSummary struct {
 	BuildEnvs       []string               `yaml:"buildEnvs" json:"buildEnvs" bson:"buildEnvs" validate:""`
 	BuildNames      []string               `yaml:"buildNames" json:"buildNames" bson:"buildNames" validate:""`
 	CustomStepConfs []CustomStepConfOutput `yaml:"customStepConfs" json:"customStepConfs" bson:"customStepConfs" validate:""`
@@ -1520,4 +1567,85 @@ type KubernetesHaCluster struct {
 		NetworkInterface   string `yaml:"networkInterface" json:"networkInterface" bson:"networkInterface" validate:"required"`
 		KeepalivedPriority int    `yaml:"keepalivedPriority" json:"keepalivedPriority" bson:"keepalivedPriority" validate:"required"`
 	} `yaml:"masterHosts" json:"masterHosts" bson:"masterHosts" validate:"required"`
+}
+
+type ProjectMember struct {
+	Username           string   `yaml:"username" json:"username" bson:"username" validate:"required"`
+	AccessLevel        string   `yaml:"accessLevel" json:"accessLevel" bson:"accessLevel" validate:"required"`
+	DisableProjectDefs []string `yaml:"disableProjectDefs" json:"disableProjectDefs" bson:"disableProjectDefs" validate:""`
+	DisableRepoSecrets []string `yaml:"disableRepoSecrets" json:"disableRepoSecrets" bson:"disableRepoSecrets" validate:""`
+	DisablePipelines   []string `yaml:"disablePipelines" json:"disablePipelines" bson:"disablePipelines" validate:""`
+}
+type DeploySpecDebug struct {
+	DebugQuota QuotaPod `yaml:"debugQuota" json:"debugQuota" bson:"debugQuota" validate:""`
+	Ingress    struct {
+		DomainName     string `yaml:"domainName" json:"domainName" bson:"domainName" validate:""`
+		PathPrefix     string `yaml:"pathPrefix" json:"pathPrefix" bson:"pathPrefix" validate:""`
+		CertSelfSigned bool   `yaml:"certSelfSigned" json:"certSelfSigned" bson:"certSelfSigned" validate:""`
+		CertBranch     string `yaml:"certBranch" json:"certBranch" bson:"certBranch" validate:""`
+		CertPath       string `yaml:"certPath" json:"certPath" bson:"certPath" validate:""`
+	} `yaml:"ingress" json:"ingress" bson:"ingress" validate:""`
+}
+
+type ComponentDebug struct {
+	Arch            string          `yaml:"arch" json:"arch" bson:"arch" validate:"required"`
+	DeploySpecDebug DeploySpecDebug `yaml:"deploySpecDebug" json:"deploySpecDebug" bson:"deploySpecDebug" validate:"required"`
+}
+type Component struct {
+	Arch             string           `yaml:"arch" json:"arch" bson:"arch" validate:"required"`
+	ComponentName    string           `yaml:"componentName" json:"componentName" bson:"componentName" validate:"required"`
+	ComponentDesc    string           `yaml:"componentDesc" json:"componentDesc" bson:"componentDesc" validate:"required"`
+	DeploySpecStatic DeploySpecStatic `yaml:"deploySpecStatic" json:"deploySpecStatic" bson:"deploySpecStatic" validate:"required"`
+}
+
+type Database struct {
+	DbName     string `yaml:"dbName" json:"dbName" bson:"dbName" validate:"required"`
+	DbUrl      string `yaml:"dbUrl" json:"dbUrl" bson:"dbUrl" validate:"required"`
+	DbUser     string `yaml:"dbUser" json:"dbUser" bson:"dbUser" validate:"required"`
+	DbPassword string `yaml:"dbPassword" json:"dbPassword" bson:"dbPassword" validate:"required"`
+}
+
+type Host struct {
+	HostName           string            `yaml:"hostName" json:"hostName" bson:"hostName" validate:"required"`
+	HostAddr           string            `yaml:"hostAddr" json:"hostAddr" bson:"hostAddr" validate:"required"`
+	HostPort           int               `yaml:"hostPort" json:"hostPort" bson:"hostPort" validate:"required"`
+	HostUser           string            `yaml:"hostUser" json:"hostUser" bson:"hostUser" validate:"required"`
+	HostPassword       string            `yaml:"hostPassword" json:"hostPassword" bson:"hostPassword" validate:"required"`
+	HostBecome         bool              `yaml:"hostBecome" json:"hostBecome" bson:"hostBecome" validate:""`
+	HostBecomeUser     string            `yaml:"hostBecomeUser" json:"hostBecomeUser" bson:"hostBecomeUser" validate:""`
+	HostBecomePassword string            `yaml:"hostBecomePassword" json:"hostBecomePassword" bson:"hostBecomePassword" validate:""`
+	Groups             []string          `yaml:"groups" json:"groups" bson:"groups" validate:""`
+	Variables          map[string]string `yaml:"variables" json:"variables" bson:"variables" validate:""`
+}
+
+type ProjectAvailableEnvConsole struct {
+	EnvName        string         `yaml:"envName" json:"envName" bson:"envName" validate:""`
+	ComponentDebug ComponentDebug `yaml:"componentDebug" json:"componentDebug" bson:"componentDebug" validate:""`
+	Components     []Component    `yaml:"components" json:"components" bson:"components" validate:""`
+	Databases      []Database     `yaml:"databases" json:"databases" bson:"databases" validate:""`
+	Hosts          []Host         `yaml:"hosts" json:"hosts" bson:"hosts" validate:""`
+}
+
+type ProjectConsole struct {
+	ProjectInfo          ProjectInfo                  `yaml:"projectInfo" json:"projectInfo" bson:"projectInfo" validate:""`
+	ProjectMembers       []ProjectMember              `yaml:"projectMembers" json:"projectMembers" bson:"projectMembers" validate:""`
+	Pipelines            []ProjectPipeline            `yaml:"pipelines" json:"pipelines" bson:"pipelines" validate:""`
+	ProjectAvailableEnvs []ProjectAvailableEnvConsole `yaml:"projectAvailableEnvs" json:"projectAvailableEnvs" bson:"projectAvailableEnvs" validate:""`
+}
+
+type ConsoleMetadata struct {
+	ProjectName string `yaml:"projectName" json:"projectName" bson:"projectName" validate:""`
+	EnvName     string `yaml:"envName" json:"envName" bson:"envName" validate:""`
+	BranchName  string `yaml:"branchName" json:"branchName" bson:"branchName" validate:""`
+}
+
+type ConsoleKind struct {
+	Kind     string          `yaml:"kind" json:"kind" bson:"kind" validate:"required"`
+	Metadata ConsoleMetadata `yaml:"metadata" json:"metadata" bson:"metadata" validate:"required"`
+	Items    []interface{}   `yaml:"items" json:"items" bson:"items" validate:""`
+}
+
+type ConsoleKindList struct {
+	Kind     string        `yaml:"kind" json:"kind" bson:"kind" validate:"required"`
+	Consoles []ConsoleKind `yaml:"consoles" json:"consoles" bson:"consoles" validate:""`
 }

@@ -10,6 +10,10 @@ cmd_example:
     │   ├── apply # apply configurations, admin permission required
     │   ├── delete # delete configurations, admin permission required
     │   └── get # get configurations, admin permission required
+    ├── console # project console management, requires project maintainer permissions
+    │   ├── apply # apply configuration parameters in files, directories or stdin to project configurations, project maintainer permissions are required
+    │   ├── delete # delete project configurations, which requires project maintainer permissions
+    │   └── get # get project configurations, which requires project maintainer permissions
     ├── def # manage project definitions
     │   ├── apply # apply project definitions
     │   ├── clone # clone project definitions modules to another environments
@@ -44,10 +48,10 @@ cmd_example:
 cmd_admin_short:
   other: "manage configurations, admin permission required"
 cmd_admin_long:
-  other: "manage users, custom steps, kubernetes environments, component templates, docker build environments, repository configurations in Dory-Engine, admin permission required"
+  other: "manage users, custom steps, kubernetes environments, component templates, docker build environments, repository configurations, admin webhooks in Dory-Engine, admin permission required"
 cmd_admin_example:
   other: |-
-    # get all users, custom steps, kubernetes environments and component templates, docker build environments, repository configurations, admin permission required
+    # get all users, custom steps, kubernetes environments and component templates, docker build environments, repository configurations, admin webhooks, admin permission required
     {{._0}} admin get {{._1}}
 
     # apply multiple configurations from file or directory, admin permission required
@@ -61,7 +65,7 @@ cmd_admin_apply_long:
   other: "apply configurations to Dory-Engine by file or directory or stdin, admin permission required"
 cmd_admin_apply_example:
   other: |-
-    # support kind: componentTemplate, envK8s, customStepConf, user, dockerBuildEnv, gitRepoConfig, imageRepoConfig, artifactRepoConfig, scanCodeRepoConfig
+    # support kind: componentTemplate, envK8s, customStepConf, user, dockerBuildEnv, gitRepoConfig, imageRepoConfig, artifactRepoConfig, scanCodeRepoConfig, adminWebhook
     # it will update or insert configurations items
     # JSON and YAML formats are accepted.
     # support apply multiple configurations at the same time.
@@ -78,7 +82,7 @@ cmd_admin_delete_long:
   other: "delete configurations in Dory-Engine, admin permission required"
 cmd_admin_delete_example:
   other: |-
-    kind options: all, {{._0}}
+    kind options: {{._0}}
 
     # delete users, admin permission required
     {{._1}} admin delete {{._2}} test-user01 test-user02
@@ -113,6 +117,78 @@ cmd_admin_get_example:
   
     # get kubernetes environments configurations, and filter by envNames, admin permission required
     {{._10}} admin get {{._11}} test uat prod
+cmd_console_short:
+  other: "project console management, requires project maintainer permissions"
+cmd_console_long:
+  other: "manage project-related configurations, including: project members, pipelines, pipeline triggers, project hosts, project databases, debugging components, project components, etc., require project maintainer permissions"
+cmd_console_example:
+  other: |-
+    # get all project configurations of test-project1, including: project members, pipelines, pipeline triggers, project hosts, project databases, debugging components, project components, etc., require project maintainer permissions
+    {{._0}} console get test-prject1 {{._1}}
+
+    # apply configuration parameters in files or directories to project configurations, requires project maintainer permissions
+    {{._2}} console apply -f members.yaml -f pipelines.json
+
+    # delete test-project1 project configurations, requires project maintainer permissions
+    {{._3}} console delete test-prject1 {{._4}} --items=test-user01
+cmd_console_apply_short:
+  other: "apply configuration parameters in files, directories or stdin to project configurations, project maintainer permissions are required"
+cmd_console_apply_long:
+  other: "apply configuration parameters in files, directories, stdin to project configurations, project maintainer permissions are required"
+cmd_console_apply_example:
+  other: |-
+    # supported project configurations types: project members, pipelines, pipeline triggers, project hosts, project databases, debugging components, project components, etc.
+    # will automatically update or create project configurations
+    # support JSON or YAML format
+    # support the simultaneous application of multiple different project configurations
+    # if [filename] is a directory, all *.json, *.yaml, *.yml files in the directory will be automatically read
+
+    # apply configuration parameters in the file to project configurations, project maintainer permissions are required
+    {{._0}} console apply -f members.yaml -f pipelines.json
+
+    # apply the configuration parameters in stdin to the project configurations, which requires project maintainer permissions
+    cat members.yaml | {{._1}} console apply -f -
+cmd_console_delete_short:
+  other: "delete project configurations, which requires project maintainer permissions"
+cmd_console_delete_long:
+  other: "delete project configurations, which requires project maintainer permissions"
+cmd_console_delete_example:
+  other: |-
+    kind options: {{._0}}
+
+    # delete the test-project1 project members, which requires project maintainer permissions
+    {{._1}} console delete test-project1 {{._2}} --items=test-user01 --items=test-user02
+
+    # delete the test-project1 project hosts, which requires project maintainer permissions
+    {{._3}} console delete test-project1 {{._4}} --envs=prod --items=test-project1-node01,test-project1-node02
+
+    # delete the test-project1 project components, which requires project maintainer permissions
+    {{._5}} console delete test-project1 {{._6}} --envs=prod --items=tp1-mysql01 --items=tp1-mysql02
+
+    # delete the test-project1 project pipeline triggers, which requires project maintainer permissions
+    {{._7}} console delete test-project1 {{._8}} --branches=develop --items=build,packageImage
+cmd_console_get_short:
+  other: "get project configurations, which requires project maintainer permissions"
+cmd_console_get_long:
+  other: "get project configurations, which requires project maintainer permissions"
+cmd_console_get_example:
+  other: |-
+    kind option: all, {{._0}}
+
+    # get all project configurations of test-project1, displayed in YAML format, which requires project maintainer permissions
+    {{._1}} console get test-project1 {{._2}} --output=yaml
+
+    # get all project configurations of test-project1, display it in YAML format, and display the complete parameter information of the project configurations, which requires project maintainer permissions
+    {{._3}} console get test-project1 {{._4}} --output=yaml --full
+
+    # get the project members and pipelines of test-project1, which requires project maintainer permissions
+    {{._5}} console get test-project1 {{._6}},{{._7}}
+
+    # get the specific components in prod env of test-project1, which requires project maintainer permissions
+    {{._8}} console get test-project1 {{._9}} --envs=prod --items=tp1-mysql
+
+    # get the specific pipeline triggers of test-project1, which requires project maintainer permissions
+    {{._10}} console get test-project1 {{._11}} --branches=develop --items=build,packageImage
 cmd_def_short:
   other: "manage project definitions"
 cmd_def_long:
@@ -581,6 +657,38 @@ param_admin_get_output:
   other: "output format (options: yaml / json)"
 param_admin_get_full:
   other: "output configurations in full version, use with --output option"
+param_console_apply_output:
+  other: "output format (options: yaml / json)"
+param_console_apply_recursive:
+  other: "process the directory used in -f, --files recursively"
+param_console_apply_full:
+  other: "output configurations in full version, use with --output option"
+param_console_apply_files:
+  other: "configurations file name or directory, support *.json and *.yaml and *.yml files"
+param_console_apply_try:
+  other: "try to check input configurations only, not apply to Dory-Engine, use with --output option"
+param_console_get_items:
+  other: "filter items by names"
+param_console_get_envs:
+  other: "filter components / debugging components / project hosts / project databases items by env names"
+param_console_get_branches:
+  other: "filter pipeline triggers items by branch names"
+param_console_get_output:
+  other: "output format (options: yaml / json)"
+param_console_get_full:
+  other: "output configurations in full version, use with --output option"
+param_console_delete_items:
+  other: "items to delete"
+param_console_delete_envs:
+  other: "filter items by env names, required if kind is {{._0}} / {{._1}} / {{._2}} / {{._3}}"
+param_console_delete_branches:
+  other: "filter items by branch names, required if kind is {{._0}}"
+param_console_delete_output:
+  other: "output format (options: yaml / json)"
+param_console_delete_full:
+  other: "output items in full version, use with --output option"
+param_console_delete_try:
+  other: "try to check input items only, not apply to Dory-Engine, use with --output option"
 param_def_apply_output:
   other: "output format (options: yaml / json)"
 param_def_apply_recursive:

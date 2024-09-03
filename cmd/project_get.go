@@ -176,11 +176,11 @@ func (o *OptionsProjectGet) Run(args []string) error {
 				}
 				opsBatchNames := strings.Join(opsBatches, "\n")
 
-				data = append(data, []string{projectName, projectShortName, projectEnvNames, pipelineNames, opsBatchNames})
+				data = append(data, []string{projectName, projectShortName, project.ProjectInfo.ProjectArch, project.TenantCode, projectEnvNames, pipelineNames, opsBatchNames})
 			}
 
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Name", "ShortName", "EnvNames", "Pipelines", "Batches"})
+			table.SetHeader([]string{"Name", "ShortName", "EnvNames", "Arch", "TenantCode", "Pipelines", "Batches"})
 			table.SetAutoWrapText(false)
 			table.SetAutoFormatHeaders(true)
 			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)

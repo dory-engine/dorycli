@@ -70,7 +70,7 @@ func NewCmdDefApply() *cobra.Command {
 func CheckDefKind(def pkg.DefKind) error {
 	var err error
 	switch def.Kind {
-	case "buildDefs":
+	case pkg.DefCmdKinds[pkg.DefKindBuild]:
 		for _, item := range def.Items {
 			var d pkg.BuildDef
 			bs, _ := pkg.YamlIndent(item)
@@ -80,7 +80,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "packageDefs":
+	case pkg.DefCmdKinds[pkg.DefKindPackage]:
 		for _, item := range def.Items {
 			var d pkg.PackageDef
 			bs, _ := pkg.YamlIndent(item)
@@ -90,7 +90,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "artifactDefs":
+	case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 		for _, item := range def.Items {
 			var d pkg.ArtifactDef
 			bs, _ := pkg.YamlIndent(item)
@@ -100,7 +100,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "deployContainerDefs":
+	case pkg.DefCmdKinds[pkg.DefKindDeployContainer]:
 		var envName string
 		for k, v := range def.Metadata.Labels {
 			if k == "envName" {
@@ -121,7 +121,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "deployArtifactDefs":
+	case pkg.DefCmdKinds[pkg.DefKindDeployArtifact]:
 		var envName string
 		for k, v := range def.Metadata.Labels {
 			if k == "envName" {
@@ -142,7 +142,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "istioDefs":
+	case pkg.DefCmdKinds[pkg.DefKindIstio]:
 		var envName string
 		for k, v := range def.Metadata.Labels {
 			if k == "envName" {
@@ -163,7 +163,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "istioGatewayDef":
+	case pkg.DefCmdKinds[pkg.DefKindIstioGateway]:
 		var envName string
 		for k, v := range def.Metadata.Labels {
 			if k == "envName" {
@@ -184,7 +184,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "pipelineDef":
+	case pkg.DefCmdKinds[pkg.DefKindPipeline]:
 		var branchName string
 		for k, v := range def.Metadata.Labels {
 			if k == "branchName" {
@@ -209,7 +209,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "dockerIgnoreDefs":
+	case pkg.DefCmdKinds[pkg.DefKindDockerIgnore]:
 		for _, item := range def.Items {
 			switch item.(type) {
 			case string:
@@ -218,7 +218,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "customOpsDefs":
+	case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 		for _, item := range def.Items {
 			var d pkg.CustomOpsDef
 			bs, _ := pkg.YamlIndent(item)
@@ -228,7 +228,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "opsBatchDefs":
+	case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 		for _, item := range def.Items {
 			var d pkg.OpsBatchDef
 			bs, _ := pkg.YamlIndent(item)
@@ -238,7 +238,7 @@ func CheckDefKind(def pkg.DefKind) error {
 				return err
 			}
 		}
-	case "customStepDef":
+	case pkg.DefCmdKinds[pkg.DefKindCustomStep]:
 		var stepName string
 		for k, v := range def.Metadata.Labels {
 			if k == "stepName" {
@@ -585,7 +585,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 
 		for _, def := range defs {
 			switch def.Kind {
-			case "buildDefs":
+			case pkg.DefCmdKinds[pkg.DefKindBuild]:
 				for _, item := range def.Items {
 					var d pkg.BuildDef
 					bs, _ := pkg.YamlIndent(item)
@@ -604,7 +604,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					}
 					project.ProjectDef.UpdateBuildDefs = true
 				}
-			case "packageDefs":
+			case pkg.DefCmdKinds[pkg.DefKindPackage]:
 				for _, item := range def.Items {
 					var d pkg.PackageDef
 					bs, _ := pkg.YamlIndent(item)
@@ -623,7 +623,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					}
 					project.ProjectDef.UpdatePackageDefs = true
 				}
-			case "artifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 				for _, item := range def.Items {
 					var d pkg.ArtifactDef
 					bs, _ := pkg.YamlIndent(item)
@@ -642,7 +642,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					}
 					project.ProjectDef.UpdateArtifactDefs = true
 				}
-			case "deployContainerDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployContainer]:
 				var envName string
 				for k, v := range def.Metadata.Labels {
 					if k == "envName" {
@@ -682,7 +682,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					projectAvailableEnv.UpdateDeployContainerDefs = true
 				}
 				project.ProjectAvailableEnvs[index] = projectAvailableEnv
-			case "deployArtifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployArtifact]:
 				var envName string
 				for k, v := range def.Metadata.Labels {
 					if k == "envName" {
@@ -722,7 +722,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					projectAvailableEnv.UpdateDeployArtifactDefs = true
 				}
 				project.ProjectAvailableEnvs[index] = projectAvailableEnv
-			case "istioDefs":
+			case pkg.DefCmdKinds[pkg.DefKindIstio]:
 				var envName string
 				for k, v := range def.Metadata.Labels {
 					if k == "envName" {
@@ -762,7 +762,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					projectAvailableEnv.UpdateIstioDefs = true
 				}
 				project.ProjectAvailableEnvs[index] = projectAvailableEnv
-			case "istioGatewayDef":
+			case pkg.DefCmdKinds[pkg.DefKindIstioGateway]:
 				var envName string
 				for k, v := range def.Metadata.Labels {
 					if k == "envName" {
@@ -791,7 +791,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					projectAvailableEnv.UpdateIstioGatewayDef = true
 				}
 				project.ProjectAvailableEnvs[index] = projectAvailableEnv
-			case "pipelineDef":
+			case pkg.DefCmdKinds[pkg.DefKindPipeline]:
 				var branchName string
 				for k, v := range def.Metadata.Labels {
 					if k == "branchName" {
@@ -820,7 +820,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					projectPipeline.UpdatePipelineDef = true
 				}
 				project.ProjectPipelines[index] = projectPipeline
-			case "dockerIgnoreDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDockerIgnore]:
 				dockerIgnoreDefs := []string{}
 				for _, item := range def.Items {
 					switch v := item.(type) {
@@ -830,7 +830,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 				}
 				project.ProjectDef.DockerIgnoreDefs = dockerIgnoreDefs
 				project.ProjectDef.UpdateDockerIgnoreDefs = true
-			case "customOpsDefs":
+			case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 				for _, item := range def.Items {
 					var d pkg.CustomOpsDef
 					bs, _ := pkg.YamlIndent(item)
@@ -849,7 +849,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					}
 					project.ProjectDef.UpdateCustomOpsDefs = true
 				}
-			case "opsBatchDefs":
+			case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 				for _, item := range def.Items {
 					var d pkg.OpsBatchDef
 					bs, _ := pkg.YamlIndent(item)
@@ -868,7 +868,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					}
 					project.ProjectDef.UpdateOpsBatchDefs = true
 				}
-			case "customStepDef":
+			case pkg.DefCmdKinds[pkg.DefKindCustomStep]:
 				var stepName string
 				var envName string
 				var enableMode string
@@ -979,7 +979,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 				return project.ProjectDef.BuildDefs[i].BuildName < project.ProjectDef.BuildDefs[j].BuildName
 			})
 			defUpdate := pkg.DefUpdate{
-				Kind:        "buildDefs",
+				Kind:        pkg.DefCmdKinds[pkg.DefKindBuild],
 				ProjectName: project.ProjectInfo.ProjectName,
 				Def:         project.ProjectDef.BuildDefs,
 			}
@@ -991,7 +991,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 				return project.ProjectDef.PackageDefs[i].PackageName < project.ProjectDef.PackageDefs[j].PackageName
 			})
 			defUpdate := pkg.DefUpdate{
-				Kind:        "packageDefs",
+				Kind:        pkg.DefCmdKinds[pkg.DefKindPackage],
 				ProjectName: project.ProjectInfo.ProjectName,
 				Def:         project.ProjectDef.PackageDefs,
 			}
@@ -1003,7 +1003,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 				return project.ProjectDef.ArtifactDefs[i].ArtifactName < project.ProjectDef.ArtifactDefs[j].ArtifactName
 			})
 			defUpdate := pkg.DefUpdate{
-				Kind:        "artifactDefs",
+				Kind:        pkg.DefCmdKinds[pkg.DefKindArtifact],
 				ProjectName: project.ProjectInfo.ProjectName,
 				Def:         project.ProjectDef.ArtifactDefs,
 			}
@@ -1016,7 +1016,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					return pae.DeployContainerDefs[i].DeployName < pae.DeployContainerDefs[j].DeployName
 				})
 				defUpdate := pkg.DefUpdate{
-					Kind:        "deployContainerDefs",
+					Kind:        pkg.DefCmdKinds[pkg.DefKindDeployContainer],
 					ProjectName: project.ProjectInfo.ProjectName,
 					Def:         pae.DeployContainerDefs,
 					EnvName:     pae.EnvName,
@@ -1029,7 +1029,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					return pae.DeployArtifactDefs[i].DeployArtifactName < pae.DeployArtifactDefs[j].DeployArtifactName
 				})
 				defUpdate := pkg.DefUpdate{
-					Kind:        "deployArtifactDefs",
+					Kind:        pkg.DefCmdKinds[pkg.DefKindDeployArtifact],
 					ProjectName: project.ProjectInfo.ProjectName,
 					Def:         pae.DeployArtifactDefs,
 					EnvName:     pae.EnvName,
@@ -1042,7 +1042,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					return pae.IstioDefs[i].DeployName < pae.IstioDefs[j].DeployName
 				})
 				defUpdate := pkg.DefUpdate{
-					Kind:        "istioDefs",
+					Kind:        pkg.DefCmdKinds[pkg.DefKindIstio],
 					ProjectName: project.ProjectInfo.ProjectName,
 					Def:         pae.IstioDefs,
 					EnvName:     pae.EnvName,
@@ -1052,7 +1052,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 
 			if pae.UpdateIstioGatewayDef {
 				defUpdate := pkg.DefUpdate{
-					Kind:        "istioGatewayDef",
+					Kind:        pkg.DefCmdKinds[pkg.DefKindIstioGateway],
 					ProjectName: project.ProjectInfo.ProjectName,
 					Def:         pae.IstioGatewayDef,
 					EnvName:     pae.EnvName,
@@ -1066,7 +1066,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 						return csd.CustomStepModuleDefs[i].ModuleName < csd.CustomStepModuleDefs[j].ModuleName
 					})
 					defUpdate := pkg.DefUpdate{
-						Kind:           "customStepDef",
+						Kind:           pkg.DefCmdKinds[pkg.DefKindCustomStep],
 						ProjectName:    project.ProjectInfo.ProjectName,
 						Def:            csd,
 						EnvName:        pae.EnvName,
@@ -1083,7 +1083,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 					return csd.CustomStepModuleDefs[i].ModuleName < csd.CustomStepModuleDefs[j].ModuleName
 				})
 				defUpdate := pkg.DefUpdate{
-					Kind:           "customStepDef",
+					Kind:           pkg.DefCmdKinds[pkg.DefKindCustomStep],
 					ProjectName:    project.ProjectInfo.ProjectName,
 					Def:            csd,
 					CustomStepName: stepName,
@@ -1095,7 +1095,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 		for _, pp := range project.ProjectPipelines {
 			if pp.UpdatePipelineDef {
 				defUpdate := pkg.DefUpdate{
-					Kind:        "pipelineDef",
+					Kind:        pkg.DefCmdKinds[pkg.DefKindPipeline],
 					ProjectName: project.ProjectInfo.ProjectName,
 					Def:         pp.PipelineDef,
 					BranchName:  pp.BranchName,
@@ -1109,7 +1109,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 				return project.ProjectDef.CustomOpsDefs[i].CustomOpsName < project.ProjectDef.CustomOpsDefs[j].CustomOpsName
 			})
 			defUpdate := pkg.DefUpdate{
-				Kind:        "customOpsDefs",
+				Kind:        pkg.DefCmdKinds[pkg.DefKindCustomOps],
 				ProjectName: project.ProjectInfo.ProjectName,
 				Def:         project.ProjectDef.CustomOpsDefs,
 			}
@@ -1121,7 +1121,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 				return project.ProjectDef.OpsBatchDefs[i].OpsBatchName < project.ProjectDef.OpsBatchDefs[j].OpsBatchName
 			})
 			defUpdate := pkg.DefUpdate{
-				Kind:        "opsBatchDefs",
+				Kind:        pkg.DefCmdKinds[pkg.DefKindOpsBatch],
 				ProjectName: project.ProjectInfo.ProjectName,
 				Def:         project.ProjectDef.OpsBatchDefs,
 			}
@@ -1133,7 +1133,7 @@ func (o *OptionsDefApply) Run(args []string) error {
 				return project.ProjectDef.DockerIgnoreDefs[i] < project.ProjectDef.DockerIgnoreDefs[j]
 			})
 			defUpdate := pkg.DefUpdate{
-				Kind:        "dockerIgnoreDefs",
+				Kind:        pkg.DefCmdKinds[pkg.DefKindDockerIgnore],
 				ProjectName: project.ProjectInfo.ProjectName,
 				Def:         project.ProjectDef.DockerIgnoreDefs,
 			}
@@ -1181,32 +1181,32 @@ func (o *OptionsDefApply) Run(args []string) error {
 
 			urlKind := defUpdate.Kind
 			switch defUpdate.Kind {
-			case "buildDefs":
+			case pkg.DefCmdKinds[pkg.DefKindBuild]:
 				param["buildDefsYaml"] = string(bs)
-			case "packageDefs":
+			case pkg.DefCmdKinds[pkg.DefKindPackage]:
 				param["packageDefsYaml"] = string(bs)
-			case "artifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 				param["artifactDefsYaml"] = string(bs)
-			case "deployContainerDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployContainer]:
 				param["deployContainerDefsYaml"] = string(bs)
-			case "deployArtifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployArtifact]:
 				param["deployArtifactDefsYaml"] = string(bs)
-			case "istioDefs":
+			case pkg.DefCmdKinds[pkg.DefKindIstio]:
 				param["istioDefsYaml"] = string(bs)
-			case "istioGatewayDef":
+			case pkg.DefCmdKinds[pkg.DefKindIstioGateway]:
 				param["istioGatewayDefYaml"] = string(bs)
-			case "customStepDef":
+			case pkg.DefCmdKinds[pkg.DefKindCustomStep]:
 				param["customStepDefYaml"] = string(bs)
 				if defUpdate.EnvName != "" {
 					urlKind = fmt.Sprintf("%s/env", urlKind)
 				}
-			case "dockerIgnoreDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDockerIgnore]:
 				param["dockerIgnoreDefsYaml"] = string(bs)
-			case "customOpsDefs":
+			case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 				param["customOpsDefsYaml"] = string(bs)
-			case "opsBatchDefs":
+			case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 				param["opsBatchDefsYaml"] = string(bs)
-			case "pipelineDef":
+			case pkg.DefCmdKinds[pkg.DefKindPipeline]:
 				param["pipelineDefYaml"] = string(bs)
 			}
 			paramOutput = pkg.RemoveMapEmptyItems(paramOutput)

@@ -982,26 +982,26 @@ func (o *OptionsDefDelete) Run(args []string) error {
 
 			urlKind := defUpdate.Kind
 			switch defUpdate.Kind {
-			case "buildDefs":
+			case pkg.DefCmdKinds[pkg.DefKindBuild]:
 				param["buildDefsYaml"] = string(bs)
-			case "packageDefs":
+			case pkg.DefCmdKinds[pkg.DefKindPackage]:
 				param["packageDefsYaml"] = string(bs)
-			case "artifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 				param["artifactDefsYaml"] = string(bs)
-			case "deployContainerDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployContainer]:
 				param["deployContainerDefsYaml"] = string(bs)
-			case "deployArtifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployArtifact]:
 				param["deployArtifactDefsYaml"] = string(bs)
-			case "istioDefs":
+			case pkg.DefCmdKinds[pkg.DefKindIstio]:
 				param["istioDefsYaml"] = string(bs)
-			case "customStepDef":
+			case pkg.DefCmdKinds[pkg.DefKindCustomStep]:
 				param["customStepDefYaml"] = string(bs)
 				if defUpdate.EnvName != "" {
 					urlKind = fmt.Sprintf("%s/env", urlKind)
 				}
-			case "customOpsDefs":
+			case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 				param["customOpsDefsYaml"] = string(bs)
-			case "opsBatchDefs":
+			case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 				param["opsBatchDefsYaml"] = string(bs)
 			}
 			paramOutput = pkg.RemoveMapEmptyItems(paramOutput)

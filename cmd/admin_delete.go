@@ -230,6 +230,14 @@ func (o *OptionsAdminDelete) Run(args []string) error {
 			}
 			msg := result.Get("msg").String()
 			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
+		case pkg.AdminKindAdminWebhook:
+			param := map[string]interface{}{}
+			result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/adminWebhook/%s", itemName), http.MethodDelete, "", param, false)
+			if err != nil {
+				return err
+			}
+			msg := result.Get("msg").String()
+			log.Info(fmt.Sprintf("%s: %s", logHeader, msg))
 		}
 
 	}

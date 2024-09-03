@@ -561,13 +561,13 @@ func (o *OptionsDefClone) Run(args []string) error {
 		urlKind := defClone.Kind
 		param["envNames"] = o.ToEnvNames
 		switch defClone.Kind {
-		case "deployContainerDefs":
+		case pkg.DefCmdKinds[pkg.DefKindDeployContainer]:
 			param["deployContainerDefsYaml"] = string(bs)
-		case "deployArtifactDefs":
+		case pkg.DefCmdKinds[pkg.DefKindDeployArtifact]:
 			param["deployArtifactDefsYaml"] = string(bs)
-		case "istioDefs":
+		case pkg.DefCmdKinds[pkg.DefKindIstio]:
 			param["istioDefsYaml"] = string(bs)
-		case "customStepDef":
+		case pkg.DefCmdKinds[pkg.DefKindCustomStep]:
 			urlKind = fmt.Sprintf("%s/env", urlKind)
 			param["customStepName"] = o.StepName
 			param["customStepDefYaml"] = string(bs)

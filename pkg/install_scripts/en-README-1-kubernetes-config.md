@@ -119,6 +119,7 @@ kubectl -n {{ $.dory.namespace }} get pods -o wide -w
 
 - url: https://{{ $.imageRepoDomainName }}
 - user: admin / {{ $.imageRepoPassword }} (admin user)
+- open `Configuration`: `https://{{ $.imageRepoDomainName }}/harbor/configs/setting`, `Project Creation` select `Admin Only` then save
 - data located at: `{{ $.rootDir }}/{{ $.dory.imageRepo.internal.namespace }}`
 {{- end }}
 

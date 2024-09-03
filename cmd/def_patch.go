@@ -1253,7 +1253,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 		for idx, defUpdate := range defUpdates {
 			bs, _ := json.Marshal(defUpdate.Def)
 			switch defUpdate.Kind {
-			case "buildDefs":
+			case pkg.DefCmdKinds[pkg.DefKindBuild]:
 				defs := []pkg.BuildDef{}
 				dps := []pkg.BuildDef{}
 				_ = json.Unmarshal(bs, &defs)
@@ -1296,7 +1296,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defPatch := defUpdate
 				defPatch.Def = dps
 				defPatches = append(defPatches, defPatch)
-			case "packageDefs":
+			case pkg.DefCmdKinds[pkg.DefKindPackage]:
 				defs := []pkg.PackageDef{}
 				dps := []pkg.PackageDef{}
 				_ = json.Unmarshal(bs, &defs)
@@ -1339,7 +1339,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defPatch := defUpdate
 				defPatch.Def = dps
 				defPatches = append(defPatches, defPatch)
-			case "artifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 				defs := []pkg.ArtifactDef{}
 				dps := []pkg.ArtifactDef{}
 				_ = json.Unmarshal(bs, &defs)
@@ -1382,7 +1382,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defPatch := defUpdate
 				defPatch.Def = dps
 				defPatches = append(defPatches, defPatch)
-			case "deployContainerDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployContainer]:
 				defs := []pkg.DeployContainerDef{}
 				dps := []pkg.DeployContainerDef{}
 				_ = json.Unmarshal(bs, &defs)
@@ -1425,7 +1425,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defPatch := defUpdate
 				defPatch.Def = dps
 				defPatches = append(defPatches, defPatch)
-			case "deployArtifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployArtifact]:
 				defs := []pkg.DeployArtifactDef{}
 				dps := []pkg.DeployArtifactDef{}
 				_ = json.Unmarshal(bs, &defs)
@@ -1468,7 +1468,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defPatch := defUpdate
 				defPatch.Def = dps
 				defPatches = append(defPatches, defPatch)
-			case "istioDefs":
+			case pkg.DefCmdKinds[pkg.DefKindIstio]:
 				defs := []pkg.IstioDef{}
 				dps := []pkg.IstioDef{}
 				_ = json.Unmarshal(bs, &defs)
@@ -1511,7 +1511,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defPatch := defUpdate
 				defPatch.Def = dps
 				defPatches = append(defPatches, defPatch)
-			case "istioGatewayDef":
+			case pkg.DefCmdKinds[pkg.DefKindIstioGateway]:
 				def := pkg.IstioGatewayDef{}
 				_ = json.Unmarshal(bs, &def)
 				var dp pkg.IstioGatewayDef
@@ -1543,7 +1543,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defUpdate.Def = dp
 				defUpdates[idx] = defUpdate
 				defPatches = append(defPatches, defUpdate)
-			case "customStepDef":
+			case pkg.DefCmdKinds[pkg.DefKindCustomStep]:
 				defs := pkg.CustomStepDef{}
 				dps := []pkg.CustomStepModuleDef{}
 				_ = json.Unmarshal(bs, &defs)
@@ -1587,7 +1587,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defUpdate.Def = defs
 				defPatch := defUpdate
 				defPatches = append(defPatches, defPatch)
-			case "pipelineDef":
+			case pkg.DefCmdKinds[pkg.DefKindPipeline]:
 				def := pkg.PipelineDef{}
 				_ = json.Unmarshal(bs, &def)
 				var dp pkg.PipelineDef
@@ -1619,7 +1619,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defUpdate.Def = dp
 				defUpdates[idx] = defUpdate
 				defPatches = append(defPatches, defUpdate)
-			case "customOpsDefs":
+			case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 				defs := []pkg.CustomOpsDef{}
 				dps := []pkg.CustomOpsDef{}
 				_ = json.Unmarshal(bs, &defs)
@@ -1662,7 +1662,7 @@ func (o *OptionsDefPatch) Run(args []string) error {
 				defPatch := defUpdate
 				defPatch.Def = dps
 				defPatches = append(defPatches, defPatch)
-			case "opsBatchDefs":
+			case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 				defs := []pkg.OpsBatchDef{}
 				dps := []pkg.OpsBatchDef{}
 				_ = json.Unmarshal(bs, &defs)
@@ -1753,30 +1753,30 @@ func (o *OptionsDefPatch) Run(args []string) error {
 
 			urlKind := defUpdate.Kind
 			switch defUpdate.Kind {
-			case "buildDefs":
+			case pkg.DefCmdKinds[pkg.DefKindBuild]:
 				param["buildDefsYaml"] = string(bs)
-			case "packageDefs":
+			case pkg.DefCmdKinds[pkg.DefKindPackage]:
 				param["packageDefsYaml"] = string(bs)
-			case "artifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 				param["artifactDefsYaml"] = string(bs)
-			case "deployContainerDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployContainer]:
 				param["deployContainerDefsYaml"] = string(bs)
-			case "deployArtifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployArtifact]:
 				param["deployArtifactDefsYaml"] = string(bs)
-			case "istioDefs":
+			case pkg.DefCmdKinds[pkg.DefKindIstio]:
 				param["istioDefsYaml"] = string(bs)
-			case "istioGatewayDef":
+			case pkg.DefCmdKinds[pkg.DefKindIstioGateway]:
 				param["istioGatewayDefYaml"] = string(bs)
-			case "customStepDef":
+			case pkg.DefCmdKinds[pkg.DefKindCustomStep]:
 				param["customStepDefYaml"] = string(bs)
 				if defUpdate.EnvName != "" {
 					urlKind = fmt.Sprintf("%s/env", urlKind)
 				}
-			case "customOpsDefs":
+			case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 				param["customOpsDefsYaml"] = string(bs)
-			case "opsBatchDefs":
+			case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 				param["opsBatchDefsYaml"] = string(bs)
-			case "pipelineDef":
+			case pkg.DefCmdKinds[pkg.DefKindPipeline]:
 				param["pipelineDefYaml"] = string(bs)
 			}
 			paramOutput = pkg.RemoveMapEmptyItems(paramOutput)

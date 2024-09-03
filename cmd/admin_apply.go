@@ -71,76 +71,84 @@ func NewCmdAdminApply() *cobra.Command {
 func CheckAdminKind(item pkg.AdminKind) error {
 	var err error
 	switch item.Kind {
-	case pkg.AdminKindUser:
+	case pkg.AdminCmdKinds[pkg.AdminKindUser]:
 		var spec pkg.User
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", pkg.AdminKindUser, err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
-	case "customStepConf":
+	case pkg.AdminCmdKinds[pkg.AdminKindCustomStep]:
 		var spec pkg.CustomStepConf
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is customStepConf, but spec parse error: %s\n%s", err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
-	case "envK8s":
+	case pkg.AdminCmdKinds[pkg.AdminKindEnvK8s]:
 		var spec pkg.EnvK8s
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is envK8s, but spec parse error: %s\n%s", err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
-	case "componentTemplate":
+	case pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate]:
 		var spec pkg.ComponentTemplate
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is componentTemplate, but spec parse error: %s\n%s", err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
-	case "dockerBuildEnv":
+	case pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv]:
 		var spec pkg.DockerBuildEnv
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is dockerBuildEnv, but spec parse error: %s\n%s", err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
-	case "gitRepoConfig":
+	case pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig]:
 		var spec pkg.GitRepoConfig
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is gitRepoConfig, but spec parse error: %s\n%s", err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
-	case "imageRepoConfig":
+	case pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig]:
 		var spec pkg.ImageRepoConfig
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is imageRepoConfig, but spec parse error: %s\n%s", err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
-	case "artifactRepoConfig":
+	case pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig]:
 		var spec pkg.ArtifactRepoConfig
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is artifactRepoConfig, but spec parse error: %s\n%s", err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
-	case "scanCodeRepoConfig":
+	case pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig]:
 		var spec pkg.ScanCodeRepoConfig
 		bs, _ := pkg.YamlIndent(item.Spec)
 		err = yaml.Unmarshal(bs, &spec)
 		if err != nil {
-			err = fmt.Errorf("kind is scanCodeRepoConfig, but spec parse error: %s\n%s", err.Error(), string(bs))
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
+			return err
+		}
+	case pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook]:
+		var spec pkg.AdminWebhook
+		bs, _ := pkg.YamlIndent(item.Spec)
+		err = yaml.Unmarshal(bs, &spec)
+		if err != nil {
+			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	}
@@ -264,7 +272,7 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			err = fmt.Errorf("parse file %s error: kind is empty", fileName)
 			return items, err
 		}
-		if item.Metadata.Name == "" {
+		if item.Kind != pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook] && item.Metadata.Name == "" {
 			err = fmt.Errorf("parse file %s error: metadata.name is empty", fileName)
 			return items, err
 		}
@@ -288,84 +296,93 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			return items, err
 		}
 		switch item.Kind {
-		case pkg.AdminKindUser:
+		case pkg.AdminCmdKinds[pkg.AdminKindUser]:
 			var spec pkg.User
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", pkg.AdminKindUser, err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
-		case "customStepConf":
+		case pkg.AdminCmdKinds[pkg.AdminKindCustomStep]:
 			var spec pkg.CustomStepConf
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is customStepConf, but spec parse error: %s\n%s", err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
-		case "envK8s":
+		case pkg.AdminCmdKinds[pkg.AdminKindEnvK8s]:
 			var spec pkg.EnvK8s
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is envK8s, but spec parse error: %s\n%s", err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
-		case "componentTemplate":
+		case pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate]:
 			var spec pkg.ComponentTemplate
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is componentTemplate, but spec parse error: %s\n%s", err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
-		case "dockerBuildEnv":
+		case pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv]:
 			var spec pkg.DockerBuildEnv
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is dockerBuildEnv, but spec parse error: %s\n%s", err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
-		case "gitRepoConfig":
+		case pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig]:
 			var spec pkg.GitRepoConfig
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is gitRepoConfig, but spec parse error: %s\n%s", err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
-		case "imageRepoConfig":
+		case pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig]:
 			var spec pkg.ImageRepoConfig
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is imageRepoConfig, but spec parse error: %s\n%s", err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
-		case "artifactRepoConfig":
+		case pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig]:
 			var spec pkg.ArtifactRepoConfig
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is artifactRepoConfig, but spec parse error: %s\n%s", err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
-		case "scanCodeRepoConfig":
+		case pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig]:
 			var spec pkg.ScanCodeRepoConfig
 			bs, _ := pkg.YamlIndent(item.Spec)
 			err = yaml.Unmarshal(bs, &spec)
 			if err != nil {
-				err = fmt.Errorf("kind is scanCodeRepoConfig, but spec parse error: %s\n%s", err.Error(), string(bs))
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
+				return items, err
+			}
+			item.Spec = spec
+		case pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook]:
+			var spec pkg.AdminWebhook
+			bs, _ := pkg.YamlIndent(item.Spec)
+			err = yaml.Unmarshal(bs, &spec)
+			if err != nil {
+				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
 			}
 			item.Spec = spec
@@ -569,7 +586,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 			logHeader := fmt.Sprintf("%s/%s", item.Kind, item.Metadata.Name)
 
 			switch item.Kind {
-			case pkg.AdminKindUser:
+			case pkg.AdminCmdKinds[pkg.AdminKindUser]:
 				var user pkg.User
 				switch v := item.Spec.(type) {
 				case pkg.User:
@@ -656,18 +673,18 @@ func (o *OptionsAdminApply) Run(args []string) error {
 						}
 					}
 				}
-			case "customStepConf":
+			case pkg.AdminCmdKinds[pkg.AdminKindCustomStep]:
 				param := map[string]interface{}{
-					"customStepNames": []string{item.Metadata.Name},
-					"page":            1,
-					"perPage":         1000,
+					"adminWebhooks": []string{item.Metadata.Name},
+					"page":          1,
+					"perPage":       1000,
 				}
 				result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/customStepConfs"), http.MethodPost, "", param, false)
 				if err != nil {
 					return err
 				}
 				customStepNames := []string{}
-				err = json.Unmarshal([]byte(result.Get("data.customStepNames").Raw), &customStepNames)
+				err = json.Unmarshal([]byte(result.Get("data.adminWebhooks").Raw), &customStepNames)
 				if err != nil {
 					return err
 				}
@@ -712,7 +729,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 					msg := result.Get("msg").String()
 					log.Info(fmt.Sprintf("%s %s: %s", logHeader, op, msg))
 				}
-			case "envK8s":
+			case pkg.AdminCmdKinds[pkg.AdminKindEnvK8s]:
 				param := map[string]interface{}{}
 				result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/envNames"), http.MethodGet, "", param, false)
 				if err != nil {
@@ -780,7 +797,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 				}
 				log.Info(fmt.Sprintf("##############################"))
 				log.Success(fmt.Sprintf("# %s %s finish", logHeader, op))
-			case "componentTemplate":
+			case pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate]:
 				param := map[string]interface{}{
 					"page":    1,
 					"perPage": 1000,
@@ -847,7 +864,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 					msg := result.Get("msg").String()
 					log.Info(fmt.Sprintf("%s %s: %s", logHeader, op, msg))
 				}
-			case "dockerBuildEnv":
+			case pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv]:
 				param := map[string]interface{}{
 					"page":    1,
 					"perPage": 1000,
@@ -908,7 +925,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 					msg := result.Get("msg").String()
 					log.Info(fmt.Sprintf("%s %s: %s", logHeader, op, msg))
 				}
-			case "gitRepoConfig":
+			case pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig]:
 				param := map[string]interface{}{
 					"types":   []string{"gitRepoConfig"},
 					"page":    1,
@@ -970,7 +987,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 					msg := result.Get("msg").String()
 					log.Info(fmt.Sprintf("%s %s: %s", logHeader, op, msg))
 				}
-			case "imageRepoConfig":
+			case pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig]:
 				param := map[string]interface{}{
 					"types":   []string{"imageRepoConfig"},
 					"page":    1,
@@ -1032,7 +1049,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 					msg := result.Get("msg").String()
 					log.Info(fmt.Sprintf("%s %s: %s", logHeader, op, msg))
 				}
-			case "artifactRepoConfig":
+			case pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig]:
 				param := map[string]interface{}{
 					"types":   []string{"artifactRepoConfig"},
 					"page":    1,
@@ -1094,7 +1111,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 					msg := result.Get("msg").String()
 					log.Info(fmt.Sprintf("%s %s: %s", logHeader, op, msg))
 				}
-			case "scanCodeRepoConfig":
+			case pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig]:
 				param := map[string]interface{}{
 					"types":   []string{"scanCodeRepoConfig"},
 					"page":    1,
@@ -1150,6 +1167,50 @@ func (o *OptionsAdminApply) Run(args []string) error {
 						"scanCodeRepoConfigYaml": scanCodeRepoConfigYaml,
 					}
 					result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/scanCodeRepoConfig"), http.MethodPost, "", param, false)
+					if err != nil {
+						return err
+					}
+					msg := result.Get("msg").String()
+					log.Info(fmt.Sprintf("%s %s: %s", logHeader, op, msg))
+				}
+			case pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook]:
+				param := map[string]interface{}{}
+				result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/adminWebhooks"), http.MethodGet, "", param, false)
+				if err != nil {
+					return err
+				}
+				adminWebhooks := []pkg.AdminWebhook{}
+				err = json.Unmarshal([]byte(result.Get("data.adminWebhooks").Raw), &adminWebhooks)
+				if err != nil {
+					return err
+				}
+				var found bool
+				for _, adminWebhook := range adminWebhooks {
+					if adminWebhook.AdminWebhookID == item.Metadata.Name {
+						found = true
+						break
+					}
+				}
+				var op string
+				if found {
+					// update
+					op = "update"
+					param := map[string]interface{}{}
+					bs, _ = json.Marshal(item.Spec)
+					_ = json.Unmarshal(bs, &param)
+					result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/adminWebhook/%s", item.Metadata.Name), http.MethodPost, "", param, false)
+					if err != nil {
+						return err
+					}
+					msg := result.Get("msg").String()
+					log.Info(fmt.Sprintf("%s %s: %s", logHeader, op, msg))
+				} else {
+					// add
+					op = "add"
+					param := map[string]interface{}{}
+					bs, _ = json.Marshal(item.Spec)
+					_ = json.Unmarshal(bs, &param)
+					result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/adminWebhook"), http.MethodPost, "", param, false)
 					if err != nil {
 						return err
 					}

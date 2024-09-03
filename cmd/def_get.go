@@ -86,12 +86,11 @@ func (o *OptionsDefGet) Complete(cmd *cobra.Command) error {
 	}
 
 	cmd.ValidArgsFunction = func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		projectNames, err := o.GetProjectNames()
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-
 		if len(args) == 0 {
+			projectNames, err := o.GetProjectNames()
+			if err != nil {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
 			return projectNames, cobra.ShellCompDirectiveNoFileComp
 		}
 		if len(args) == 1 {
@@ -407,7 +406,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 		for _, pae := range project.ProjectAvailableEnvs {
 			envNames = append(envNames, pae.EnvName)
 		}
-		def := pkg.ProjectSummary{
+		def := pkg.DefProjectSummary{
 			BuildEnvs:       project.BuildEnvs,
 			BuildNames:      project.BuildNames,
 			CustomStepConfs: project.CustomStepConfs,
@@ -429,7 +428,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 		}
 		if len(project.ProjectDef.BuildDefs) > 0 {
 			defKind := defKindProject
-			defKind.Kind = "buildDefs"
+			defKind.Kind = pkg.DefCmdKinds[pkg.DefKindBuild]
 			for _, def := range project.ProjectDef.BuildDefs {
 				var isShow bool
 				if len(o.ModuleNames) == 0 {
@@ -451,7 +450,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 
 		if len(project.ProjectDef.PackageDefs) > 0 {
 			defKind := defKindProject
-			defKind.Kind = "packageDefs"
+			defKind.Kind = pkg.DefCmdKinds[pkg.DefKindPackage]
 			defKind.Status.ErrMsg = project.ProjectDef.ErrMsgPackageDefs
 			for _, def := range project.ProjectDef.PackageDefs {
 				var isShow bool
@@ -474,7 +473,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 
 		if len(project.ProjectDef.ArtifactDefs) > 0 {
 			defKind := defKindProject
-			defKind.Kind = "artifactDefs"
+			defKind.Kind = pkg.DefCmdKinds[pkg.DefKindArtifact]
 			defKind.Status.ErrMsg = project.ProjectDef.ErrMsgArtifactDefs
 			for _, def := range project.ProjectDef.ArtifactDefs {
 				var isShow bool
@@ -512,7 +511,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 			for _, pae := range paes {
 				if len(pae.DeployContainerDefs) > 0 {
 					defKind := defKindProject
-					defKind.Kind = "deployContainerDefs"
+					defKind.Kind = pkg.DefCmdKinds[pkg.DefKindDeployContainer]
 					defKind.Status.ErrMsg = pae.ErrMsgDeployContainerDefs
 					defKind.Metadata.Labels = map[string]string{
 						"envName": pae.EnvName,
@@ -540,7 +539,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 			for _, pae := range paes {
 				if len(pae.DeployArtifactDefs) > 0 {
 					defKind := defKindProject
-					defKind.Kind = "deployArtifactDefs"
+					defKind.Kind = pkg.DefCmdKinds[pkg.DefKindDeployArtifact]
 					defKind.Status.ErrMsg = pae.ErrMsgDeployArtifactDefs
 					defKind.Metadata.Labels = map[string]string{
 						"envName": pae.EnvName,
@@ -568,7 +567,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 			for _, pae := range paes {
 				if len(pae.IstioDefs) > 0 {
 					defKind := defKindProject
-					defKind.Kind = "istioDefs"
+					defKind.Kind = pkg.DefCmdKinds[pkg.DefKindIstio]
 					defKind.Status.ErrMsg = pae.ErrMsgIstioDefs
 					defKind.Metadata.Labels = map[string]string{
 						"envName": pae.EnvName,
@@ -595,7 +594,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 
 			for _, pae := range paes {
 				defKind := defKindProject
-				defKind.Kind = "istioGatewayDef"
+				defKind.Kind = pkg.DefCmdKinds[pkg.DefKindIstioGateway]
 				defKind.Status.ErrMsg = pae.ErrMsgIstioGatewayDef
 				defKind.Metadata.Labels = map[string]string{
 					"envName": pae.EnvName,
@@ -621,7 +620,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					}
 					for stepName, csd := range csds {
 						defKind := defKindProject
-						defKind.Kind = "customStepDef"
+						defKind.Kind = pkg.DefCmdKinds[pkg.DefKindCustomStep]
 						var errMsg string
 						for name, msg := range pae.ErrMsgCustomStepDefs {
 							if name == stepName {
@@ -672,7 +671,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 			}
 			for stepName, csd := range csds {
 				defKind := defKindProject
-				defKind.Kind = "customStepDef"
+				defKind.Kind = pkg.DefCmdKinds[pkg.DefKindCustomStep]
 				var errMsg string
 				for name, msg := range project.ProjectDef.ErrMsgCustomStepDefs {
 					if name == stepName {
@@ -720,7 +719,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 			}
 			for _, pp := range pps {
 				defKind := defKindProject
-				defKind.Kind = "pipelineDef"
+				defKind.Kind = pkg.DefCmdKinds[pkg.DefKindPipeline]
 				defKind.Status.ErrMsg = pp.ErrMsgPipelineDef
 				defKind.Metadata.Labels = map[string]string{
 					"branchName": pp.BranchName,
@@ -738,7 +737,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 
 		if len(project.ProjectDef.DockerIgnoreDefs) > 0 {
 			defKind := defKindProject
-			defKind.Kind = "dockerIgnoreDefs"
+			defKind.Kind = pkg.DefCmdKinds[pkg.DefKindDockerIgnore]
 			for _, def := range project.ProjectDef.DockerIgnoreDefs {
 				defKind.Items = append(defKind.Items, def)
 			}
@@ -747,7 +746,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 
 		if len(project.ProjectDef.CustomOpsDefs) > 0 {
 			defKind := defKindProject
-			defKind.Kind = "customOpsDefs"
+			defKind.Kind = pkg.DefCmdKinds[pkg.DefKindCustomOps]
 			defKind.Status.ErrMsg = project.ProjectDef.ErrMsgCustomOpsDefs
 			for _, def := range project.ProjectDef.CustomOpsDefs {
 				var isShow bool
@@ -770,7 +769,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 
 		if len(project.ProjectDef.OpsBatchDefs) > 0 {
 			defKind := defKindProject
-			defKind.Kind = "opsBatchDefs"
+			defKind.Kind = pkg.DefCmdKinds[pkg.DefKindOpsBatch]
 			defKind.Status.ErrMsg = project.ProjectDef.ErrMsgOpsBatchDefs
 			for _, def := range project.ProjectDef.OpsBatchDefs {
 				var isShow bool
@@ -891,7 +890,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 			bs, _ := json.Marshal(defKind.Items)
 			switch defKind.Kind {
 			case "projectSummary":
-				items := []pkg.ProjectSummary{}
+				items := []pkg.DefProjectSummary{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
 					var customSteps []string
@@ -907,7 +906,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"kind", "Builds", "Packages", "Artifacts", "CustomSteps", "Branches", "Envs"}
-			case "buildDefs":
+			case pkg.DefCmdKinds[pkg.DefKindBuild]:
 				items := []pkg.BuildDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -915,7 +914,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Env", "Path", "PhaseID", "Cmds", "SonarSettings"}
-			case "packageDefs":
+			case pkg.DefCmdKinds[pkg.DefKindPackage]:
 				items := []pkg.PackageDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -923,7 +922,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Builds", "Dockerfile"}
-			case "artifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 				items := []pkg.ArtifactDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -931,7 +930,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Builds", "Artifacts"}
-			case "deployContainerDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployContainer]:
 				items := []pkg.DeployContainerDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -957,7 +956,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Env", "Package", "Replicas", "Ports", "Depends"}
-			case "deployArtifactDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDeployArtifact]:
 				items := []pkg.DeployArtifactDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -965,7 +964,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Env", "Artifact", "Hosts", "Tasks"}
-			case "istioDefs":
+			case pkg.DefCmdKinds[pkg.DefKindIstio]:
 				items := []pkg.IstioDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -973,7 +972,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Env", "Port", "Protocol", "Gateway"}
-			case "istioGatewayDef":
+			case pkg.DefCmdKinds[pkg.DefKindIstioGateway]:
 				items := []pkg.IstioGatewayDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -981,7 +980,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Env", "Default", "New", "Header"}
-			case "customStepDef":
+			case pkg.DefCmdKinds[pkg.DefKindCustomStep]:
 				items := []pkg.CustomStepModuleDef{}
 				_ = json.Unmarshal(bs, &items)
 				var envName string
@@ -995,7 +994,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "StepName", "Env", "EnableMode", "RelateModules", "ManualEnable", "Params"}
-			case "pipelineDef":
+			case pkg.DefCmdKinds[pkg.DefKindPipeline]:
 				items := []pkg.PipelineDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -1010,7 +1009,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Envs", "EnvProds", "AutoDetect", "Queue", "Builds"}
-			case "dockerIgnoreDefs":
+			case pkg.DefCmdKinds[pkg.DefKindDockerIgnore]:
 				items := []string{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -1018,7 +1017,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Value"}
-			case "customOpsDefs":
+			case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 				items := []pkg.CustomOpsDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -1026,7 +1025,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 					dataRows = append(dataRows, dataRow)
 				}
 				dataHeader = []string{"Name", "Desc", "Steps"}
-			case "opsBatchDefs":
+			case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 				items := []pkg.OpsBatchDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {

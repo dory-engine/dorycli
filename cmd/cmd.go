@@ -197,6 +197,7 @@ func NewCmdRoot() *cobra.Command {
 	cmd.AddCommand(NewCmdRun())
 	cmd.AddCommand(NewCmdDef())
 	cmd.AddCommand(NewCmdAdmin())
+	cmd.AddCommand(NewCmdConsole())
 	cmd.AddCommand(NewCmdInstall())
 	cmd.AddCommand(NewCmdVersion())
 
@@ -636,6 +637,36 @@ func (o *OptionsCommon) GetProjectNames() ([]string, error) {
 		return projectNames, err
 	}
 	return projectNames, err
+}
+
+func (o *OptionsCommon) GetConsoleProjectNames() ([]string, error) {
+	var err error
+	projectNames := []string{}
+	param := map[string]interface{}{}
+	result, _, err := o.QueryAPI(fmt.Sprintf("api/console/projectNames"), http.MethodGet, "", param, false)
+	if err != nil {
+		return projectNames, err
+	}
+	err = json.Unmarshal([]byte(result.Get("data.projectNames").Raw), &projectNames)
+	if err != nil {
+		return projectNames, err
+	}
+	return projectNames, err
+}
+
+func (o *OptionsCommon) GetConsoleProject(projectName string) (pkg.ProjectConsole, error) {
+	var err error
+	var projectConsole pkg.ProjectConsole
+	param := map[string]interface{}{}
+	result, _, err := o.QueryAPI(fmt.Sprintf("api/console/project/%s/minimal", projectName), http.MethodGet, "", param, false)
+	if err != nil {
+		return projectConsole, err
+	}
+	err = json.Unmarshal([]byte(result.Get("data.project").Raw), &projectConsole)
+	if err != nil {
+		return projectConsole, err
+	}
+	return projectConsole, err
 }
 
 func (o *OptionsCommon) GetProjectDef(projectName string) (pkg.ProjectOutput, error) {

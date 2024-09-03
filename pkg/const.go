@@ -3,9 +3,9 @@ package pkg
 import "embed"
 
 const (
-	VersionDoryCli      = "v1.6.4"
-	VersionDoryEngine   = "v2.6.4"
-	VersionDoryFrontend = "v2.6.4"
+	VersionDoryCli      = "v1.6.5"
+	VersionDoryEngine   = "v2.6.5"
+	VersionDoryFrontend = "v2.6.5"
 
 	NexusInitData = "nexus-data-init.tar.gz"
 
@@ -79,6 +79,7 @@ var (
 	AdminKindImageRepoConfig    = "image-repo-config"
 	AdminKindArtifactRepoConfig = "artifact-repo-config"
 	AdminKindScanCodeRepoConfig = "scan-code-repo-config"
+	AdminKindAdminWebhook       = "admin-webhook"
 
 	AdminKinds = []string{
 		AdminKindComponentTemplate,
@@ -90,6 +91,7 @@ var (
 		AdminKindImageRepoConfig,
 		AdminKindArtifactRepoConfig,
 		AdminKindScanCodeRepoConfig,
+		AdminKindAdminWebhook,
 	}
 
 	AdminCmdKinds = map[string]string{
@@ -103,6 +105,37 @@ var (
 		AdminKindImageRepoConfig:    "imageRepoConfig",
 		AdminKindArtifactRepoConfig: "artifactRepoConfig",
 		AdminKindScanCodeRepoConfig: "scanCodeRepoConfig",
+		AdminKindAdminWebhook:       "adminWebhook",
+	}
+
+	ConsoleKindAll             = "all"
+	ConsoleKindMember          = "member"
+	ConsoleKindPipeline        = "pipeline"
+	ConsoleKindPipelineTrigger = "pipeline-trigger"
+	ConsoleKindHost            = "host"
+	ConsoleKindDatabase        = "database"
+	ConsoleKindDebugComponent  = "debug-component"
+	ConsoleKindComponent       = "component"
+
+	ConsoleKinds = []string{
+		ConsoleKindMember,
+		ConsoleKindPipeline,
+		ConsoleKindPipelineTrigger,
+		ConsoleKindHost,
+		ConsoleKindDatabase,
+		ConsoleKindDebugComponent,
+		ConsoleKindComponent,
+	}
+
+	ConsoleCmdKinds = map[string]string{
+		ConsoleKindAll:             "",
+		ConsoleKindMember:          "member",
+		ConsoleKindPipeline:        "pipeline",
+		ConsoleKindPipelineTrigger: "pipelineTrigger",
+		ConsoleKindHost:            "host",
+		ConsoleKindDatabase:        "database",
+		ConsoleKindDebugComponent:  "debugComponent",
+		ConsoleKindComponent:       "component",
 	}
 
 	AccessLevelMaintainer = "maintainer"
