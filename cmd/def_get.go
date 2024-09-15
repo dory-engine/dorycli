@@ -718,20 +718,22 @@ func (o *OptionsDefGet) Run(args []string) error {
 				}
 			}
 			for _, pp := range pps {
-				defKind := defKindProject
-				defKind.Kind = pkg.DefCmdKinds[pkg.DefKindPipeline]
-				defKind.Status.ErrMsg = pp.ErrMsgPipelineDef
-				defKind.Metadata.Labels = map[string]string{
-					"branchName": pp.BranchName,
+				if pp.BranchName != "" {
+					defKind := defKindProject
+					defKind.Kind = pkg.DefCmdKinds[pkg.DefKindPipeline]
+					defKind.Status.ErrMsg = pp.ErrMsgPipelineDef
+					defKind.Metadata.Labels = map[string]string{
+						"branchName": pp.BranchName,
+					}
+					defKind.Metadata.Annotations = map[string]string{
+						"envs":             strings.Join(pp.Envs, ","),
+						"envProductions":   strings.Join(pp.EnvProductions, ","),
+						"isDefault":        fmt.Sprintf("%v", pp.IsDefault),
+						"webhookPushEvent": fmt.Sprintf("%v", pp.WebhookPushEvent),
+					}
+					defKind.Items = append(defKind.Items, pp.PipelineDef)
+					defKinds = append(defKinds, defKind)
 				}
-				defKind.Metadata.Annotations = map[string]string{
-					"envs":             strings.Join(pp.Envs, ","),
-					"envProductions":   strings.Join(pp.EnvProductions, ","),
-					"isDefault":        fmt.Sprintf("%v", pp.IsDefault),
-					"webhookPushEvent": fmt.Sprintf("%v", pp.WebhookPushEvent),
-				}
-				defKind.Items = append(defKind.Items, pp.PipelineDef)
-				defKinds = append(defKinds, defKind)
 			}
 		}
 
@@ -1005,10 +1007,10 @@ func (o *OptionsDefGet) Run(args []string) error {
 					}
 					envs := strings.Split(defKind.Metadata.Annotations["envs"], ",")
 					envProductions := strings.Split(defKind.Metadata.Annotations["envProductions"], ",")
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, defKind.Metadata.Labels["branchName"]), strings.Join(envs, "\n"), strings.Join(envProductions, "\n"), fmt.Sprintf("%v", item.IsAutoDetectBuild), fmt.Sprintf("%v", item.IsQueue), strings.Join(builds, "\n")}
+					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, defKind.Metadata.Labels["branchName"]), item.PipelineArch, strings.Join(envs, "\n"), strings.Join(envProductions, "\n"), fmt.Sprintf("%v", item.IsAutoDetectBuild), fmt.Sprintf("%v", item.IsQueue), strings.Join(builds, "\n")}
 					dataRows = append(dataRows, dataRow)
 				}
-				dataHeader = []string{"Name", "Envs", "EnvProds", "AutoDetect", "Queue", "Builds"}
+				dataHeader = []string{"Name", "Arch", "Envs", "EnvProds", "AutoDetect", "Queue", "Builds"}
 			case pkg.DefCmdKinds[pkg.DefKindDockerIgnore]:
 				items := []string{}
 				_ = json.Unmarshal(bs, &items)

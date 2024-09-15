@@ -855,7 +855,6 @@ func (o *OptionsConsoleApply) Run(args []string) error {
 					bsYaml, _ := pkg.YamlIndent(obj.DeploySpecDebug)
 					param := map[string]interface{}{
 						"envName":            consoleKind.Metadata.EnvName,
-						"arch":               obj.Arch,
 						"componentDebugYaml": string(bsYaml),
 					}
 					result, _, err := o.QueryAPI(fmt.Sprintf("api/console/project/%s/envComponentDebugUpdate", consoleKind.Metadata.ProjectName), http.MethodPost, "", param, false)

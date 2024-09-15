@@ -2,7 +2,7 @@ FROM {{ $.source }}
 LABEL maintainer="cookeem"
 LABEL email="cookeem@qq.com"
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
-    apk --update add ca-certificates git curl zip jq tree htop python3 g++ make && \
+    apk --update add ca-certificates git curl zip jq tree htop python3 g++ make libpng-dev autoconf bash && \
     update-ca-certificates && \
     rm -rf /var/cache/apk/*
 

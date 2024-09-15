@@ -306,17 +306,11 @@ func (o *OptionsRunGet) Run(args []string) error {
 		default:
 			data := [][]string{}
 			for _, run := range runs {
-				runName := run.RunName
-				startUser := run.StartUser
-				abortUser := run.AbortUser
-				startTime := run.Status.StartTime
-				statusResult := run.Status.Result
-				duration := run.Status.Duration
-				data = append(data, []string{runName, startUser, abortUser, startTime, statusResult, duration})
+				data = append(data, []string{run.RunName, run.PipelineArch, run.StartUser, run.Status.StartTime, run.Status.Result, run.Status.Duration})
 			}
 
 			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Name", "StartUser", "AbortUser", "StartTime", "Status", "Duration"})
+			table.SetHeader([]string{"Name", "Arch", "StartUser", "StartTime", "Status", "Duration"})
 			table.SetAutoWrapText(false)
 			table.SetAutoFormatHeaders(true)
 			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)

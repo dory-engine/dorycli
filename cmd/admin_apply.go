@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -481,7 +480,7 @@ func (o *OptionsAdminApply) Validate(args []string) error {
 						return nil
 					})
 				} else {
-					infos, err := ioutil.ReadDir(fileName)
+					infos, err := os.ReadDir(fileName)
 					if err != nil {
 						return err
 					}
@@ -684,7 +683,7 @@ func (o *OptionsAdminApply) Run(args []string) error {
 					return err
 				}
 				customStepNames := []string{}
-				err = json.Unmarshal([]byte(result.Get("data.adminWebhooks").Raw), &customStepNames)
+				err = json.Unmarshal([]byte(result.Get("data.customStepNames").Raw), &customStepNames)
 				if err != nil {
 					return err
 				}

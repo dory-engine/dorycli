@@ -427,6 +427,7 @@ type Run struct {
 	PipelineName string `yaml:"pipelineName" json:"pipelineName" bson:"pipelineName" validate:""`
 	RunName      string `yaml:"runName" json:"runName" bson:"runName" validate:""`
 	BranchName   string `yaml:"branchName" json:"branchName" bson:"branchName" validate:""`
+	PipelineArch string `yaml:"pipelineArch" json:"pipelineArch" bson:"pipelineArch" validate:""`
 	TriggerKind  string `yaml:"triggerKind" json:"triggerKind" bson:"triggerKind" validate:""`
 	StartUser    string `yaml:"startUser" json:"startUser" bson:"startUser" validate:""`
 	AbortUser    string `yaml:"abortUser" json:"abortUser" bson:"abortUser" validate:""`
@@ -981,6 +982,7 @@ type CustomStepPhaseDef struct {
 type PipelineDef struct {
 	IsAutoDetectBuild    bool                            `yaml:"isAutoDetectBuild" json:"isAutoDetectBuild" bson:"isAutoDetectBuild" validate:""`
 	IsQueue              bool                            `yaml:"isQueue" json:"isQueue" bson:"isQueue" validate:""`
+	PipelineArch         string                          `yaml:"pipelineArch" json:"pipelineArch" bson:"pipelineArch" validate:""`
 	Builds               []PipelineBuildDef              `yaml:"builds" json:"builds" bson:"builds" validate:"dive"`
 	PipelineStep         PipelineStepDef                 `yaml:"pipelineStep" json:"pipelineStep" bson:"pipelineStep" validate:"required"`
 	CustomStepInsertDefs map[string][]CustomStepPhaseDef `yaml:"customStepInsertDefs" json:"customStepInsertDefs" bson:"customStepInsertDefs" validate:""`
@@ -1012,7 +1014,6 @@ type ProjectInfo struct {
 	ProjectNamespace string `yaml:"projectNamespace" json:"projectNamespace" bson:"projectNamespace" validate:""`
 	ProjectShortName string `yaml:"projectShortName" json:"projectShortName" bson:"projectShortName" validate:""`
 	ShortName        string `yaml:"shortName" json:"shortName" bson:"shortName" validate:""`
-	ProjectArch      string `yaml:"projectArch" json:"projectArch" bson:"projectArch" validate:""`
 	DefaultPv        string `yaml:"defaultPv" json:"defaultPv" bson:"defaultPv" validate:""`
 	ProjectDesc      string `yaml:"projectDesc" json:"projectDesc" bson:"projectDesc" validate:""`
 	ProjectTeam      string `yaml:"projectTeam" json:"projectTeam" bson:"projectTeam" validate:""`
@@ -1258,6 +1259,8 @@ type EnvK8s struct {
 	QuotaConfig         QuotaConfig       `yaml:"quotaConfig" json:"quotaConfig" bson:"quotaConfig" validate:"required"`
 	DisabledDefs        []string          `yaml:"disabledDefs" json:"disabledDefs" bson:"disabledDefs" validate:""`
 	DisabledPatches     []string          `yaml:"disabledPatches" json:"disabledPatches" bson:"disabledPatches" validate:""`
+	Arches              []string          `yaml:"arches" json:"arches" bson:"arches" validate:""`
+	EnvArch             string            `yaml:"envArch" json:"envArch" bson:"envArch" validate:""`
 }
 
 type EnvK8sDetail struct {
@@ -1588,7 +1591,6 @@ type DeploySpecDebug struct {
 }
 
 type ComponentDebug struct {
-	Arch            string          `yaml:"arch" json:"arch" bson:"arch" validate:"required"`
 	DeploySpecDebug DeploySpecDebug `yaml:"deploySpecDebug" json:"deploySpecDebug" bson:"deploySpecDebug" validate:"required"`
 }
 type Component struct {

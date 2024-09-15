@@ -8,7 +8,7 @@ RUN echo "===> Installing sudo to emulate normal OS behavior..."  && \
     sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
     apk --update add sudo                                         && \
     echo "===> Adding Python runtime..."  && \
-    apk --update add git curl zip jq tree htop && \
+    apk --update add git curl zip jq tree htop bash && \
     apk --update add python3 py3-pip openssl ca-certificates    && \
     apk --update add --virtual build-dependencies python3-dev libffi-dev openssl-dev build-base cargo && \
     apk --update add gcc python3-dev musl-dev linux-headers  && \

@@ -814,11 +814,11 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range envFilters {
 				arches := strings.Join(item.Arches, ",")
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindEnvK8s], item.EnvName), item.TenantCode, item.EnvDesc, fmt.Sprintf("https://%s:%d", item.Host, item.Port), arches, item.ResourceVersion.IngressVersion, item.ResourceVersion.HpaVersion, item.ResourceVersion.IstioVersion}
+				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindEnvK8s], item.EnvName), item.EnvArch, item.TenantCode, item.EnvDesc, fmt.Sprintf("https://%s:%d", item.Host, item.Port), arches, item.ResourceVersion.IngressVersion, item.ResourceVersion.HpaVersion, item.ResourceVersion.IstioVersion}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Name", "TenantCode", "Desc", "Host", "Arches", "Ingress", "Hpa", "Istio"}
+			dataHeader := []string{"Name", "Arch", "TenantCode", "Desc", "Host", "Arches", "Ingress", "Hpa", "Istio"}
 			table := tablewriter.NewWriter(os.Stdout)
 			table.SetHeader(dataHeader)
 			table.SetAutoWrapText(false)

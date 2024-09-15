@@ -516,7 +516,7 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 		}
 
 		for _, pae := range paes {
-			if pae.ComponentDebug.Arch != "" {
+			if pae.ComponentDebug.DeploySpecDebug.DebugQuota.CpuLimit != "" {
 				ck := consoleKindProject
 				ck.Kind = pkg.ConsoleCmdKinds[pkg.ConsoleKindDebugComponent]
 				ck.Metadata.EnvName = pae.EnvName
@@ -524,7 +524,6 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 				consoleKinds = append(consoleKinds, ck)
 			}
 		}
-
 	}
 
 	consoleKindFilters := []pkg.ConsoleKind{}
@@ -611,6 +610,7 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 				}
 				dataHeader = []string{"Name", "Env", "URL", "User"}
 			case pkg.ConsoleCmdKinds[pkg.ConsoleKindComponent]:
+				fmt.Println("$$$")
 				items := []pkg.Component{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
@@ -622,10 +622,10 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 				items := []pkg.ComponentDebug{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, consoleKind.Metadata.EnvName), consoleKind.Metadata.EnvName, item.Arch, item.DeploySpecDebug.DebugQuota.CpuLimit, item.DeploySpecDebug.DebugQuota.MemoryLimit}
+					dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, consoleKind.Metadata.EnvName), consoleKind.Metadata.EnvName, item.DeploySpecDebug.DebugQuota.CpuLimit, item.DeploySpecDebug.DebugQuota.MemoryLimit}
 					dataRows = append(dataRows, dataRow)
 				}
-				dataHeader = []string{"Name", "Env", "Arch", "CPU", "MEM"}
+				dataHeader = []string{"Name", "Env", "CPU", "MEM"}
 			}
 
 			table := tablewriter.NewWriter(os.Stdout)
