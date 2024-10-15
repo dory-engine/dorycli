@@ -1555,16 +1555,19 @@ type AccessToken struct {
 }
 
 type KubernetesHaCluster struct {
-	Version            string `yaml:"version" json:"version" bson:"version" validate:"required"`
-	ImageRepository    string `yaml:"imageRepository" json:"imageRepository" bson:"imageRepository" validate:""`
-	VirtualIp          string `yaml:"virtualIp" json:"virtualIp" bson:"virtualIp" validate:"required"`
-	VirtualPort        int    `yaml:"virtualPort" json:"virtualPort" bson:"virtualPort" validate:"required"`
-	VirtualHostname    string `yaml:"virtualHostname" json:"virtualHostname" bson:"virtualHostname" validate:"required"`
-	CriSocket          string `yaml:"criSocket" json:"criSocket" bson:"criSocket" validate:"required"`
-	PodSubnet          string `yaml:"podSubnet" json:"podSubnet" bson:"podSubnet" validate:""`
-	ServiceSubnet      string `yaml:"serviceSubnet" json:"serviceSubnet" bson:"serviceSubnet" validate:""`
-	KeepAlivedAuthPass string `yaml:"keepAlivedAuthPass" json:"keepAlivedAuthPass" bson:"keepAlivedAuthPass" validate:""`
-	MasterHosts        []struct {
+	Version                   string `yaml:"version" json:"version" bson:"version" validate:"required"`
+	ImageRepository           string `yaml:"imageRepository" json:"imageRepository" bson:"imageRepository" validate:""`
+	KeepalivedImage           string `yaml:"keepalivedImage" json:"keepalivedImage" bson:"keepalivedImage" validate:"required"`
+	NginxlbImage              string `yaml:"nginxlbImage" json:"nginxlbImage" bson:"nginxlbImage" validate:"required"`
+	VirtualIp                 string `yaml:"virtualIp" json:"virtualIp" bson:"virtualIp" validate:"required"`
+	VirtualPort               int    `yaml:"virtualPort" json:"virtualPort" bson:"virtualPort" validate:"required"`
+	VirtualHostname           string `yaml:"virtualHostname" json:"virtualHostname" bson:"virtualHostname" validate:"required"`
+	CriSocket                 string `yaml:"criSocket" json:"criSocket" bson:"criSocket" validate:"required"`
+	PodSubnet                 string `yaml:"podSubnet" json:"podSubnet" bson:"podSubnet" validate:""`
+	ServiceSubnet             string `yaml:"serviceSubnet" json:"serviceSubnet" bson:"serviceSubnet" validate:""`
+	KeepAlivedAuthPass        string `yaml:"keepAlivedAuthPass" json:"keepAlivedAuthPass" bson:"keepAlivedAuthPass" validate:""`
+	KeepAlivedVirtualRouterId int    `yaml:"keepAlivedVirtualRouterId" json:"keepAlivedVirtualRouterId" bson:"keepAlivedVirtualRouterId" validate:"required"`
+	MasterHosts               []struct {
 		IpAddress          string `yaml:"ipAddress" json:"ipAddress" bson:"ipAddress" validate:"required"`
 		Hostname           string `yaml:"hostname" json:"hostname" bson:"hostname" validate:"required"`
 		NetworkInterface   string `yaml:"networkInterface" json:"networkInterface" bson:"networkInterface" validate:"required"`

@@ -646,7 +646,7 @@ func (khc *KubernetesHaCluster) VerifyKubernetesHaCluster() error {
 	}
 
 	if khc.KeepAlivedAuthPass == "" {
-		khc.KeepAlivedAuthPass = RandomString(16, false, "")
+		khc.KeepAlivedAuthPass = RandomString(16, false, "=")
 	}
 
 	return err

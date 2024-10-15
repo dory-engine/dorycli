@@ -2,6 +2,10 @@
 version: "v1.27.3"
 # The kubernete image registry settings, if not set, then use the official default image registry
 imageRepository: "registry.cn-hangzhou.aliyuncs.com/google_containers"
+# keepalived image
+keepalivedImage: "osixia/keepalived:release-2.1.5-dev"
+# nginx-lb image
+nginxlbImage: "nginx:1.27.0-alpine"
 # The virtual ip address of the highly available kubernetes cluster created using keepalived
 virtualIp: 192.168.0.100
 # Use the apiserver mapping port of the highly available kubernetes cluster mapped by nginx
@@ -19,6 +23,8 @@ podSubnet: "10.244.0.0/24"
 serviceSubnet: "10.96.0.0/16"
 # The authentication password of keepalived, if not set then use a randomly generated password
 keepAlivedAuthPass: "input_your_password"
+# keepalived virtual_router_id settings
+keepAlivedVirtualRouterId: 101
 # The host configuration of the controlplane control plane of kubernetes, the number of highly available master nodes must be singular and at least 3
 masterHosts:
     # The host name of the master node, please set the host name mapping in the /etc/hosts configuration file
