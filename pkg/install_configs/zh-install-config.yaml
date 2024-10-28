@@ -46,9 +46,9 @@ dory:
     internal:
       # 镜像名
       # 假如类型为gitlab，建议使用镜像 gitlab/gitlab-ce:16.9.2-ce.0
-      image: gitea/gitea:1.21.8
+      image: gitea/gitea:1.22.3
       # gitea 数据库镜像名，gitea情况下必须填写(选填)
-      imageDB: mysql:8.0.20
+      imageDB: postgres:16.4-alpine3.19
       # # gitlab 代理镜像名，gitlab情况下必须填写(选填)
       # imageNginx: nginx:1.27.0-alpine
       # 暴露的服务端口
@@ -356,6 +356,8 @@ kubernetes:
   dashboardUrl: {{ `https://k8s.example.com:30000/#/workloads?namespace={{ .projectNamespace }}` }}
   # kubernetes dashboard管理控制台workload的url
   dashboardUrlNetworkPolicy: {{ `https://k8s.example.com:30000/#/networkpolicy?namespace={{ .projectNamespace }}` }}
+  # kubernetes dashboard管理控制台workload的url
+  dashboardUrlPod: {{ `https://k8s.example.com:30000/#/pod/{{ .projectNamespace }}/{{ .podName }}?namespace={{ .projectNamespace }}` }}
   # 环境中istio服务网格部署的名字空间
   istioNamespace: istio-system
   # 环境中ingress controller部署的名字空间

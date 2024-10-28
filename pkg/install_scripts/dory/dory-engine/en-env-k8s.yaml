@@ -16,6 +16,8 @@ caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
 dashboardUrl: {{ $.kubernetes.dashboardUrl | quote }}
 # kubernetes dashboard network policy browser access url
 dashboardUrlNetworkPolicy: {{ $.kubernetes.dashboardUrlNetworkPolicy | quote }}
+# kubernetes dashboard pod browser access url
+dashboardUrlPod: {{ $.kubernetes.dashboardUrlPod | quote }}
 # namespace for istio service mesh deployment in kubernetes environment
 istioNamespace: {{ $.kubernetes.istioNamespace | quote }}
 # namespace for ingress controller in kubernetes environment

@@ -46,9 +46,9 @@ dory:
     internal:
       # git repository image name
       # if git repository type is gitlab, recommend image is gitlab/gitlab-ce:16.9.2-ce.0
-      image: gitea/gitea:1.21.8
+      image: gitea/gitea:1.22.3
       # gitea repository database image name, if type is gitea this setting required
-      imageDB: mysql:8.0.20
+      imageDB: postgres:16.4-alpine3.19
       # # gitlab repository nginx proxy image name, if type is gitlab this setting required
       # imageNginx: nginx:1.27.0-alpine
       # expose service port (kubernetes node port)
@@ -356,6 +356,8 @@ kubernetes:
   dashboardUrl: {{ `https://k8s.example.com:30000/#/workloads?namespace={{ .projectNamespace }}` }}
   # kubernetes dashboard network policy browser access url
   dashboardUrlNetworkPolicy: {{ `https://k8s.example.com:30000/#/networkpolicy?namespace={{ .projectNamespace }}` }}
+  # kubernetes dashboard pod browser access url
+  dashboardUrlPod: {{ `https://k8s.example.com:30000/#/pod/{{ .projectNamespace }}/{{ .podName }}?namespace={{ .projectNamespace }}` }}
   # namespace for istio service mesh deployment in kubernetes environment
   istioNamespace: istio-system
   # namespace for ingress controller in kubernetes environment

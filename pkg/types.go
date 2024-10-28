@@ -219,6 +219,7 @@ type InstallConfig struct {
 		CaCrtBase64                string `yaml:"caCrtBase64" json:"caCrtBase64" bson:"caCrtBase64" validate:"required"`
 		DashboardUrl               string `yaml:"dashboardUrl" json:"dashboardUrl" bson:"dashboardUrl" validate:"required"`
 		DashboardUrlNetworkPolicy  string `yaml:"dashboardUrlNetworkPolicy" json:"dashboardUrlNetworkPolicy" bson:"dashboardUrlNetworkPolicy" validate:"required"`
+		DashboardUrlPod            string `yaml:"dashboardUrlPod" json:"dashboardUrlPod" bson:"dashboardUrlPod" validate:"required"`
 		IstioNamespace             string `yaml:"istioNamespace" json:"istioNamespace" bson:"istioNamespace" validate:"required"`
 		IngressControllerNamespace string `yaml:"ingressControllerNamespace" json:"ingressControllerNamespace" bson:"ingressControllerNamespace" validate:"required"`
 		PvConfigLocal              struct {
@@ -1223,6 +1224,7 @@ type EnvK8s struct {
 	CaCrtBase64                string `yaml:"caCrtBase64" json:"caCrtBase64" bson:"caCrtBase64" validate:"required"`
 	DashboardUrl               string `yaml:"dashboardUrl" json:"dashboardUrl" bson:"dashboardUrl" validate:"required"`
 	DashboardUrlNetworkPolicy  string `yaml:"dashboardUrlNetworkPolicy" json:"dashboardUrlNetworkPolicy" bson:"dashboardUrlNetworkPolicy" validate:"required"`
+	DashboardUrlPod            string `yaml:"dashboardUrlPod" json:"dashboardUrlPod" bson:"dashboardUrlPod" validate:"required"`
 	IstioNamespace             string `yaml:"istioNamespace" json:"istioNamespace" bson:"istioNamespace" validate:"required"`
 	IngressControllerNamespace string `yaml:"ingressControllerNamespace" json:"ingressControllerNamespace" bson:"ingressControllerNamespace" validate:"required"`
 	Timezone                   string `yaml:"timezone" json:"timezone" bson:"timezone" validate:"required"`

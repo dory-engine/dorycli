@@ -19,8 +19,8 @@ services:
       TZ: {{ $.kubernetes.timezone }}
       USER_UID: 1000
       USER_GID: 1000
-      GITEA__database__DB_TYPE: "mysql"
-      GITEA__database__HOST: {{ $.dory.gitRepo.type }}-mysql:3306
+      GITEA__database__DB_TYPE: "postgres"
+      GITEA__database__HOST: {{ $.dory.gitRepo.type }}-postgres:5432
       GITEA__database__NAME: {{ $.dory.gitRepo.type | quote }}
       GITEA__database__USER: {{ $.dory.gitRepo.type | quote }}
       GITEA__database__PASSWD: {{ $giteaDbPwd | quote }}
@@ -29,27 +29,26 @@ services:
       - "{{ $.dory.gitRepo.internal.port }}:3000"
     restart: always
     depends_on:
-      - {{ $.dory.gitRepo.type }}-mysql
+      - {{ $.dory.gitRepo.type }}-postgres
 
-  {{ $.dory.gitRepo.type }}-mysql:
+  {{ $.dory.gitRepo.type }}-postgres:
     {{- if eq $.dory.imageRepo.type "harbor" }}
     image: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.imageDB }}
     {{- else }}
     image: {{ $.dory.gitRepo.internal.imageDB }}
     {{- end }}
-    container_name: {{ $.dory.gitRepo.type }}-mysql
-    hostname: {{ $.dory.gitRepo.type }}-mysql
+    container_name: {{ $.dory.gitRepo.type }}-postgres
+    hostname: {{ $.dory.gitRepo.type }}-postgres
+    shm_size: 256mb
     volumes:
       - /etc/timezone:/etc/timezone
       - /usr/share/zoneinfo/{{ $.kubernetes.timezone }}:/etc/localtime
-      - ./{{ $.dory.gitRepo.type }}-mysql:/var/lib/mysql
+      - ./{{ $.dory.gitRepo.type }}-postgres:/var/lib/postgresql/data
     environment:
       TZ: {{ $.kubernetes.timezone }}
-      MYSQL_ROOT_PASSWORD: {{ randAlphaNum 16 | quote }}
-      MYSQL_DATABASE: {{ $.dory.gitRepo.type | quote }}
-      MYSQL_USER: {{ $.dory.gitRepo.type | quote }}
-      MYSQL_PASSWORD: {{ $giteaDbPwd | quote }}
-    command: "--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max_allowed_packet=268435456"
+      POSTGRES_DB: {{ $.dory.gitRepo.type | quote }}
+      POSTGRES_USER: {{ $.dory.gitRepo.type | quote }}
+      POSTGRES_PASSWORD: {{ $giteaDbPwd | quote }}
     restart: always
   {{- else if eq $.dory.gitRepo.type "gitlab" }}
   {{ $.dory.gitRepo.type }}:

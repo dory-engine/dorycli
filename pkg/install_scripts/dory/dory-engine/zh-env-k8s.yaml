@@ -16,6 +16,8 @@ caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
 dashboardUrl: {{ $.kubernetes.dashboardUrl | quote }}
 # kubernetes dashboard管理控制台网络策略的url
 dashboardUrlNetworkPolicy: {{ $.kubernetes.dashboardUrlNetworkPolicy | quote }}
+# kubernetes dashboard管理控制台pod的url
+dashboardUrlPod: {{ $.kubernetes.dashboardUrlPod | quote }}
 # 环境中istio服务网格部署的名字空间
 istioNamespace: {{ $.kubernetes.istioNamespace | quote }}
 # 环境中ingress controller部署的名字空间

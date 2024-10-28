@@ -25,9 +25,9 @@ deploys:
       - name: USER_GID
         value: 1000
       - name: GITEA__database__DB_TYPE
-        value: mysql
+        value: postgres
       - name: GITEA__database__HOST
-        value: {{ $.dory.gitRepo.type }}-mysql:3306
+        value: {{ $.dory.gitRepo.type }}-postgres:5432
       - name: GITEA__database__NAME
         value: {{ $.dory.gitRepo.type | quote}}
       - name: GITEA__database__USER
@@ -46,18 +46,18 @@ deploys:
       livenessDelaySeconds: 300
       livenessPeriodSeconds: 30
     dependServices:
-      - dependName: {{ $.dory.gitRepo.type }}-mysql
-        dependPort: 3306
+      - dependName: {{ $.dory.gitRepo.type }}-postgres
+        dependPort: 5432
         dependType: TCP
 
-  - deployName: {{ $.dory.gitRepo.type }}-mysql
+  - deployName: {{ $.dory.gitRepo.type }}-postgres
     {{- if eq $.dory.imageRepo.type "harbor" }}
     deployImage: {{ $.imageRepoDomainName }}/hub/{{ $.dory.gitRepo.internal.imageDB }}
     {{- else }}
     deployImage: {{ $.dory.gitRepo.internal.imageDB }}
     {{- end }}
     deployLocalPort:
-      - port: 3306
+      - port: 5432
     deployReplicas: 1
     {{- if $.dory.nodeSelector }}
     nodeSelector:
@@ -65,21 +65,19 @@ deploys:
       {{ $k }}: {{ $v }}
       {{- end }}
     {{- end }}
-    deployArgs: [ "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--max_allowed_packet=268435456" ]
     deployEnvs:
-      - name: MYSQL_ROOT_PASSWORD
-        value: {{ randAlphaNum 16 | quote }}
-      - name: MYSQL_DATABASE
+      - name: POSTGRES_DB
         value: {{ $.dory.gitRepo.type | quote }}
-      - name: MYSQL_USER
+      - name: POSTGRES_USER
         value: {{ $.dory.gitRepo.type | quote }}
-      - name: MYSQL_PASSWORD
+      - name: POSTGRES_PASSWORD
         value: {{ $giteaDbPwd | quote }}
     deployVolumes:
-      - mountPath: /var/lib/mysql
-        subPath: {{ $.dory.gitRepo.type }}-mysql
+      - mountPath: /var/lib/postgresql/data
+        subPath: {{ $.dory.gitRepo.type }}-postgres
+    deployShmSize: 512Mi
     deployHealthCheck:
-      checkPort: 3306
+      checkPort: 5432
       readinessDelaySeconds: 15
       readinessPeriodSeconds: 5
       livenessDelaySeconds: 90
