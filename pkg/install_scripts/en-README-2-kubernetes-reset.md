@@ -15,11 +15,12 @@ helm -n {{ $.dory.imageRepo.internal.namespace }} uninstall {{ $.dory.imageRepo.
 ```shell script
 kubectl delete namespace {{ $.dory.namespace }}
 kubectl delete pv {{ $.dory.namespace }}-pv
-kubectl delete pv project-data-pv
 {{- if $.imageRepoInternal }}
 kubectl delete namespace {{ $.dory.imageRepo.internal.namespace }}
 kubectl delete pv {{ $.dory.imageRepo.internal.namespace }}-pv
 {{- end }}
+
+kubectl delete pv project-data-pv
 ```
 
 ## about dory services data

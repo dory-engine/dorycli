@@ -17,6 +17,7 @@ docker-compose stop && docker-compose rm -f
 cd {{ $.rootDir }}/{{ $.dory.namespace }}
 docker-compose stop && docker-compose rm -f
 kubectl delete namespace {{ $.dory.namespace }}
+
 kubectl delete pv project-data-pv
 ```
 

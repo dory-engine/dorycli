@@ -687,8 +687,7 @@ func (o *OptionsInstallRun) DoryCreateKubernetesDataPod(installConfig pkg.Instal
 	}
 	log.Info(fmt.Sprintf("clear project-data-pod pv begin"))
 	cmdClearPv := fmt.Sprintf(`(kubectl -n %s delete sts project-data-pod || true) && \
-		(kubectl -n %s delete pvc project-data-pvc || true) && \
-		(kubectl delete pv project-data-pv || true)`, installConfig.Dory.Namespace, installConfig.Dory.Namespace)
+		(kubectl -n %s delete pvc project-data-pvc || true)`, installConfig.Dory.Namespace, installConfig.Dory.Namespace)
 	_, _, err = pkg.CommandExec(cmdClearPv, doryDir)
 	if err != nil {
 		err = fmt.Errorf("create project-data-pod in kubernetes error: %s", err.Error())
