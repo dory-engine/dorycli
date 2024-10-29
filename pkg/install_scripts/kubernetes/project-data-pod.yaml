@@ -62,11 +62,11 @@ data:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: project-data-pv
+  name: {{ $.dory.namespace }}-project-data-pv
   labels:
     app: project-data
 spec:
-  storageClassName: project-data-pv
+  storageClassName: {{ $.dory.namespace }}-project-data-pv
   capacity:
     storage: 500Gi
   accessModes:
@@ -118,7 +118,7 @@ spec:
   resources:
     requests:
       storage: 500Gi
-  storageClassName: project-data-pv
+  storageClassName: {{ $.dory.namespace }}-project-data-pv
   selector:
     matchLabels:
       app: project-data

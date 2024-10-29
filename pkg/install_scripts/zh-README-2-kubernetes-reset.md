@@ -20,7 +20,7 @@ kubectl delete namespace {{ $.dory.imageRepo.internal.namespace }}
 kubectl delete pv {{ $.dory.imageRepo.internal.namespace }}-pv
 {{- end }}
 
-kubectl delete pv project-data-pv
+kubectl delete pv {{ $.dory.namespace }}-project-data-pv
 ```
 
 ## 所有dory组件的数据存放位置
