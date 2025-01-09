@@ -130,7 +130,7 @@ cmd_console_example:
     {{._2}} console apply -f members.yaml -f pipelines.json
 
     # delete test-project1 project configurations, requires project maintainer permissions
-    {{._3}} console delete test-prject1 {{._4}} --items=test-user01
+    {{._3}} console delete test-prject1 {{._4}} test-user01
 cmd_console_apply_short:
   other: "apply configuration parameters in files, directories or stdin to project configurations, project maintainer permissions are required"
 cmd_console_apply_long:
@@ -157,16 +157,16 @@ cmd_console_delete_example:
     kind options: {{._0}}
 
     # delete the test-project1 project members, which requires project maintainer permissions
-    {{._1}} console delete test-project1 {{._2}} --items=test-user01 --items=test-user02
+    {{._1}} console delete test-project1 {{._2}} test-user01 test-user02
 
     # delete the test-project1 project hosts, which requires project maintainer permissions
-    {{._3}} console delete test-project1 {{._4}} --envs=prod --items=test-project1-node01,test-project1-node02
+    {{._3}} console delete test-project1 {{._4}} --envs=prod test-project1-node01 test-project1-node02
 
     # delete the test-project1 project components, which requires project maintainer permissions
-    {{._5}} console delete test-project1 {{._6}} --envs=prod --items=tp1-mysql01 --items=tp1-mysql02
+    {{._5}} console delete test-project1 {{._6}} --envs=prod tp1-mysql01 tp1-mysql02
 
     # delete the test-project1 project pipeline triggers, which requires project maintainer permissions
-    {{._7}} console delete test-project1 {{._8}} --branches=develop --items=build,packageImage
+    {{._7}} console delete test-project1 {{._8}} --branches=develop build packageImage
 cmd_console_get_short:
   other: "get project configurations, which requires project maintainer permissions"
 cmd_console_get_long:
@@ -185,10 +185,10 @@ cmd_console_get_example:
     {{._5}} console get test-project1 {{._6}},{{._7}}
 
     # get the specific components in prod env of test-project1, which requires project maintainer permissions
-    {{._8}} console get test-project1 {{._9}} --envs=prod --items=tp1-mysql
+    {{._8}} console get test-project1 {{._9}} --envs=prod tp1-mysql
 
     # get the specific pipeline triggers of test-project1, which requires project maintainer permissions
-    {{._10}} console get test-project1 {{._11}} --branches=develop --items=build,packageImage
+    {{._10}} console get test-project1 {{._11}} --branches=develop build packageImage
 cmd_def_short:
   other: "manage project definitions"
 cmd_def_long:
@@ -667,8 +667,6 @@ param_console_apply_files:
   other: "configurations file name or directory, support *.json and *.yaml and *.yml files"
 param_console_apply_try:
   other: "try to check input configurations only, not apply to Dory-Engine, use with --output option"
-param_console_get_items:
-  other: "filter items by names"
 param_console_get_envs:
   other: "filter components / debugging components / project hosts / project databases items by env names"
 param_console_get_branches:
@@ -677,8 +675,6 @@ param_console_get_output:
   other: "output format (options: yaml / json)"
 param_console_get_full:
   other: "output configurations in full version, use with --output option"
-param_console_delete_items:
-  other: "items to delete"
 param_console_delete_envs:
   other: "filter items by env names, required if kind is {{._0}} / {{._1}} / {{._2}} / {{._3}}"
 param_console_delete_branches:

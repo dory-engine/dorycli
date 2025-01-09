@@ -161,7 +161,12 @@ func (o *OptionsProjectGet) Run(args []string) error {
 				projectShortName := project.ProjectInfo.ProjectShortName
 				projectEnvs := []string{}
 				for _, pnp := range project.ProjectNodePorts {
-					projectEnvs = append(projectEnvs, pnp.EnvName)
+					nodePorts := []string{}
+					for _, envNodePort := range pnp.EnvNodePorts {
+						nodePorts = append(nodePorts, fmt.Sprintf("%d", envNodePort.NodePortStart))
+					}
+					envInfo := fmt.Sprintf("%s:%s", pnp.EnvName, strings.Join(nodePorts, ","))
+					projectEnvs = append(projectEnvs, envInfo)
 				}
 				projectEnvNames := strings.Join(projectEnvs, "\n")
 				pipelines := []string{}
@@ -176,7 +181,7 @@ func (o *OptionsProjectGet) Run(args []string) error {
 				}
 				opsBatchNames := strings.Join(opsBatches, "\n")
 
-				data = append(data, []string{projectName, projectShortName, project.TenantCode, projectEnvNames, pipelineNames, opsBatchNames})
+				data = append(data, []string{projectName, projectShortName, projectEnvNames, project.TenantCode, pipelineNames, opsBatchNames})
 			}
 
 			table := tablewriter.NewWriter(os.Stdout)

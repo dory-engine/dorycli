@@ -130,7 +130,7 @@ cmd_console_example:
     {{._2}} console apply -f members.yaml -f pipelines.json
 
     # 删除test-project1项目配置信息，需要项目维护者权限
-    {{._3}} console delete test-prject1 {{._4}} --items=test-user01
+    {{._3}} console delete test-prject1 {{._4}} test-user01
 cmd_console_apply_short:
   other: "把文件、目录或者stdin中的配置参数应用到项目配置信息中，需要项目维护者权限"
 cmd_console_apply_long:
@@ -157,16 +157,16 @@ cmd_console_delete_example:
     kind 选项: {{._0}}
 
     # 删除test-project1项目成员，需要项目维护者权限
-    {{._1}} console delete test-project1 {{._2}} --items=test-user01 --items=test-user02
+    {{._1}} console delete test-project1 {{._2}} test-user01 test-user02
     
     # 删除test-project1项目主机，需要项目维护者权限
-    {{._3}} console delete test-project1 {{._4}} --envs=prod --items=test-project1-node01,test-project1-node02
+    {{._3}} console delete test-project1 {{._4}} --envs=prod test-project1-node01 test-project1-node02
     
     # 删除test-project1项目组件，需要项目维护者权限
-    {{._5}} console delete test-project1 {{._6}} --envs=prod --items=tp1-mysql01 --items=tp1-mysql02
+    {{._5}} console delete test-project1 {{._6}} --envs=prod tp1-mysql01 tp1-mysql02
     
     # 删除test-project1流水线触发器，需要项目维护者权限
-    {{._7}} console delete test-project1 {{._8}} --branches=develop --items=build,packageImage
+    {{._7}} console delete test-project1 {{._8}} --branches=develop build packageImage
 cmd_console_get_short:
   other: "获取项目配置信息，需要项目维护者权限"
 cmd_console_get_long:
@@ -185,10 +185,10 @@ cmd_console_get_example:
     {{._5}} console get test-project1 {{._6}},{{._7}}
     
     # 获取test-project1特定环境的组件，需要项目维护者权限
-    {{._8}} console get test-project1 {{._9}} --envs=prod --items=tp1-mysql
+    {{._8}} console get test-project1 {{._9}} --envs=prod tp1-mysql
     
     # 获取test-project1特定流水线触发器，需要项目维护者权限
-    {{._10}} console get test-project1 {{._11}} --branches=develop --items=build,packageImage
+    {{._10}} console get test-project1 {{._11}} --branches=develop build packageImage
 cmd_def_short:
   other: "管理项目定义"
 cmd_def_long:
@@ -667,8 +667,6 @@ param_console_apply_files:
   other: "配置项文件路径或者目录，支持 *.json *.yaml *.yml 后缀的文件"
 param_console_apply_try:
   other: "仅尝试检查配置项，并不应用到Dory-Engine中，与 --output 选项配合使用"
-param_console_get_items:
-  other: "过滤配置项名称"
 param_console_get_envs:
   other: "使用环境名过滤组件/调试组件/项目主机/项目数据库"
 param_console_get_branches:
@@ -677,8 +675,6 @@ param_console_get_output:
   other: "输出格式 (选项：yaml / json)"
 param_console_get_full:
   other: "完整输出配置项的所有参数，与 --output 选项配合使用"
-param_console_delete_items:
-  other: "需要删除的配置项"
 param_console_delete_envs:
   other: "通过环境名过滤配置项，kind为 {{._0}} / {{._1}} / {{._2}} / {{._3}} 情况下必填"
 param_console_delete_branches:

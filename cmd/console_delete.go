@@ -12,15 +12,15 @@ import (
 
 type OptionsConsoleDelete struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
-	Items          []string `yaml:"items" json:"items" bson:"items" validate:""`
 	EnvNames       []string `yaml:"envNames" json:"envNames" bson:"envNames" validate:""`
 	BranchNames    []string `yaml:"branchNames" json:"branchNames" bson:"branchNames" validate:""`
 	Try            bool     `yaml:"try" json:"try" bson:"try" validate:""`
 	Full           bool     `yaml:"full" json:"full" bson:"full" validate:""`
 	Output         string   `yaml:"output" json:"output" bson:"output" validate:""`
 	Param          struct {
-		Kind        string `yaml:"kind" json:"kind" bson:"kind" validate:""`
-		ProjectName string `yaml:"projectName" json:"projectName" bson:"projectName" validate:""`
+		Kind        string   `yaml:"kind" json:"kind" bson:"kind" validate:""`
+		ProjectName string   `yaml:"projectName" json:"projectName" bson:"projectName" validate:""`
+		ItemNames   []string `yaml:"itemNames" json:"itemNames" bson:"itemNames" validate:""`
 	}
 }
 
@@ -34,7 +34,7 @@ func NewCmdConsoleDelete() *cobra.Command {
 	o := NewOptionsConsoleDelete()
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`delete [projectName] [kind] [--envs=envName1,envName2] [--branches=branch1,branch2] [--items=itemName1,itemName2]...`)
+	msgUse := fmt.Sprintf(`delete [projectName] [kind] [--envs=envName1,envName2] [--branches=branch1,branch2] [itemName1] [itemName2]...`)
 
 	consoleCmdKinds := []string{}
 	for k, _ := range pkg.ConsoleCmdKinds {
@@ -60,7 +60,6 @@ func NewCmdConsoleDelete() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringSliceVar(&o.Items, "items", []string{}, OptCommon.TransLang("param_console_delete_items"))
 	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, OptCommon.TransLang("param_console_delete_envs", pkg.ConsoleKindHost, pkg.ConsoleKindDatabase, pkg.ConsoleKindComponent, pkg.ConsoleKindDebugComponent))
 	cmd.Flags().StringSliceVar(&o.BranchNames, "branches", []string{}, OptCommon.TransLang("param_console_delete_branches", pkg.ConsoleKindPipelineTrigger))
 	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_console_delete_output"))
@@ -97,6 +96,117 @@ func (o *OptionsConsoleDelete) Complete(cmd *cobra.Command) error {
 		if len(args) == 1 {
 			return consoleCmdKinds, cobra.ShellCompDirectiveNoFileComp
 		}
+		if len(args) >= 2 {
+			items := []string{}
+			projectName := args[0]
+			kindStr := args[1]
+			var isAllKind bool
+			kinds := strings.Split(kindStr, ",")
+			for _, kind := range kinds {
+				if kind == pkg.ConsoleKindAll {
+					isAllKind = true
+				}
+			}
+			envs, _ := cmd.Flags().GetStringSlice("envs")
+			branches, _ := cmd.Flags().GetStringSlice("branches")
+			projectConsole, err := o.GetConsoleProject(projectName)
+			if err != nil {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+
+			m := map[string]string{}
+			for _, kind := range kinds {
+				if kind == pkg.ConsoleKindMember || isAllKind {
+					for _, item := range projectConsole.ProjectMembers {
+						m[item.Username] = ""
+					}
+				}
+				if kind == pkg.ConsoleKindPipeline || isAllKind {
+					for _, item := range projectConsole.Pipelines {
+						m[item.BranchName] = ""
+					}
+				}
+				if kind == pkg.ConsoleKindPipelineTrigger || isAllKind {
+					if len(branches) == 0 {
+						for _, pipeline := range projectConsole.Pipelines {
+							for _, item := range pipeline.PipelineTriggers {
+								m[item.StepAction] = ""
+							}
+						}
+					} else {
+						pipelines := []pkg.ProjectPipeline{}
+						for _, pipeline := range projectConsole.Pipelines {
+							for _, branch := range branches {
+								if branch == pipeline.BranchName {
+									pipelines = append(pipelines, pipeline)
+									break
+								}
+							}
+						}
+						for _, pipeline := range pipelines {
+							for _, item := range pipeline.PipelineTriggers {
+								m[item.StepAction] = ""
+							}
+						}
+					}
+				}
+				if kind == pkg.ConsoleKindHost || kind == pkg.ConsoleKindDatabase || kind == pkg.ConsoleKindComponent || isAllKind {
+					if len(envs) == 0 {
+						for _, pae := range projectConsole.ProjectAvailableEnvs {
+							if kind == pkg.ConsoleKindHost || isAllKind {
+								for _, item := range pae.Hosts {
+									m[item.HostName] = ""
+								}
+							}
+							if kind == pkg.ConsoleKindDatabase || isAllKind {
+								for _, item := range pae.Databases {
+									m[item.DbName] = ""
+								}
+							}
+							if kind == pkg.ConsoleKindComponent || isAllKind {
+								for _, item := range pae.Components {
+									m[item.ComponentName] = ""
+								}
+							}
+						}
+					} else {
+						paes := []pkg.ProjectAvailableEnvConsole{}
+						for _, pae := range projectConsole.ProjectAvailableEnvs {
+							for _, env := range envs {
+								if env == pae.EnvName {
+									paes = append(paes, pae)
+									break
+								}
+							}
+						}
+						for _, pae := range paes {
+							if kind == pkg.ConsoleKindHost || isAllKind {
+								for _, item := range pae.Hosts {
+									m[item.HostName] = ""
+								}
+							}
+							if kind == pkg.ConsoleKindDatabase || isAllKind {
+								for _, item := range pae.Databases {
+									m[item.DbName] = ""
+								}
+							}
+							if kind == pkg.ConsoleKindComponent || isAllKind {
+								for _, item := range pae.Components {
+									m[item.ComponentName] = ""
+								}
+							}
+						}
+					}
+				}
+				if isAllKind {
+					break
+				}
+			}
+			for k, _ := range m {
+				items = append(items, k)
+			}
+			return items, cobra.ShellCompDirectiveNoFileComp
+		}
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
@@ -127,121 +237,6 @@ func (o *OptionsConsoleDelete) Complete(cmd *cobra.Command) error {
 			branchNames = append(branchNames, pp.BranchName)
 		}
 		return branchNames, cobra.ShellCompDirectiveNoFileComp
-	})
-	if err != nil {
-		return err
-	}
-
-	err = cmd.RegisterFlagCompletionFunc("items", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		items := []string{}
-		projectName := args[0]
-		kindStr := args[1]
-		var isAllKind bool
-		kinds := strings.Split(kindStr, ",")
-		for _, kind := range kinds {
-			if kind == pkg.ConsoleKindAll {
-				isAllKind = true
-			}
-		}
-		envs, _ := cmd.Flags().GetStringSlice("envs")
-		branches, _ := cmd.Flags().GetStringSlice("branches")
-		projectConsole, err := o.GetConsoleProject(projectName)
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-
-		m := map[string]string{}
-		for _, kind := range kinds {
-			if kind == pkg.ConsoleKindMember || isAllKind {
-				for _, item := range projectConsole.ProjectMembers {
-					m[item.Username] = ""
-				}
-			}
-			if kind == pkg.ConsoleKindPipeline || isAllKind {
-				for _, item := range projectConsole.Pipelines {
-					m[item.BranchName] = ""
-				}
-			}
-			if kind == pkg.ConsoleKindPipelineTrigger || isAllKind {
-				if len(branches) == 0 {
-					for _, pipeline := range projectConsole.Pipelines {
-						for _, item := range pipeline.PipelineTriggers {
-							m[item.StepAction] = ""
-						}
-					}
-				} else {
-					pipelines := []pkg.ProjectPipeline{}
-					for _, pipeline := range projectConsole.Pipelines {
-						for _, branch := range branches {
-							if branch == pipeline.BranchName {
-								pipelines = append(pipelines, pipeline)
-								break
-							}
-						}
-					}
-					for _, pipeline := range pipelines {
-						for _, item := range pipeline.PipelineTriggers {
-							m[item.StepAction] = ""
-						}
-					}
-				}
-			}
-			if kind == pkg.ConsoleKindHost || kind == pkg.ConsoleKindDatabase || kind == pkg.ConsoleKindComponent || isAllKind {
-				if len(envs) == 0 {
-					for _, pae := range projectConsole.ProjectAvailableEnvs {
-						if kind == pkg.ConsoleKindHost || isAllKind {
-							for _, item := range pae.Hosts {
-								m[item.HostName] = ""
-							}
-						}
-						if kind == pkg.ConsoleKindDatabase || isAllKind {
-							for _, item := range pae.Databases {
-								m[item.DbName] = ""
-							}
-						}
-						if kind == pkg.ConsoleKindComponent || isAllKind {
-							for _, item := range pae.Components {
-								m[item.ComponentName] = ""
-							}
-						}
-					}
-				} else {
-					paes := []pkg.ProjectAvailableEnvConsole{}
-					for _, pae := range projectConsole.ProjectAvailableEnvs {
-						for _, env := range envs {
-							if env == pae.EnvName {
-								paes = append(paes, pae)
-								break
-							}
-						}
-					}
-					for _, pae := range paes {
-						if kind == pkg.ConsoleKindHost || isAllKind {
-							for _, item := range pae.Hosts {
-								m[item.HostName] = ""
-							}
-						}
-						if kind == pkg.ConsoleKindDatabase || isAllKind {
-							for _, item := range pae.Databases {
-								m[item.DbName] = ""
-							}
-						}
-						if kind == pkg.ConsoleKindComponent || isAllKind {
-							for _, item := range pae.Components {
-								m[item.ComponentName] = ""
-							}
-						}
-					}
-				}
-			}
-			if isAllKind {
-				break
-			}
-		}
-		for k, _ := range m {
-			items = append(items, k)
-		}
-		return items, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -307,8 +302,13 @@ func (o *OptionsConsoleDelete) Validate(args []string) error {
 	}
 	o.Param.Kind = kind
 
-	if len(o.Items) == 0 && o.Param.Kind != pkg.ConsoleKindDebugComponent {
-		err = fmt.Errorf("--items required")
+	o.Param.ItemNames = []string{}
+	if len(args) > 2 {
+		o.Param.ItemNames = args[2:]
+	}
+
+	if len(o.Param.ItemNames) == 0 && o.Param.Kind != pkg.ConsoleKindDebugComponent {
+		err = fmt.Errorf("items required")
 		return err
 	}
 
@@ -371,7 +371,7 @@ func (o *OptionsConsoleDelete) Run(args []string) error {
 		consoleKind.Kind = pkg.ConsoleCmdKinds[o.Param.Kind]
 		for _, item := range projectConsole.ProjectMembers {
 			var found bool
-			for _, itemName := range o.Items {
+			for _, itemName := range o.Param.ItemNames {
 				if item.Username == itemName {
 					found = true
 					break
@@ -387,7 +387,7 @@ func (o *OptionsConsoleDelete) Run(args []string) error {
 		consoleKind.Kind = pkg.ConsoleCmdKinds[o.Param.Kind]
 		for _, item := range projectConsole.Pipelines {
 			var found bool
-			for _, itemName := range o.Items {
+			for _, itemName := range o.Param.ItemNames {
 				if item.BranchName == itemName {
 					found = true
 					break
@@ -412,7 +412,7 @@ func (o *OptionsConsoleDelete) Run(args []string) error {
 			}
 			if found {
 				for _, item := range pipeline.PipelineTriggers {
-					for _, itemName := range o.Items {
+					for _, itemName := range o.Param.ItemNames {
 						if item.StepAction == itemName {
 							consoleKind.Items = append(consoleKind.Items, item)
 							break
@@ -438,7 +438,7 @@ func (o *OptionsConsoleDelete) Run(args []string) error {
 			}
 			if found {
 				for _, item := range pae.Hosts {
-					for _, itemName := range o.Items {
+					for _, itemName := range o.Param.ItemNames {
 						if item.HostName == itemName {
 							consoleKind.Items = append(consoleKind.Items, item)
 							break
@@ -464,7 +464,7 @@ func (o *OptionsConsoleDelete) Run(args []string) error {
 			}
 			if found {
 				for _, item := range pae.Databases {
-					for _, itemName := range o.Items {
+					for _, itemName := range o.Param.ItemNames {
 						if item.DbName == itemName {
 							consoleKind.Items = append(consoleKind.Items, item)
 							break
@@ -490,7 +490,7 @@ func (o *OptionsConsoleDelete) Run(args []string) error {
 			}
 			if found {
 				for _, item := range pae.Components {
-					for _, itemName := range o.Items {
+					for _, itemName := range o.Param.ItemNames {
 						if item.ComponentName == itemName {
 							consoleKind.Items = append(consoleKind.Items, item)
 							break

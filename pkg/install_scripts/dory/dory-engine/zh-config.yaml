@@ -536,10 +536,10 @@ dockerBuildSettings:
   dockerHomeDir: "/home/dory"
   # 构建docker executor环境设置
   dockerBuildEnvs:
-    # 构建环境名称
-    - buildEnvName: maven-jdk17
+      # 构建环境名称
+    - buildEnvName: maven-jdk21
       # 构建环境容器镜像，当cpu架构为amd64的时候的镜像名字
-      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.5-openjdk-17-dory"
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.9.9-amazoncorretto-21-debian-dory"
       # 构建环境支持哪些cpu架构
       # 假如cpu架构不为amd64，构建环境的容器镜像名为 <image>-<cpu架构名字>
       # 例如cpu架构为arm64v8，那么实际构建环境的image名字为 public/maven:3.8.5-openjdk-17-dory-arm64v8
@@ -554,6 +554,14 @@ dockerBuildSettings:
       # 执行构建命令前执行什么命令
       commandsBeforeBuild: ["pwd", "ls -al"]
       # 执行检查命令后执行什么命令
+      commandsAfterCheck: []
+    - buildEnvName: maven-jdk17
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.5-openjdk-17-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
     - buildEnvName: maven-jdk11
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.6-openjdk-11-dory"
@@ -627,6 +635,14 @@ dockerBuildSettings:
       mountExtraCacheDirs: []
       commandsBeforeBuild: ["pwd", "ls -al"]
       commandsAfterCheck: []
+    - buildEnvName: gradle-jdk21
+      image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:8.12.0-jdk21-corretto-dory"
+      buildArches: ["amd64", "arm64v8"]
+      mountHomeDir: true
+      enableProxy: false
+      mountExtraCacheDirs: []
+      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsAfterCheck: []
     - buildEnvName: gradle-jdk17
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk17-dory"
       buildArches: ["amd64", "arm64v8"]
@@ -679,7 +695,7 @@ dockerBuildSettings:
 # 调试容器docker镜像设置
 componentDebugEnvs:
   # 调试容器镜像地址
-  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ end }}doryengine/debug-ubuntu:v1.0.0"
+  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ end }}doryengine/debug-ubuntu:v1.0.2"
 
 # 流水线各个步骤使用的docker镜像设置
 stepDockerEnvs:

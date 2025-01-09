@@ -12,7 +12,6 @@ import (
 
 type OptionsConsoleGet struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
-	Items          []string `yaml:"items" json:"items" bson:"items" validate:""`
 	EnvNames       []string `yaml:"envNames" json:"envNames" bson:"envNames" validate:""`
 	BranchNames    []string `yaml:"branchNames" json:"branchNames" bson:"branchNames" validate:""`
 	Full           bool     `yaml:"full" json:"full" bson:"full" validate:""`
@@ -20,6 +19,7 @@ type OptionsConsoleGet struct {
 	Param          struct {
 		Kinds       []string `yaml:"kinds" json:"kinds" bson:"kinds" validate:""`
 		ProjectName string   `yaml:"projectName" json:"projectName" bson:"projectName" validate:""`
+		ItemNames   []string `yaml:"itemNames" json:"itemNames" bson:"itemNames" validate:""`
 		IsAllKind   bool     `yaml:"isAllKind" json:"isAllKind" bson:"isAllKind" validate:""`
 	}
 }
@@ -34,7 +34,7 @@ func NewCmdConsoleGet() *cobra.Command {
 	o := NewOptionsConsoleGet()
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`get [projectName] [kind],[kind] [--envs=envName1,envName2] [--branches=branch1,branch2] [--items=itemName1,itemName2] [--output=json|yaml] ...`)
+	msgUse := fmt.Sprintf(`get [projectName] [kind],[kind]... [--envs=envName1,envName2] [--branches=branch1,branch2] [itemName1] [itemName2]... [--output=json|yaml]`)
 
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_console_get_short")
@@ -52,7 +52,6 @@ func NewCmdConsoleGet() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringSliceVar(&o.Items, "items", []string{}, OptCommon.TransLang("param_console_get_items"))
 	cmd.Flags().StringSliceVar(&o.EnvNames, "envs", []string{}, OptCommon.TransLang("param_console_get_envs"))
 	cmd.Flags().StringSliceVar(&o.BranchNames, "branches", []string{}, OptCommon.TransLang("param_console_get_branches"))
 	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_console_get_output"))
@@ -86,6 +85,117 @@ func (o *OptionsConsoleGet) Complete(cmd *cobra.Command) error {
 		if len(args) == 1 {
 			return consoleCmdKinds, cobra.ShellCompDirectiveNoFileComp
 		}
+		if len(args) >= 2 {
+			items := []string{}
+			projectName := args[0]
+			kindStr := args[1]
+			var isAllKind bool
+			kinds := strings.Split(kindStr, ",")
+			for _, kind := range kinds {
+				if kind == pkg.ConsoleKindAll {
+					isAllKind = true
+				}
+			}
+			envs, _ := cmd.Flags().GetStringSlice("envs")
+			branches, _ := cmd.Flags().GetStringSlice("branches")
+			projectConsole, err := o.GetConsoleProject(projectName)
+			if err != nil {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+
+			m := map[string]string{}
+			for _, kind := range kinds {
+				if kind == pkg.ConsoleKindMember || isAllKind {
+					for _, item := range projectConsole.ProjectMembers {
+						m[item.Username] = ""
+					}
+				}
+				if kind == pkg.ConsoleKindPipeline || isAllKind {
+					for _, item := range projectConsole.Pipelines {
+						m[item.BranchName] = ""
+					}
+				}
+				if kind == pkg.ConsoleKindPipelineTrigger || isAllKind {
+					if len(branches) == 0 {
+						for _, pipeline := range projectConsole.Pipelines {
+							for _, item := range pipeline.PipelineTriggers {
+								m[item.StepAction] = ""
+							}
+						}
+					} else {
+						pipelines := []pkg.ProjectPipeline{}
+						for _, pipeline := range projectConsole.Pipelines {
+							for _, branch := range branches {
+								if branch == pipeline.BranchName {
+									pipelines = append(pipelines, pipeline)
+									break
+								}
+							}
+						}
+						for _, pipeline := range pipelines {
+							for _, item := range pipeline.PipelineTriggers {
+								m[item.StepAction] = ""
+							}
+						}
+					}
+				}
+				if kind == pkg.ConsoleKindHost || kind == pkg.ConsoleKindDatabase || kind == pkg.ConsoleKindComponent || isAllKind {
+					if len(envs) == 0 {
+						for _, pae := range projectConsole.ProjectAvailableEnvs {
+							if kind == pkg.ConsoleKindHost || isAllKind {
+								for _, item := range pae.Hosts {
+									m[item.HostName] = ""
+								}
+							}
+							if kind == pkg.ConsoleKindDatabase || isAllKind {
+								for _, item := range pae.Databases {
+									m[item.DbName] = ""
+								}
+							}
+							if kind == pkg.ConsoleKindComponent || isAllKind {
+								for _, item := range pae.Components {
+									m[item.ComponentName] = ""
+								}
+							}
+						}
+					} else {
+						paes := []pkg.ProjectAvailableEnvConsole{}
+						for _, pae := range projectConsole.ProjectAvailableEnvs {
+							for _, env := range envs {
+								if env == pae.EnvName {
+									paes = append(paes, pae)
+									break
+								}
+							}
+						}
+						for _, pae := range paes {
+							if kind == pkg.ConsoleKindHost || isAllKind {
+								for _, item := range pae.Hosts {
+									m[item.HostName] = ""
+								}
+							}
+							if kind == pkg.ConsoleKindDatabase || isAllKind {
+								for _, item := range pae.Databases {
+									m[item.DbName] = ""
+								}
+							}
+							if kind == pkg.ConsoleKindComponent || isAllKind {
+								for _, item := range pae.Components {
+									m[item.ComponentName] = ""
+								}
+							}
+						}
+					}
+				}
+				if isAllKind {
+					break
+				}
+			}
+			for k, _ := range m {
+				items = append(items, k)
+			}
+			return items, cobra.ShellCompDirectiveNoFileComp
+		}
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
 
@@ -116,121 +226,6 @@ func (o *OptionsConsoleGet) Complete(cmd *cobra.Command) error {
 			branchNames = append(branchNames, pp.BranchName)
 		}
 		return branchNames, cobra.ShellCompDirectiveNoFileComp
-	})
-	if err != nil {
-		return err
-	}
-
-	err = cmd.RegisterFlagCompletionFunc("items", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		items := []string{}
-		projectName := args[0]
-		kindStr := args[1]
-		var isAllKind bool
-		kinds := strings.Split(kindStr, ",")
-		for _, kind := range kinds {
-			if kind == pkg.ConsoleKindAll {
-				isAllKind = true
-			}
-		}
-		envs, _ := cmd.Flags().GetStringSlice("envs")
-		branches, _ := cmd.Flags().GetStringSlice("branches")
-		projectConsole, err := o.GetConsoleProject(projectName)
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveNoFileComp
-		}
-
-		m := map[string]string{}
-		for _, kind := range kinds {
-			if kind == pkg.ConsoleKindMember || isAllKind {
-				for _, item := range projectConsole.ProjectMembers {
-					m[item.Username] = ""
-				}
-			}
-			if kind == pkg.ConsoleKindPipeline || isAllKind {
-				for _, item := range projectConsole.Pipelines {
-					m[item.BranchName] = ""
-				}
-			}
-			if kind == pkg.ConsoleKindPipelineTrigger || isAllKind {
-				if len(branches) == 0 {
-					for _, pipeline := range projectConsole.Pipelines {
-						for _, item := range pipeline.PipelineTriggers {
-							m[item.StepAction] = ""
-						}
-					}
-				} else {
-					pipelines := []pkg.ProjectPipeline{}
-					for _, pipeline := range projectConsole.Pipelines {
-						for _, branch := range branches {
-							if branch == pipeline.BranchName {
-								pipelines = append(pipelines, pipeline)
-								break
-							}
-						}
-					}
-					for _, pipeline := range pipelines {
-						for _, item := range pipeline.PipelineTriggers {
-							m[item.StepAction] = ""
-						}
-					}
-				}
-			}
-			if kind == pkg.ConsoleKindHost || kind == pkg.ConsoleKindDatabase || kind == pkg.ConsoleKindComponent || isAllKind {
-				if len(envs) == 0 {
-					for _, pae := range projectConsole.ProjectAvailableEnvs {
-						if kind == pkg.ConsoleKindHost || isAllKind {
-							for _, item := range pae.Hosts {
-								m[item.HostName] = ""
-							}
-						}
-						if kind == pkg.ConsoleKindDatabase || isAllKind {
-							for _, item := range pae.Databases {
-								m[item.DbName] = ""
-							}
-						}
-						if kind == pkg.ConsoleKindComponent || isAllKind {
-							for _, item := range pae.Components {
-								m[item.ComponentName] = ""
-							}
-						}
-					}
-				} else {
-					paes := []pkg.ProjectAvailableEnvConsole{}
-					for _, pae := range projectConsole.ProjectAvailableEnvs {
-						for _, env := range envs {
-							if env == pae.EnvName {
-								paes = append(paes, pae)
-								break
-							}
-						}
-					}
-					for _, pae := range paes {
-						if kind == pkg.ConsoleKindHost || isAllKind {
-							for _, item := range pae.Hosts {
-								m[item.HostName] = ""
-							}
-						}
-						if kind == pkg.ConsoleKindDatabase || isAllKind {
-							for _, item := range pae.Databases {
-								m[item.DbName] = ""
-							}
-						}
-						if kind == pkg.ConsoleKindComponent || isAllKind {
-							for _, item := range pae.Components {
-								m[item.ComponentName] = ""
-							}
-						}
-					}
-				}
-			}
-			if isAllKind {
-				break
-			}
-		}
-		for k, _ := range m {
-			items = append(items, k)
-		}
-		return items, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -296,10 +291,15 @@ func (o *OptionsConsoleGet) Validate(args []string) error {
 		}
 		kindParams = append(kindParams, pkg.ConsoleCmdKinds[kind])
 	}
-	if foundAll == true {
+	if foundAll {
 		o.Param.IsAllKind = true
 	}
 	o.Param.Kinds = kindParams
+
+	o.Param.ItemNames = []string{}
+	if len(args) > 2 {
+		o.Param.ItemNames = args[2:]
+	}
 
 	err = pkg.ValidateMinusNameID(projectName)
 	if err != nil {
@@ -344,10 +344,10 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 		ck.Kind = pkg.ConsoleCmdKinds[pkg.ConsoleKindMember]
 		for _, item := range projectConsole.ProjectMembers {
 			var isShow bool
-			if len(o.Items) == 0 {
+			if len(o.Param.ItemNames) == 0 {
 				isShow = true
 			} else {
-				for _, itemName := range o.Items {
+				for _, itemName := range o.Param.ItemNames {
 					if itemName == item.Username {
 						isShow = true
 						break
@@ -368,10 +368,10 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 			item.PipelineTriggers = []pkg.PipelineTrigger{}
 			item.PipelineCrons = []pkg.PipelineCron{}
 			var isShow bool
-			if len(o.Items) == 0 {
+			if len(o.Param.ItemNames) == 0 {
 				isShow = true
 			} else {
-				for _, itemName := range o.Items {
+				for _, itemName := range o.Param.ItemNames {
 					if itemName == item.BranchName {
 						isShow = true
 						break
@@ -406,10 +406,10 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 				ck.Metadata.BranchName = pipeline.BranchName
 				for _, item := range pipeline.PipelineTriggers {
 					var isShow bool
-					if len(o.Items) == 0 {
+					if len(o.Param.ItemNames) == 0 {
 						isShow = true
 					} else {
-						for _, itemName := range o.Items {
+						for _, itemName := range o.Param.ItemNames {
 							if itemName == item.StepAction {
 								isShow = true
 								break
@@ -447,10 +447,10 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 				ck.Metadata.EnvName = pae.EnvName
 				for _, item := range pae.Hosts {
 					var isShow bool
-					if len(o.Items) == 0 {
+					if len(o.Param.ItemNames) == 0 {
 						isShow = true
 					} else {
-						for _, itemName := range o.Items {
+						for _, itemName := range o.Param.ItemNames {
 							if itemName == item.HostName {
 								isShow = true
 								break
@@ -472,10 +472,10 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 				ck.Metadata.EnvName = pae.EnvName
 				for _, item := range pae.Databases {
 					var isShow bool
-					if len(o.Items) == 0 {
+					if len(o.Param.ItemNames) == 0 {
 						isShow = true
 					} else {
-						for _, itemName := range o.Items {
+						for _, itemName := range o.Param.ItemNames {
 							if itemName == item.DbName {
 								isShow = true
 								break
@@ -497,10 +497,10 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 				ck.Metadata.EnvName = pae.EnvName
 				for _, item := range pae.Components {
 					var isShow bool
-					if len(o.Items) == 0 {
+					if len(o.Param.ItemNames) == 0 {
 						isShow = true
 					} else {
-						for _, itemName := range o.Items {
+						for _, itemName := range o.Param.ItemNames {
 							if itemName == item.ComponentName {
 								isShow = true
 								break
@@ -610,7 +610,6 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 				}
 				dataHeader = []string{"Name", "Env", "URL", "User"}
 			case pkg.ConsoleCmdKinds[pkg.ConsoleKindComponent]:
-				fmt.Println("$$$")
 				items := []pkg.Component{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {

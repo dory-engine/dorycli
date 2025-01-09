@@ -19,6 +19,7 @@
 
 ![](docs/images/what-is-dory.png)
 
+![](docs/images/dory-engine-webui.png)
 
 - 快速开始视频介绍:
 
