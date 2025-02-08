@@ -352,6 +352,8 @@ kubernetes:
   # The base64 encoded string of the ca certificate of the apiserver in the kubernetes environment
   # Run the "{{ .baseName }} install check --mode {{ $.mode }} --runtime {{ $.runtime }} --language {{ $.language }}" command and obtain caCrtBase64 according to the instructions in the "create kubernetes admin token" section
   caCrtBase64: "xxx"
+  # Whether to use insecure mode to connect to the kubernetes environment
+  insecure: false
   # kubernetes dashboard workload browser access url
   dashboardUrl: {{ `https://k8s.example.com:30000/#/workloads?namespace={{ .projectNamespace }}` }}
   # kubernetes dashboard network policy browser access url

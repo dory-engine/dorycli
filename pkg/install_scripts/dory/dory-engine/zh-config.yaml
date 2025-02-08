@@ -253,6 +253,8 @@ docker:
     token: {{ $.kubernetes.token | quote }}
     # kubernetes环境的 apiserver 的ca证书的base64编码字符串
     caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
+    # 是否使用insecure方式连接kubernetes环境
+    insecure: {{ $.kubernetes.insecure }}
     # docker executor 证书存放的名字空间
     namespace: {{ $.dory.namespace | quote }}
   {{- else if eq $.installMode "docker" }}

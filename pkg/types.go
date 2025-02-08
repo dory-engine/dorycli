@@ -217,6 +217,7 @@ type InstallConfig struct {
 		Port                       int    `yaml:"port" json:"port" bson:"port" validate:"required"`
 		Token                      string `yaml:"token" json:"token" bson:"token" validate:"required"`
 		CaCrtBase64                string `yaml:"caCrtBase64" json:"caCrtBase64" bson:"caCrtBase64" validate:"required"`
+		Insecure                   bool   `yaml:"insecure" json:"insecure" bson:"insecure" validate:""`
 		DashboardUrl               string `yaml:"dashboardUrl" json:"dashboardUrl" bson:"dashboardUrl" validate:"required"`
 		DashboardUrlNetworkPolicy  string `yaml:"dashboardUrlNetworkPolicy" json:"dashboardUrlNetworkPolicy" bson:"dashboardUrlNetworkPolicy" validate:"required"`
 		DashboardUrlPod            string `yaml:"dashboardUrlPod" json:"dashboardUrlPod" bson:"dashboardUrlPod" validate:"required"`
@@ -1222,6 +1223,7 @@ type EnvK8s struct {
 	Port                       int    `yaml:"port" json:"port" bson:"port" validate:"required"`
 	Token                      string `yaml:"token" json:"token" bson:"token" validate:"required"`
 	CaCrtBase64                string `yaml:"caCrtBase64" json:"caCrtBase64" bson:"caCrtBase64" validate:"required"`
+	Insecure                   bool   `yaml:"insecure" json:"insecure" bson:"insecure" validate:""`
 	DashboardUrl               string `yaml:"dashboardUrl" json:"dashboardUrl" bson:"dashboardUrl" validate:"required"`
 	DashboardUrlNetworkPolicy  string `yaml:"dashboardUrlNetworkPolicy" json:"dashboardUrlNetworkPolicy" bson:"dashboardUrlNetworkPolicy" validate:"required"`
 	DashboardUrlPod            string `yaml:"dashboardUrlPod" json:"dashboardUrlPod" bson:"dashboardUrlPod" validate:"required"`

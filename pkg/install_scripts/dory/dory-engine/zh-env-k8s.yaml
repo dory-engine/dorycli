@@ -12,6 +12,8 @@ port: {{ $.kubernetes.port }}
 token: {{ $.kubernetes.token | quote }}
 # kubernetes环境的 apiserver 的ca证书的base64编码字符串
 caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
+# 是否使用insecure方式连接kubernetes环境
+insecure: {{ $.kubernetes.insecure }}
 # kubernetes dashboard管理控制台workload的url
 dashboardUrl: {{ $.kubernetes.dashboardUrl | quote }}
 # kubernetes dashboard管理控制台网络策略的url

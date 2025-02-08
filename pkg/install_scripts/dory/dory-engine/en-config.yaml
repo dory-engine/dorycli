@@ -253,6 +253,8 @@ docker:
     token: {{ $.kubernetes.token | quote }}
     # The base64 encoded string of the ca certificate of the apiserver in the kubernetes environment
     caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
+    # Whether to use insecure mode to connect to the kubernetes environment
+    insecure: {{ $.kubernetes.insecure }}
     # docker executors self signed certificates secret in which kubernetes namespace
     namespace: {{ $.dory.namespace | quote }}
   {{- else if eq $.installMode "docker" }}

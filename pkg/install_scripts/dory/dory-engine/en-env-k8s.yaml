@@ -12,6 +12,8 @@ port: {{ $.kubernetes.port }}
 token: {{ $.kubernetes.token | quote }}
 # The base64 encoded string of the ca certificate of the apiserver in the kubernetes environment
 caCrtBase64: {{ $.kubernetes.caCrtBase64 | quote }}
+# Whether to use insecure mode to connect to the kubernetes environment
+insecure: {{ $.kubernetes.insecure }}
 # kubernetes dashboard workload browser access url
 dashboardUrl: {{ $.kubernetes.dashboardUrl | quote }}
 # kubernetes dashboard network policy browser access url
