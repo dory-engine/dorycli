@@ -1,6 +1,8 @@
 module github.com/dory-engine/dorycli
 
-go 1.23
+go 1.24.0
+
+toolchain go1.24.3
 
 require (
 	github.com/Masterminds/sprig v2.22.0+incompatible

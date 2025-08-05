@@ -50,7 +50,7 @@ jobs:
       - name: Set go build environment
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: 1.24
       - name: Building dorycli
         working-directory: .
         run: go mod tidy && go build
