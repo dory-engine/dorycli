@@ -143,7 +143,7 @@ func (o *OptionsRunGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -252,8 +252,8 @@ func (o *OptionsRunGet) Validate(args []string) error {
 	}
 
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" {
-			err = fmt.Errorf("--output must be yaml or json")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
+			err = fmt.Errorf("--output must be yaml or json or table")
 			return err
 		}
 	}
@@ -262,6 +262,15 @@ func (o *OptionsRunGet) Validate(args []string) error {
 
 func (o *OptionsRunGet) Run(args []string) error {
 	var err error
+
+	var table *tablewriter.Table
+	var tableRender, tableCellConfig tablewriter.Option
+	if o.Output == "table" {
+		tableRender = pkg.TableRenderBorder
+	} else {
+		tableRender = pkg.TableRenderBorderNone
+	}
+	tableCellConfig = pkg.TableCellConfig
 
 	bs, _ := pkg.YamlIndent(o)
 	log.Debug(fmt.Sprintf("command options:\n%s", string(bs)))
@@ -309,20 +318,10 @@ func (o *OptionsRunGet) Run(args []string) error {
 				data = append(data, []string{run.RunName, run.PipelineArch, run.StartUser, run.Status.StartTime, run.Status.Result, run.Status.Duration})
 			}
 
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Name", "Arch", "StartUser", "StartTime", "Status", "Duration"})
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(data)
+			dataHeader := []string{"Name", "Arch", "StartUser", "StartTime", "Status", "Duration"}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(data)
 			table.Render()
 		}
 	}

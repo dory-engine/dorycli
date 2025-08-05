@@ -92,8 +92,8 @@ func (o *OptionsConsoleApply) CheckConsoleKind(consoleKind pkg.ConsoleKind) erro
 	case pkg.ConsoleCmdKinds[pkg.ConsoleKindMember]:
 		for _, item := range consoleKind.Items {
 			var d pkg.ProjectMember
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but item parse error: %s\n%s", consoleKind.Kind, err.Error(), string(bs))
 				return err
@@ -119,8 +119,8 @@ func (o *OptionsConsoleApply) CheckConsoleKind(consoleKind pkg.ConsoleKind) erro
 	case pkg.ConsoleCmdKinds[pkg.ConsoleKindPipeline]:
 		for _, item := range consoleKind.Items {
 			var d pkg.ProjectPipeline
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but item parse error: %s\n%s", consoleKind.Kind, err.Error(), string(bs))
 				return err
@@ -142,8 +142,8 @@ func (o *OptionsConsoleApply) CheckConsoleKind(consoleKind pkg.ConsoleKind) erro
 		}
 		for _, item := range consoleKind.Items {
 			var d pkg.PipelineTrigger
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but item parse error: %s\n%s", consoleKind.Kind, err.Error(), string(bs))
 				return err
@@ -161,8 +161,8 @@ func (o *OptionsConsoleApply) CheckConsoleKind(consoleKind pkg.ConsoleKind) erro
 		}
 		for _, item := range consoleKind.Items {
 			var d pkg.Host
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but item parse error: %s\n%s", consoleKind.Kind, err.Error(), string(bs))
 				return err
@@ -180,8 +180,8 @@ func (o *OptionsConsoleApply) CheckConsoleKind(consoleKind pkg.ConsoleKind) erro
 		}
 		for _, item := range consoleKind.Items {
 			var d pkg.Database
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but item parse error: %s\n%s", consoleKind.Kind, err.Error(), string(bs))
 				return err
@@ -199,8 +199,8 @@ func (o *OptionsConsoleApply) CheckConsoleKind(consoleKind pkg.ConsoleKind) erro
 		}
 		for _, item := range consoleKind.Items {
 			var d pkg.Component
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but item parse error: %s\n%s", consoleKind.Kind, err.Error(), string(bs))
 				return err
@@ -218,8 +218,8 @@ func (o *OptionsConsoleApply) CheckConsoleKind(consoleKind pkg.ConsoleKind) erro
 		}
 		for _, item := range consoleKind.Items {
 			var d pkg.ComponentDebug
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but item parse error: %s\n%s", consoleKind.Kind, err.Error(), string(bs))
 				return err
@@ -286,15 +286,15 @@ func GetConsoleKindsFromYaml(fileName string, bs []byte) ([]pkg.ConsoleKind, err
 		}
 	}
 	for _, m := range ms {
-		b, _ := yaml.Marshal(m)
+		b, _ := json.Marshal(m)
 		var list pkg.ConsoleKindList
-		err = yaml.Unmarshal(b, &list)
+		err = json.Unmarshal(b, &list)
 		if err == nil {
 			if list.Kind == "list" {
 				consoleKinds = append(consoleKinds, list.Consoles...)
 			} else {
 				var console pkg.ConsoleKind
-				err = yaml.Unmarshal(b, &console)
+				err = json.Unmarshal(b, &console)
 				if err != nil {
 					err = fmt.Errorf("parse file %s error: %s", fileName, err.Error())
 					return consoleKinds, err
@@ -305,7 +305,7 @@ func GetConsoleKindsFromYaml(fileName string, bs []byte) ([]pkg.ConsoleKind, err
 			}
 		} else {
 			var console pkg.ConsoleKind
-			err = yaml.Unmarshal(b, &console)
+			err = json.Unmarshal(b, &console)
 			if err != nil {
 				err = fmt.Errorf("parse file %s error: %s", fileName, err.Error())
 				return consoleKinds, err

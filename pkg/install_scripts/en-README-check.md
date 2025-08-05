@@ -11,19 +11,19 @@
 
 ### Install DORY core components (default installation)
 
-- cpus: 1 core
-- memory: 1G
-- storage: 2G
+- cpus: 2 cores
+- memory: 2G
+- storage: 5G
 
 ### Install all optional components (full installation)
 
 - cpus: 4 cores
 - memory: 16G
-- storage: 60G
+- storage: 50G
 
 ## create kubernetes admin token
 
-- [note] Please ensure that the local kubectl can manage the target kubernetes cluster
+- [note] Please ensure that the local kubectl can manage the target kubernetes cluster, support all versions of kubernetes cluster
 
 - kubernetes admin token is for dory to deploy project applications in kubernetes cluster, you must set it in dory's config file
 
@@ -73,24 +73,12 @@ yum install -y qemu
 
 - execute qemu-user-static, so that both nodes can run x86 architecture and arm64 architecture container images
 ```shell script
-{{- if or (eq $.mode "docker") (eq $.runtime "docker") }}
-docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-{{- else if eq $.runtime "containerd" }}
-nerdctl -n k8s.io run --rm --privileged multiarch/qemu-user-static --reset -p yes
-{{- else if eq $.runtime "crio" }}
-podman run --rm --privileged multiarch/qemu-user-static --reset -p yes
-{{- end }}
+{{ $.cmdRun }} --rm --privileged multiarch/qemu-user-static --reset -p yes
 ```
 
 - verify that the node supports running x86 architecture and arm64 architecture container images
 ```shell script
-{{- if or (eq $.mode "docker") (eq $.runtime "docker") }}
-docker run --rm -t arm64v8/alpine:latest uname -m
-{{- else if eq $.runtime "containerd" }}
-nerdctl -n k8s.io run --rm -t arm64v8/alpine:latest uname -m
-{{- else if eq $.runtime "crio" }}
-podman run --rm -t arm64v8/alpine:latest uname -m
-{{- end }}
+{{ $.cmdRun }} --rm -t arm64v8/alpine:latest uname -m
 ```
 
 {{- if eq $.runtime "containerd" }}

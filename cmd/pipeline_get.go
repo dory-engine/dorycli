@@ -87,7 +87,7 @@ func (o *OptionsPipelineGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -129,8 +129,8 @@ func (o *OptionsPipelineGet) Validate(args []string) error {
 		}
 	}
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" {
-			err = fmt.Errorf("--output must be yaml or json")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
+			err = fmt.Errorf("--output must be yaml or json or table")
 			return err
 		}
 	}
@@ -139,6 +139,15 @@ func (o *OptionsPipelineGet) Validate(args []string) error {
 
 func (o *OptionsPipelineGet) Run(args []string) error {
 	var err error
+
+	var table *tablewriter.Table
+	var tableRender, tableCellConfig tablewriter.Option
+	if o.Output == "table" {
+		tableRender = pkg.TableRenderBorder
+	} else {
+		tableRender = pkg.TableRenderBorderNone
+	}
+	tableCellConfig = pkg.TableCellConfig
 
 	bs, _ := pkg.YamlIndent(o)
 	log.Debug(fmt.Sprintf("command options:\n%s", string(bs)))
@@ -212,20 +221,10 @@ func (o *OptionsPipelineGet) Run(args []string) error {
 				data = append(data, []string{pipelineName, branchName, envs, envProds, successCount, failCount, abortCount, statusResult})
 			}
 
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Name", "Branch", "Envs", "EnvProds", "Success", "Fail", "Abort", "LastRun"})
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(data)
+			dataHeader := []string{"Name", "Branch", "Envs", "EnvProds", "Success", "Fail", "Abort", "LastRun"}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(data)
 			table.Render()
 		}
 	}

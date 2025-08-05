@@ -123,6 +123,54 @@ pvConfigCephfs:
 #   - "192.168.0.3:6789"
 {{- end }}
 
+{{- if or $.kubernetes.pvConfigCsiNfs.nfsPath $.kubernetes.pvConfigCsiCephfs.cephPath }}
+# if persistent volumes uses csi, please set it, otherwise please delete the following configuration
+pvConfigCsi:
+  # csi storage name, currently built-in support for csi-nfs csi-cephfs two csi storage
+  {{- if $.kubernetes.pvConfigCsiNfs.nfsPath }}
+  envCsiName: csi-nfs
+  {{- else if $.kubernetes.pvConfigCsiCephfs.cephPath }}
+  envCsiName: csi-cephfs
+  {{- end }}
+  # csi storage parameter configuration
+  {{- if $.kubernetes.pvConfigCsiNfs.nfsPath }}
+  envCsiParams: |
+    server: {{ $.kubernetes.pvConfigCsiNfs.nfsServer }}
+    share: {{ $.kubernetes.pvConfigCsiNfs.nfsPath }}
+    {{- if $.kubernetes.pvConfigCsiNfs.nfsMountOptions }}
+    mountOptions:
+    {{- range $_, $v := $.kubernetes.pvConfigCsiNfs.nfsMountOptions }}
+    - {{ $v }}
+    {{- end }}
+    {{- end }}
+  {{- else if $.kubernetes.pvConfigCsiCephfs.cephPath }}
+  envCsiParams: |
+    adminID: {{ $.kubernetes.pvConfigCsiCephfs.cephUser }}
+    adminKey: {{ $.kubernetes.pvConfigCsiCephfs.cephSecret }}
+    fsName: {{ $.kubernetes.pvConfigCsiCephfs.cephFsName }}
+    clusterID: {{ $.kubernetes.pvConfigCsiCephfs.cephClusterId }}
+    rootPath: {{ $.kubernetes.pvConfigCsiCephfs.cephPath }}
+  {{- end }}
+{{- else }}
+# # if persistent storage uses csi, please set it, otherwise please delete the following configuration
+# pvConfigCsi:
+#   # csi template name, currently built-in support csi-nfs csi-cephfs two csi storage
+#   envCsiName: csi-nfs
+#   # csi volumes parameter configuration
+#   envCsiParams: |
+#     # in the case of csi-nfs, the parameter format is as follows:
+#     server: 192.168.0.1
+#     share: /data/nfs-share
+#     mountOptions:
+#     - nfsvers=4.1
+#     # in the case of csi-cephfs, the parameter format is as follows:
+#     adminID: admin
+#     adminKey: xxx
+#     fsName: your_filesystem_name
+#     clusterID: xxxx
+#     rootPath: /your_cephfs_path
+{{- end }}
+
 # project applications deployment kubernetes node selector, format: (labelName: labelValue)
 projectNodeSelector: {}
 

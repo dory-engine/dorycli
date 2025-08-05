@@ -8,7 +8,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/tidwall/gjson"
 	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -26,24 +25,6 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 	err = validate.Struct(ic)
 	if err != nil {
 		err = fmt.Errorf("validate install config error: %s", err.Error())
-		return err
-	}
-
-	fieldName = "installMode"
-	fieldValue = ic.InstallMode
-	if fieldValue != "docker" && fieldValue != "kubernetes" {
-		err = fmt.Errorf("%s: %s %s format error: must be docker or kubernetes", errInfo, fieldName, fieldValue)
-		return err
-	}
-
-	fieldName = "rootDir"
-	fieldValue = ic.RootDir
-	if !strings.HasPrefix(fieldValue, "/") {
-		err = fmt.Errorf("%s: %s %s format error: must start with /", errInfo, fieldName, fieldValue)
-		return err
-	}
-	if strings.HasSuffix(fieldValue, "/") {
-		err = fmt.Errorf("%s: %s %s format error: can not end with /", errInfo, fieldName, fieldValue)
 		return err
 	}
 
@@ -144,30 +125,6 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 			return err
 		}
 
-		if ic.InstallMode == "docker" {
-			fieldName = "imageRepo.internal.certsDir"
-			fieldValue = ic.Dory.ImageRepo.Internal.CertsDir
-			if fieldValue == "" {
-				err = fmt.Errorf("%s: %s %s format error: installMode is docker, imageRepo.internal.certsDir can not be empty", errInfo, fieldName, fieldValue)
-				return err
-			}
-			if strings.HasPrefix(fieldValue, "/") || strings.HasSuffix(fieldValue, "/") {
-				err = fmt.Errorf("%s: %s %s format error: can not start or end with /", errInfo, fieldName, fieldValue)
-				return err
-			}
-
-			fieldName = "imageRepo.internal.dataDir"
-			fieldValue = ic.Dory.ImageRepo.Internal.DataDir
-			if fieldValue == "" {
-				err = fmt.Errorf("%s: %s %s format error: installMode is docker, imageRepo.internal.dataDir can not be empty", errInfo, fieldName, fieldValue)
-				return err
-			}
-			if strings.HasPrefix(fieldValue, "/") || strings.HasSuffix(fieldValue, "/") {
-				err = fmt.Errorf("%s: %s %s format error: can not start or end with /", errInfo, fieldName, fieldValue)
-				return err
-			}
-		}
-
 		arr := strings.Split(ic.Dory.ImageRepo.Internal.Version, ".")
 		if len(arr) != 3 {
 			fieldName = "imageRepo.internal.version"
@@ -210,8 +167,14 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 	if ic.Kubernetes.PvConfigNfs.NfsServer != "" {
 		count = count + 1
 	}
+	if len(ic.Kubernetes.PvConfigCsiCephfs.CephPath) > 0 {
+		count = count + 1
+	}
+	if ic.Kubernetes.PvConfigCsiNfs.NfsServer != "" {
+		count = count + 1
+	}
 	if count != 1 {
-		err = fmt.Errorf("%s: kubernetes.pvConfigLocal/pvConfigNfs/pvConfigCephfs must set one only", errInfo)
+		err = fmt.Errorf("%s: kubernetes.pvConfigLocal/pvConfigNfs/pvConfigCephfs/pvConfigCsiNfs/pvConfigCsiCephfs must set one only", errInfo)
 		return err
 	}
 
@@ -229,6 +192,8 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 			err = fmt.Errorf("%s: %s %s format error: must start with /", errInfo, fieldName, fieldValue)
 			return err
 		}
+		ic.Kubernetes.PvType = "local-path"
+		ic.Kubernetes.PvPath = ic.Kubernetes.PvConfigLocal.LocalPath
 	}
 	if len(ic.Kubernetes.PvConfigCephfs.CephMonitors) > 0 {
 		for _, monitor := range ic.Kubernetes.PvConfigCephfs.CephMonitors {
@@ -263,6 +228,9 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 			err = fmt.Errorf("%s: %s %s format error: must start with /", errInfo, fieldName, fieldValue)
 			return err
 		}
+
+		ic.Kubernetes.PvType = "cephfs"
+		ic.Kubernetes.PvPath = ic.Kubernetes.PvConfigCephfs.CephPath
 	}
 
 	if ic.Kubernetes.PvConfigNfs.NfsServer != "" {
@@ -272,6 +240,69 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 			err = fmt.Errorf("%s: %s %s format error: must start with /", errInfo, fieldName, fieldValue)
 			return err
 		}
+		ic.Kubernetes.PvType = "nfs"
+		ic.Kubernetes.PvPath = ic.Kubernetes.PvConfigNfs.NfsPath
+	}
+
+	if ic.Kubernetes.PvConfigCsiNfs.NfsServer != "" {
+		if !strings.HasPrefix(ic.Kubernetes.PvConfigCsiNfs.NfsPath, "/") {
+			fieldName = "kubernetes.pvConfigCsiNfs.nfsPath"
+			fieldValue = ic.Kubernetes.PvConfigCsiNfs.NfsPath
+			err = fmt.Errorf("%s: %s %s format error: must start with /", errInfo, fieldName, fieldValue)
+			return err
+		}
+		for _, opt := range ic.Kubernetes.PvConfigCsiNfs.NfsMountOptions {
+			arr := strings.Split(opt, "=")
+			if len(arr) != 2 {
+				fieldName = "kubernetes.pvConfigCsiNfs.nfsMountOptions"
+				fieldValue = opt
+				err = fmt.Errorf("%s: %s %s format error: should like nfsvers=4.1", errInfo, fieldName, fieldValue)
+				return err
+			}
+			if arr[0] == "" || arr[1] == "" {
+				fieldName = "kubernetes.pvConfigCsiNfs.nfsMountOptions"
+				fieldValue = opt
+				err = fmt.Errorf("%s: %s %s format error: should like nfsvers=4.1", errInfo, fieldName, fieldValue)
+				return err
+			}
+		}
+		ic.Kubernetes.PvType = "csi-nfs"
+		ic.Kubernetes.PvPath = ic.Kubernetes.PvConfigCsiNfs.NfsPath
+	}
+
+	if ic.Kubernetes.PvConfigCsiCephfs.CephPath != "" {
+		if ic.Kubernetes.PvConfigCsiCephfs.CephSecret == "" {
+			fieldName = "kubernetes.pvConfigCsiCephfs.cephSecret"
+			fieldValue = ic.Kubernetes.PvConfigCsiCephfs.CephSecret
+			err = fmt.Errorf("%s: %s %s format error: can not be empty", errInfo, fieldName, fieldValue)
+			return err
+		}
+		if ic.Kubernetes.PvConfigCsiCephfs.CephUser == "" {
+			fieldName = "kubernetes.pvConfigCsiCephfs.cephUser"
+			fieldValue = ic.Kubernetes.PvConfigCsiCephfs.CephUser
+			err = fmt.Errorf("%s: %s %s format error: can not be empty", errInfo, fieldName, fieldValue)
+			return err
+		}
+		if ic.Kubernetes.PvConfigCsiCephfs.CephFsName == "" {
+			fieldName = "kubernetes.pvConfigCsiCephfs.cephFsName"
+			fieldValue = ic.Kubernetes.PvConfigCsiCephfs.CephFsName
+			err = fmt.Errorf("%s: %s %s format error: can not be empty", errInfo, fieldName, fieldValue)
+			return err
+		}
+		if ic.Kubernetes.PvConfigCsiCephfs.CephClusterId == "" {
+			fieldName = "kubernetes.pvConfigCsiCephfs.cephClusterId"
+			fieldValue = ic.Kubernetes.PvConfigCsiCephfs.CephClusterId
+			err = fmt.Errorf("%s: %s %s format error: can not be empty", errInfo, fieldName, fieldValue)
+			return err
+		}
+		if !strings.HasPrefix(ic.Kubernetes.PvConfigCsiCephfs.CephPath, "/") {
+			fieldName = "kubernetes.pvConfigCsiCephfs.cephPath"
+			fieldValue = ic.Kubernetes.PvConfigCsiCephfs.CephPath
+			err = fmt.Errorf("%s: %s %s format error: must start with /", errInfo, fieldName, fieldValue)
+			return err
+		}
+		ic.Kubernetes.PvType = "csi-cephfs"
+		ic.Kubernetes.PvPath = ic.Kubernetes.PvConfigCsiCephfs.CephPath
 	}
 
 	if ic.Dory.Openldap.Password == "" {
@@ -292,8 +323,6 @@ func (ic *InstallConfig) VerifyInstallConfig() error {
 	if ic.Dory.DemoHost.Internal.Password == "" {
 		ic.Dory.DemoHost.Internal.Password = RandomString(16, false, "=")
 	}
-
-	ic.Dory.NexusInitData = NexusInitData
 	return err
 }
 
@@ -301,13 +330,45 @@ func (ic *InstallConfig) UnmarshalMapValues() (map[string]interface{}, error) {
 	var err error
 	errInfo := fmt.Sprintf("unmarshal install config to map error")
 
-	bs, _ := yaml.Marshal(ic)
+	bs, _ := json.Marshal(ic)
 	vals := map[string]interface{}{}
-	err = yaml.Unmarshal(bs, &vals)
+	err = json.Unmarshal(bs, &vals)
 	if err != nil {
 		err = fmt.Errorf("%s: %s", errInfo, err.Error())
 		return vals, err
 	}
+	gitRepoInternal := true
+	gitRepoViewUrl := fmt.Sprintf("%s:%d", ic.ViewURL, ic.Dory.GitRepo.Internal.Port)
+	gitRepoUrl := ""
+	if ic.Dory.GitRepo.Type == "gitea" {
+		gitRepoUrl = fmt.Sprintf("http://%s:3000", ic.Dory.GitRepo.Type)
+	} else if ic.Dory.GitRepo.Type == "gitlab" {
+		gitRepoUrl = fmt.Sprintf("http://%s", ic.Dory.GitRepo.Type)
+	}
+	gitRepoUsername := "GIT_REPO_USERNAME"
+	gitRepoName := "GIT_REPO_NAME"
+	gitRepoMail := "GIT_REPO_MAIL@example.com"
+	gitRepoPassword := RandomString(16, false, "=")
+	gitRepoToken := "GIT_REPO_TOKEN"
+	if ic.Dory.GitRepo.Internal.Image == "" {
+		gitRepoInternal = false
+		gitRepoViewUrl = ic.Dory.GitRepo.External.ViewUrl
+		gitRepoUrl = ic.Dory.GitRepo.External.Url
+		gitRepoUsername = ic.Dory.GitRepo.External.Username
+		gitRepoName = ic.Dory.GitRepo.External.Name
+		gitRepoMail = ic.Dory.GitRepo.External.Mail
+		gitRepoPassword = ic.Dory.GitRepo.External.Password
+		gitRepoToken = ic.Dory.GitRepo.External.Token
+	}
+	vals["gitRepoInternal"] = gitRepoInternal
+	vals["gitRepoViewUrl"] = gitRepoViewUrl
+	vals["gitRepoUrl"] = gitRepoUrl
+	vals["gitRepoUsername"] = gitRepoUsername
+	vals["gitRepoName"] = gitRepoName
+	vals["gitRepoMail"] = gitRepoMail
+	vals["gitRepoPassword"] = gitRepoPassword
+	vals["gitRepoToken"] = gitRepoToken
+
 	imageRepoInternal := true
 	imageRepoDomainName := ic.Dory.ImageRepo.Internal.Hostname
 	imageRepoUsername := "admin"
@@ -337,7 +398,7 @@ func (ic *InstallConfig) UnmarshalMapValues() (map[string]interface{}, error) {
 	artifactRepoPortGcr := ic.Dory.ArtifactRepo.Internal.PortGcr
 	artifactRepoPortQuay := ic.Dory.ArtifactRepo.Internal.PortQuay
 	artifactRepoUsername := "admin"
-	artifactRepoPassword := "Nexus_Pwd_321"
+	artifactRepoPassword := RandomString(16, false, "=")
 	artifactRepoPublicRole := "public-role"
 	artifactRepoPublicUser := "public-user"
 	artifactRepoPublicPassword := "public-user"
@@ -377,23 +438,21 @@ func (ic *InstallConfig) UnmarshalMapValues() (map[string]interface{}, error) {
 	scanCodeRepoInternal := true
 	scanCodeRepoViewUrl := fmt.Sprintf("%s:%d", ic.ViewURL, ic.Dory.ScanCodeRepo.Internal.Port)
 	scanCodeRepoUrl := ""
-	scanCodeRepoToken := "PLEASE_INPUT_BY_MANUAL"
+	scanCodeRepoToken := "SCAN_CODE_REPO_TOKEN"
+	scanCodeRepoPassword := RandomString(16, false, "=")
 	if ic.Dory.ScanCodeRepo.Internal.Image == "" {
 		scanCodeRepoInternal = false
 		scanCodeRepoViewUrl = ic.Dory.ScanCodeRepo.External.ViewUrl
 		scanCodeRepoUrl = ic.Dory.ScanCodeRepo.External.Url
 		scanCodeRepoToken = ic.Dory.ScanCodeRepo.External.Token
 	} else {
-		if ic.InstallMode == "docker" {
-			scanCodeRepoUrl = fmt.Sprintf("http://%s:%d", ic.HostIP, ic.Dory.ScanCodeRepo.Internal.Port)
-		} else {
-			scanCodeRepoUrl = fmt.Sprintf("http://%s-web:9000", ic.Dory.ScanCodeRepo.Type)
-		}
+		scanCodeRepoUrl = fmt.Sprintf("http://%s-web:9000", ic.Dory.ScanCodeRepo.Type)
 	}
 	vals["scanCodeRepoInternal"] = scanCodeRepoInternal
 	vals["scanCodeRepoViewUrl"] = scanCodeRepoViewUrl
 	vals["scanCodeRepoUrl"] = scanCodeRepoUrl
 	vals["scanCodeRepoToken"] = scanCodeRepoToken
+	vals["scanCodeRepoPassword"] = scanCodeRepoPassword
 
 	demoDatabaseInternal := true
 	demoDatabaseUrl := fmt.Sprintf("jdbc:mysql://%s:%d/%s", ic.HostIP, ic.Dory.DemoDatabase.Internal.Port, ic.Dory.DemoDatabase.Internal.Database)
@@ -457,8 +516,9 @@ func (ic *InstallConfig) HarborQuery(url, method string, param map[string]interf
 	var resp *http.Response
 	var bs []byte
 	client := &http.Client{
-		Timeout: time.Second * time.Duration(time.Second*5),
+		Timeout: 5 * time.Second,
 	}
+
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	domainName := ic.Dory.ImageRepo.Internal.Hostname
@@ -536,7 +596,7 @@ func (ic *InstallConfig) KubernetesQuery(url, method string, param map[string]in
 	var resp *http.Response
 	var bs []byte
 	client := &http.Client{
-		Timeout: time.Second * time.Duration(time.Second*5),
+		Timeout: 5 * time.Second,
 	}
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 

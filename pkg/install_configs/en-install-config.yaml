@@ -1,54 +1,31 @@
-# installation mode, options: docker, kubernetes
-# docker mode: install dory service with docker-compose
-# kubernetes mode: install dory service in kubernetes cluster
-installMode: {{ $.mode }}
-# all dory components data will write in the root directory (use absolute path)
-# if install mode is docker: use this host local path
-# if install mode is kubernetes: if kubernetes cluster with multiple nodes, please use shared storage (nfs or cephfs), make sure shared storage is mounted in this host path
-# The installation process will write all configuration files to the mounted shared storage directory, and the DORY component in kubernetes will read these configuration files in the shared storage.
-{{- if eq $.mode "docker" }}
-rootDir: "/data/docker-vols/dory"
-{{- else if eq $.mode "kubernetes" }}
-rootDir: "/mnt/nfs/k8s-vols/dory"
-{{- end }}
 # this host ip address, dory use this ip address to connect container image repository and build dependency repository
-# if install mode is docker: please use this host ip address, don't use loopback ip address like 127.0.0.1
-# if install mode is kubernetes: please use the kubernetes master node ip address (in single master way) or load balancer ip address / virtual ip address (in multiple masters way)
-{{- if eq $.mode "docker" }}
-hostIP: "10.2.0.10"
-{{- else if eq $.mode "kubernetes" }}
-hostIP: "10.1.0.2"
-{{- end }}
+# please use the kubernetes master node ip address (in single master way) or load balancer ip address / virtual ip address (in multiple masters way)
+hostIP: "10.2.0.1"
 # all dory services view url, please don't include port
-# use kubernetes node port or docker expose port to access dory services
+# use kubernetes node port to access dory services
 viewURL: http://example.com
 # dory services deployment settings
 dory:
   # which namespace will dory service deploy in
-  # if install mode is docker: it means which subdirectory dory's data store in
-  # if install mode is kubernetes: it means which namespace dory service will deploy in
   namespace: "dory"
-  {{- if eq $.mode "kubernetes" }}
   # set which nodes will dory services deploy in, corresponding to kubernetes' nodeSelector settings
   # example: "type: worker"
   nodeSelector: {}
-  {{- end }}
   # dory-engine license key, emtpy means community edition
   licenseKey: ""
   {{- if $.full }}
   # git repository settings
   gitRepo:
     # git repository type, options: gitea, gitlab
-    # gitea support arm64 cpu architecture
-    # gitlab not support arm64 cpu architecture
     type: gitea
     # deploy git repository automatically (internal or external only accept one deploy way)
     internal:
-      # git repository image name
-      # if git repository type is gitlab, recommend image is gitlab/gitlab-ce:16.9.2-ce.0
-      image: gitea/gitea:1.22.3
+      # gitea image name
+      image: gitea/gitea:1.24.3
       # gitea repository database image name, if type is gitea this setting required
       imageDB: postgres:16.4-alpine3.19
+      # # gitlab image name
+      # image: gitlab/gitlab-ce:17.11.6-ce.0
       # # gitlab repository nginx proxy image name, if type is gitlab this setting required
       # imageNginx: nginx:1.27.0-alpine
       # expose service port (kubernetes node port)
@@ -60,21 +37,17 @@ dory:
     #   # git repository internal access url by dory
     #   url: http://192.168.0.1:30001
     #   # git repository admin user name
-    #   username: "PLEASE_INPUT_BY_MANUAL"
+    #   username: "GIT_REPO_USERNAME"
     #   # git repository admin user display name
-    #   name: "PLEASE_INPUT_BY_MANUAL"
+    #   name: "GIT_REPO_NAME"
     #   # git repository admin user mail
-    #   mail: "PLEASE_INPUT_BY_MANUAL"
+    #   mail: "GIT_REPO_MAIL@example.com"
     #   # git repository admin user password
-    #   password: "PLEASE_INPUT_BY_MANUAL"
+    #   password: "GIT_REPO_PASSWORD"
     #   # git repository admin user token
-    #   token: "PLEASE_INPUT_BY_MANUAL"
+    #   token: "GIT_REPO_TOKEN"
     #   # dory URL callback by git repository webhook
-    {{- if eq $.mode "docker" }}
-    #   gitWebhookUrl: "http://10.2.0.10:30010"
-    {{- else if eq $.mode "kubernetes" }}
-    #   gitWebhookUrl: "http://10.1.0.2:30010"
-    {{- end }}
+    #   gitWebhookUrl: "http://10.2.0.1:30010"
   # image repository settings, not support arm64 cpu architecture
   imageRepo:
     # image repository type, options: harbor
@@ -84,21 +57,11 @@ dory:
       # image repository domain name, only support https://<hostname> to access image repository now
       hostname: harbor.example.com
       # which namespace will image repository deploy in
-      # if install mode is docker: it means which subdirectory image repository's data store in
-      # if install mode is kubernetes: it means which namespace image repository will deploy in
       namespace: harbor
-      # image repository (harbor) version, support v2.6.x - v2.8.x
-      version: v2.8.4
+      # image repository (harbor) version, support v2.13.x
+      version: v2.13.1
       # image repository admin user password, leave it empty to random create one
       password: ""
-      {{- if eq $.mode "docker" }}
-      # which subdirectory image repository self signed certificates store in
-      # if install mode is docker: required
-      certsDir: certs
-      # which subdirectory image repository data store in
-      # if install mode is docker: required
-      dataDir: data
-      {{- end }}
     # # use external image repository, do not deploy image repository automatically (internal or external only accept one deploy way)
     # external:
     #   # image repository ip address
@@ -108,7 +71,7 @@ dory:
     #   # image repository admin username
     #   username: admin
     #   # image repository admin password
-    #   password: "PLEASE_INPUT_BY_MANUAL"
+    #   password: "IMAGE_REPO_PASSWORD"
     #   # image repository admin email
     #   email: "admin@example.com"
   # artifact and dependency repository settings, not support arm64 cpu architecture
@@ -118,7 +81,7 @@ dory:
     # deploy artifact and dependency repository automatically (internal or external only accept one deploy way)
     internal:
       # artifact and dependency repository image name
-      image: sonatype/nexus3:3.45.0
+      image: sonatype/nexus3:3.82.0
       # artifact and dependency repository expose service port (kubernetes node port)
       port: 30003
       # docker.io image proxy expose service port (kubernetes node port)
@@ -128,7 +91,6 @@ dory:
       # quay.io image proxy expose service port (kubernetes node port)
       portQuay: 30006
     # # use external artifact and dependency repository, do not deploy artifact and dependency repository automatically (internal or external only accept one deploy way)
-    # # please use https://doryengine.com/attachments/{{ .nexusInitData }} data as basic nexus data
     # external:
     #   # artifact and dependency repository browser access url
     #   viewUrl: http://192.168.0.1:30003
@@ -171,9 +133,9 @@ dory:
     #     # apt proxy settings
     #     apt:
     #       # x86 proxy path
-    #       amd64: repository/apt-aliyun-focal/
+    #       amd64: repository/apt-aliyun/
     #       # arm64v8 proxy path
-    #       arm64v8: repository/apt-aliyun-focal-arm64/
+    #       arm64v8: repository/apt-aliyun/
   # scan code repository settings
   scanCodeRepo:
     # scan code repository type, options: sonarqube
@@ -193,7 +155,7 @@ dory:
     #   # scan code repository access url by docker executors
     #   url: http://192.168.0.1:30008
     #   # scan code repository admin user token
-    #   token: "PLEASE_INPUT_BY_MANUAL"
+    #   token: "SCAN_CODE_REPO_TOKEN"
   {{- end }}
   # openldap account center settings, dory-engine use openldap to store user accounts
   openldap:
@@ -253,7 +215,7 @@ dory:
     #   # demo project database connection username
     #   dbUser: testuser
     #   # demo project database connection password
-    #   dbPassword: "PLEASE_INPUT_BY_MANUAL"
+    #   dbPassword: "DEMO_DATABASE_PASSWORD"
     {{- end }}
   # demo project ssh host settings
   demoHost:
@@ -283,7 +245,7 @@ dory:
     #   # demo project ssh host ssh user name
     #   hostUser: "root"
     #   # demo project ssh host ssh user password
-    #   hostPassword: "PLEASE_INPUT_BY_MANUAL"
+    #   hostPassword: "DEMO_HOST_PASSWORD"
     #   # demo project ssh host ssh need to sudo or not
     #   hostBecome: false
     #   # demo project ssh host ssh sudo user name (option, when hostBecome=true required)
@@ -297,10 +259,8 @@ dory:
   docker:
     # docker executor image name
     image: docker:27.0.2-dind
-    # service name of docker executor (in docker-compose or kubernetes)
+    # service name of docker executor
     dockerName: docker
-    # how many docker executors will deploy in docker-compose or with kubernetes
-    dockerNumber: 2
 
 # dory account settings
 account:
@@ -323,7 +283,7 @@ account:
     # smtp user account
     username: "user@example.com"
     # smtp password
-    password: "PLEASE_INPUT_BY_MANUAL"
+    password: "MAIL_PASSWORD"
     # smtp send mode, options: default, tls, start_tls
     mode: tls
     # smtp sender display name
@@ -341,16 +301,16 @@ kubernetes:
   # kubernetes cluster container runtime type, options: docker, containerd, crio
   runtime: {{ $.runtime }}
   # kubernetes apiserver address
-  host: "10.1.0.2"
+  host: "10.2.0.1"
   # kubernetes apiserver address for external access
   viewHost: "k8s.example.com"
   # kubernetes apiserver port
   port: 6443
   # kubernetes apiserver admin token
-  # Run the "{{ .baseName }} install check --mode {{ $.mode }} --runtime {{ $.runtime }} --language {{ $.language }}" command and obtain token according to the instructions in the "create kubernetes admin token" section
+  # Run the "{{ .baseName }} install check --runtime {{ $.runtime }} --language {{ $.language }}" command and obtain token according to the instructions in the "create kubernetes admin token" section
   token: "xxx"
   # The base64 encoded string of the ca certificate of the apiserver in the kubernetes environment
-  # Run the "{{ .baseName }} install check --mode {{ $.mode }} --runtime {{ $.runtime }} --language {{ $.language }}" command and obtain caCrtBase64 according to the instructions in the "create kubernetes admin token" section
+  # Run the "{{ .baseName }} install check --runtime {{ $.runtime }} --language {{ $.language }}" command and obtain caCrtBase64 according to the instructions in the "create kubernetes admin token" section
   caCrtBase64: "xxx"
   # Whether to use insecure mode to connect to the kubernetes environment
   insecure: false
@@ -367,28 +327,20 @@ kubernetes:
 
   # # if kubernetes cluster persistent volume use local storage, please set it, otherwise remove it
   # pvConfigLocal:
-  #   # local path (absolute path)
-  {{- if eq $.mode "kubernetes" }}
-  #   # the same as `rootDir` settings
-  {{- end }}
+  #   # kubernetes persistent volume local path (absolute path)
   #   localPath: "/data/k8s-vols/dory"
 
   # if kubernetes cluster persistent volume use nfs shared storage, please set it, otherwise remove it
   pvConfigNfs:
-    # nfs storage path (absolute path)
-      {{- if eq $.mode "kubernetes" }}
-      # this path is the nfs server path, not nfs mount path, relative to `rootDir` settings
-      {{- end }}
-      nfsPath: "/data/nfs-vols/k8s-vols/dory"
-      # nfs server ip address
-      nfsServer: "10.2.0.10"
+    # kubernetes persistent volume nfs storage path (absolute path)
+    nfsPath: "/data/nfs-vols/k8s-vols/dory"
+    # nfs server ip address
+    nfsServer: "10.2.0.1"
 
   # # if kubernetes cluster persistent volume use cephfs shared storage, please set it, otherwise remove it
+  # # note that starting from kubernetes v1.31, the built-in cephfs persistent volume is no longer supported. Please use pvConfigCsiCephfs and install the ceph-csi component in the kubernetes cluster.
   # pvConfigCephfs:
-  #   # cephfs storage path (absolute path)
-  {{- if eq $.mode "kubernetes" }}
-  #   # this path is the cephfs server path, not cephfs mount path, relative to `rootDir` settings
-  {{- end }}
+  #   # kubernetes persistent volume cephfs storage path (absolute path)
   #   cephPath: "/k8s-vols/dory"
   #   # ceph connect account
   #   cephUser: admin
@@ -399,3 +351,28 @@ kubernetes:
   #   - "192.168.0.1:6789"
   #   - "192.168.0.2:6789"
   #   - "192.168.0.3:6789"
+
+  # # if the persistent volume of the kubernetes cluster uses csi-driver-nfs, please set it, otherwise please delete the following configuration
+  # # Note that the kubernetes cluster needs to install the csi-driver-nfs component
+  # pvConfigCsiNfs:
+  #   # kubernetes persistent volume csi nfs storage path (absolute path)
+  #   nfsPath: "/data/nfs-vols/k8s-vols/dory"
+  #   # nfs server address
+  #   nfsServer: "10.2.0.1"
+  #   # nfs options
+  #   nfsMountOptions:
+  #   - nfsvers=4.1
+
+  # # if the persistent storage of the kubernetes cluster uses ceph-csi Please set it if necessary, otherwise please delete the following configuration
+  # # note that starting from kubernetes v1.31, the built-in cephfs persistent volume is no longer supported. Please use pvConfigCsiCephfs. The kubernetes cluster needs to install the ceph-csi component
+  # pvConfigCsiCephfs:
+  #   # kubernetes persistent volume csi ceph storage path (absolute path)
+  #   cephPath: "/k8s-vols/dory"
+  #   # ceph account
+  #   cephUser: admin
+  #   # ceph secret key
+  #   cephSecret: "xxx"
+  #   # cephfs file system name
+  #   cephFsName: "xxx"
+  #   # ceph Cluster ID
+  #   cephClusterId: "xxx"

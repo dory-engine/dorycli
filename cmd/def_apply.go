@@ -73,8 +73,8 @@ func CheckDefKind(def pkg.DefKind) error {
 	case pkg.DefCmdKinds[pkg.DefKindBuild]:
 		for _, item := range def.Items {
 			var d pkg.BuildDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is buildDefs, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -83,8 +83,8 @@ func CheckDefKind(def pkg.DefKind) error {
 	case pkg.DefCmdKinds[pkg.DefKindPackage]:
 		for _, item := range def.Items {
 			var d pkg.PackageDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is packageDefs, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -93,8 +93,8 @@ func CheckDefKind(def pkg.DefKind) error {
 	case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 		for _, item := range def.Items {
 			var d pkg.ArtifactDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is artifactDefs, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -114,8 +114,8 @@ func CheckDefKind(def pkg.DefKind) error {
 		}
 		for _, item := range def.Items {
 			var d pkg.DeployContainerDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is deployContainerDefs, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -135,8 +135,8 @@ func CheckDefKind(def pkg.DefKind) error {
 		}
 		for _, item := range def.Items {
 			var d pkg.DeployArtifactDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is deployArtifactDefs, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -156,8 +156,8 @@ func CheckDefKind(def pkg.DefKind) error {
 		}
 		for _, item := range def.Items {
 			var d pkg.IstioDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is istioDefs, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -177,8 +177,8 @@ func CheckDefKind(def pkg.DefKind) error {
 		}
 		for _, item := range def.Items {
 			var d pkg.IstioGatewayDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is istioGatewayDef, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -202,8 +202,8 @@ func CheckDefKind(def pkg.DefKind) error {
 		}
 		for _, item := range def.Items {
 			var d pkg.PipelineDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is pipelineDef, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -221,8 +221,8 @@ func CheckDefKind(def pkg.DefKind) error {
 	case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 		for _, item := range def.Items {
 			var d pkg.CustomOpsDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is customOpsDefs, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -231,8 +231,8 @@ func CheckDefKind(def pkg.DefKind) error {
 	case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 		for _, item := range def.Items {
 			var d pkg.OpsBatchDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is opsBatchDefs, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -252,8 +252,8 @@ func CheckDefKind(def pkg.DefKind) error {
 		}
 		for _, item := range def.Items {
 			var d pkg.CustomStepModuleDef
-			bs, _ := pkg.YamlIndent(item)
-			err = yaml.Unmarshal(bs, &d)
+			bs, _ := json.Marshal(item)
+			err = json.Unmarshal(bs, &d)
 			if err != nil {
 				err = fmt.Errorf("kind is customStepDef, but item parse error: %s\n%s", err.Error(), string(bs))
 				return err
@@ -315,15 +315,15 @@ func GetDefKindsFromYaml(fileName string, bs []byte) ([]pkg.DefKind, error) {
 		}
 	}
 	for _, m := range ms {
-		b, _ := yaml.Marshal(m)
+		b, _ := json.Marshal(m)
 		var list pkg.DefKindList
-		err = yaml.Unmarshal(b, &list)
+		err = json.Unmarshal(b, &list)
 		if err == nil {
 			if list.Kind == "list" {
 				defKinds = append(defKinds, list.Defs...)
 			} else {
 				var def pkg.DefKind
-				err = yaml.Unmarshal(b, &def)
+				err = json.Unmarshal(b, &def)
 				if err != nil {
 					err = fmt.Errorf("parse file %s error: %s", fileName, err.Error())
 					return defKinds, err
@@ -334,7 +334,7 @@ func GetDefKindsFromYaml(fileName string, bs []byte) ([]pkg.DefKind, error) {
 			}
 		} else {
 			var def pkg.DefKind
-			err = yaml.Unmarshal(b, &def)
+			err = json.Unmarshal(b, &def)
 			if err != nil {
 				err = fmt.Errorf("parse file %s error: %s", fileName, err.Error())
 				return defKinds, err
@@ -588,8 +588,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 			case pkg.DefCmdKinds[pkg.DefKindBuild]:
 				for _, item := range def.Items {
 					var d pkg.BuildDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					idx := -1
 					for i, buildDef := range project.ProjectDef.BuildDefs {
 						if buildDef.BuildName == d.BuildName {
@@ -607,8 +607,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 			case pkg.DefCmdKinds[pkg.DefKindPackage]:
 				for _, item := range def.Items {
 					var d pkg.PackageDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					idx := -1
 					for i, packageDef := range project.ProjectDef.PackageDefs {
 						if packageDef.PackageName == d.PackageName {
@@ -626,8 +626,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 			case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 				for _, item := range def.Items {
 					var d pkg.ArtifactDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					idx := -1
 					for i, artifactDef := range project.ProjectDef.ArtifactDefs {
 						if artifactDef.ArtifactName == d.ArtifactName {
@@ -665,8 +665,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 				}
 				for _, item := range def.Items {
 					var d pkg.DeployContainerDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					idx := -1
 					for i, deployContainerDef := range projectAvailableEnv.DeployContainerDefs {
 						if deployContainerDef.DeployName == d.DeployName {
@@ -705,8 +705,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 				}
 				for _, item := range def.Items {
 					var d pkg.DeployArtifactDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					idx := -1
 					for i, deployArtifactDef := range projectAvailableEnv.DeployArtifactDefs {
 						if deployArtifactDef.DeployArtifactName == d.DeployArtifactName {
@@ -745,8 +745,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 				}
 				for _, item := range def.Items {
 					var d pkg.IstioDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					idx := -1
 					for i, istioDef := range projectAvailableEnv.IstioDefs {
 						if istioDef.DeployName == d.DeployName {
@@ -785,8 +785,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 				}
 				for _, item := range def.Items {
 					var d pkg.IstioGatewayDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					projectAvailableEnv.IstioGatewayDef = d
 					projectAvailableEnv.UpdateIstioGatewayDef = true
 				}
@@ -814,8 +814,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 				}
 				for _, item := range def.Items {
 					var d pkg.PipelineDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					projectPipeline.PipelineDef = d
 					projectPipeline.UpdatePipelineDef = true
 				}
@@ -833,8 +833,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 			case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 				for _, item := range def.Items {
 					var d pkg.CustomOpsDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					idx := -1
 					for i, customOpsDef := range project.ProjectDef.CustomOpsDefs {
 						if customOpsDef.CustomOpsName == d.CustomOpsName {
@@ -852,8 +852,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 			case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 				for _, item := range def.Items {
 					var d pkg.OpsBatchDef
-					bs, _ := pkg.YamlIndent(item)
-					_ = yaml.Unmarshal(bs, &d)
+					bs, _ := json.Marshal(item)
+					_ = json.Unmarshal(bs, &d)
 					idx := -1
 					for i, opsBatchDef := range project.ProjectDef.OpsBatchDefs {
 						if opsBatchDef.OpsBatchName == d.OpsBatchName {
@@ -912,8 +912,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 					}
 					for _, item := range def.Items {
 						var d pkg.CustomStepModuleDef
-						bs, _ := pkg.YamlIndent(item)
-						_ = yaml.Unmarshal(bs, &d)
+						bs, _ := json.Marshal(item)
+						_ = json.Unmarshal(bs, &d)
 						idx := -1
 						for i, moduleDef := range customStepDef.CustomStepModuleDefs {
 							if d.ModuleName == moduleDef.ModuleName {
@@ -947,8 +947,8 @@ func (o *OptionsDefApply) Run(args []string) error {
 					}
 					for _, item := range def.Items {
 						var d pkg.CustomStepModuleDef
-						bs, _ := pkg.YamlIndent(item)
-						_ = yaml.Unmarshal(bs, &d)
+						bs, _ := json.Marshal(item)
+						_ = json.Unmarshal(bs, &d)
 						idx := -1
 						for i, moduleDef := range customStepDef.CustomStepModuleDefs {
 							if d.ModuleName == moduleDef.ModuleName {

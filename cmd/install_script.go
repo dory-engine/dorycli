@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/dory-engine/dorycli/pkg"
 	"github.com/spf13/cobra"
@@ -16,6 +17,7 @@ type OptionsInstallScript struct {
 	OutputDir      string `yaml:"outputDir" json:"outputDir" bson:"outputDir" validate:""`
 	Param          struct {
 		Stdin []byte `yaml:"stdin" json:"stdin" bson:"stdin" validate:""`
+		Vals  map[string]interface{}
 	}
 }
 
@@ -145,26 +147,13 @@ func (o *OptionsInstallScript) Run(args []string) error {
 		return err
 	}
 
-	if installConfig.Dory.ArtifactRepo.Type == "nexus" {
-		_, err = os.Stat(pkg.NexusInitData)
-		if err != nil {
-			err = fmt.Errorf("%s not exists in current directory", pkg.NexusInitData)
-			return err
-		}
+	o.Param.Vals, err = installConfig.UnmarshalMapValues()
+	if err != nil {
+		return err
 	}
 
-	if installConfig.InstallMode == "docker" {
-		err = o.ScriptWithDocker(installConfig)
-		if err != nil {
-			return err
-		}
-	} else if installConfig.InstallMode == "kubernetes" {
-		err = o.ScriptWithKubernetes(installConfig)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = fmt.Errorf("install script error: installMode not correct, must be docker or kubernetes")
+	err = o.ScriptWithKubernetes(installConfig)
+	if err != nil {
 		return err
 	}
 	return err
@@ -174,10 +163,7 @@ func (o *OptionsInstallScript) DoryCreateConfig(installConfig pkg.InstallConfig,
 	var err error
 	var bs []byte
 
-	vals, err := installConfig.UnmarshalMapValues()
-	if err != nil {
-		return err
-	}
+	vals := o.Param.Vals
 
 	doryengineDir := fmt.Sprintf("%s/%s/dory-engine", rootDir, installConfig.Dory.Namespace)
 	doryengineConfigDir := fmt.Sprintf("%s/config", doryengineDir)
@@ -245,10 +231,7 @@ func (o *OptionsInstallScript) DoryCreateNginxGitlabConfig(installConfig pkg.Ins
 	var bs []byte
 
 	if installConfig.Dory.GitRepo.Type == "gitlab" {
-		vals, err := installConfig.UnmarshalMapValues()
-		if err != nil {
-			return err
-		}
+		vals := o.Param.Vals
 
 		nginxGitlabDir := fmt.Sprintf("%s/%s/nginx-%s", rootDir, installConfig.Dory.Namespace, installConfig.Dory.GitRepo.Type)
 		nginxGitlabScriptDir := "dory/nginx-gitlab"
@@ -281,10 +264,7 @@ func (o *OptionsInstallScript) DoryCreateDockerCertsConfig(installConfig pkg.Ins
 	var err error
 	var bs []byte
 
-	vals, err := installConfig.UnmarshalMapValues()
-	if err != nil {
-		return err
-	}
+	vals := o.Param.Vals
 
 	dockerDir := fmt.Sprintf("%s/%s/%s", rootDir, installConfig.Dory.Namespace, installConfig.Dory.Docker.DockerName)
 	_ = os.RemoveAll(dockerDir)
@@ -348,10 +328,7 @@ func (o *OptionsInstallScript) DoryCreateOpenldapCertsConfig(installConfig pkg.I
 	var err error
 	var bs []byte
 
-	vals, err := installConfig.UnmarshalMapValues()
-	if err != nil {
-		return err
-	}
+	vals := o.Param.Vals
 
 	doryDir := fmt.Sprintf("%s/%s", rootDir, installConfig.Dory.Namespace)
 	openldapCertsDir := fmt.Sprintf("%s/%s/certs", doryDir, installConfig.Dory.Openldap.ServiceName)
@@ -382,12 +359,27 @@ func (o *OptionsInstallScript) DoryCreateKubernetesDataPod(installConfig pkg.Ins
 	var err error
 	var bs []byte
 
-	vals, err := installConfig.UnmarshalMapValues()
+	vals := o.Param.Vals
+
+	kubernetesDir := "kubernetes"
+
+	projectDataPvName := "project-data-pv.yaml"
+	bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s/%s", pkg.DirInstallScripts, kubernetesDir, projectDataPvName))
 	if err != nil {
+		err = fmt.Errorf("create project-data-pv in kubernetes error: %s", err.Error())
+		return err
+	}
+	strProjectDataPv, err := pkg.ParseTplFromVals(vals, string(bs))
+	if err != nil {
+		err = fmt.Errorf("create project-data-pv in kubernetes error: %s", err.Error())
+		return err
+	}
+	err = os.WriteFile(fmt.Sprintf("%s/%s", rootDir, projectDataPvName), []byte(strProjectDataPv), 0600)
+	if err != nil {
+		err = fmt.Errorf("create project-data-pv in kubernetes error: %s", err.Error())
 		return err
 	}
 
-	kubernetesDir := "kubernetes"
 	projectDataPodName := "project-data-pod.yaml"
 	bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s/%s", pkg.DirInstallScripts, kubernetesDir, projectDataPodName))
 	if err != nil {
@@ -412,38 +404,39 @@ func (o *OptionsInstallScript) DoryCreateReadme(installConfig pkg.InstallConfig,
 	var err error
 	var bs []byte
 
-	vals, err := installConfig.UnmarshalMapValues()
-	if err != nil {
-		return err
-	}
+	vals := o.Param.Vals
 
-	var cmdContainerLogin, cmdContainerTag, cmdContainerPush string
+	var cmdContainerLogin, cmdContainerTag, cmdContainerPush, cmdContainerRun string
 	switch installConfig.Kubernetes.Runtime {
 	case "docker":
 		cmdContainerLogin = "docker login"
 		cmdContainerTag = "docker tag"
 		cmdContainerPush = "docker push"
+		cmdContainerRun = "docker run"
 	case "containerd":
 		cmdContainerLogin = "nerdctl -n k8s.io login"
 		cmdContainerTag = "nerdctl -n k8s.io tag"
 		cmdContainerPush = "nerdctl -n k8s.io push"
+		cmdContainerRun = "nerdctl -n k8s.io run"
 	case "crio":
 		cmdContainerLogin = "podman login"
 		cmdContainerTag = "podman tag"
 		cmdContainerPush = "podman push"
+		cmdContainerRun = "podman run"
 	}
 	vals["cmdLogin"] = cmdContainerLogin
 	vals["cmdTag"] = cmdContainerTag
 	vals["cmdPush"] = cmdContainerPush
+	vals["cmdRun"] = cmdContainerRun
 
 	// get pull docker images
 	dockerImages, err := pkg.GetDockerImages(installConfig)
 	if err != nil {
 		return err
 	}
-	bs, _ = pkg.YamlIndent(dockerImages)
+	bs, _ = json.Marshal(dockerImages)
 	m := map[string]interface{}{}
-	_ = yaml.Unmarshal(bs, &m)
+	_ = json.Unmarshal(bs, &m)
 	for k, v := range m {
 		vals[k] = v
 	}
@@ -467,188 +460,19 @@ func (o *OptionsInstallScript) DoryCreateReadme(installConfig pkg.InstallConfig,
 	return err
 }
 
-func (o *OptionsInstallScript) ScriptWithDocker(installConfig pkg.InstallConfig) error {
-	var err error
-	bs := []byte{}
-
-	vals, err := installConfig.UnmarshalMapValues()
-	if err != nil {
-		return err
-	}
-	vals["versionDoryEngine"] = pkg.VersionDoryEngine
-	vals["versionDoryFrontend"] = pkg.VersionDoryFrontend
-
-	outputDir := o.OutputDir
-	_ = os.MkdirAll(outputDir, 0700)
-
-	readmeDockerResetName := "README-2-docker-reset.md"
-	defer o.DoryCreateReadme(installConfig, outputDir, readmeDockerResetName)
-
-	if installConfig.Dory.ImageRepo.Internal.Hostname != "" {
-		// create harbor certificates
-		harborDir := fmt.Sprintf("%s/%s", outputDir, installConfig.Dory.ImageRepo.Internal.Namespace)
-		_ = os.RemoveAll(harborDir)
-		_ = os.MkdirAll(harborDir, 0700)
-		harborScriptDir := "harbor"
-		harborScriptName := "harbor_certs.sh"
-		bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s/%s", pkg.DirInstallScripts, harborScriptDir, harborScriptName))
-		if err != nil {
-			err = fmt.Errorf("create harbor certificates error: %s", err.Error())
-			return err
-		}
-		strHarborCertScript, err := pkg.ParseTplFromVals(vals, string(bs))
-		if err != nil {
-			err = fmt.Errorf("create harbor certificates error: %s", err.Error())
-			return err
-		}
-		err = os.WriteFile(fmt.Sprintf("%s/%s", harborDir, harborScriptName), []byte(strHarborCertScript), 0600)
-		if err != nil {
-			err = fmt.Errorf("create harbor certificates error: %s", err.Error())
-			return err
-		}
-
-		// extract harbor install files
-		err = pkg.ExtractEmbedFile(pkg.FsInstallScripts, fmt.Sprintf("%s/harbor/harbor", pkg.DirInstallScripts), harborDir)
-		if err != nil {
-			err = fmt.Errorf("extract harbor install files error: %s", err.Error())
-			return err
-		}
-
-		harborInstallerDir := "harbor/harbor"
-		harborYamlName := "harbor.yml"
-		bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s/%s", pkg.DirInstallScripts, harborInstallerDir, harborYamlName))
-		if err != nil {
-			err = fmt.Errorf("create harbor.yml error: %s", err.Error())
-			return err
-		}
-		strHarborYaml, err := pkg.ParseTplFromVals(vals, string(bs))
-		if err != nil {
-			err = fmt.Errorf("create harbor.yml error: %s", err.Error())
-			return err
-		}
-		err = os.WriteFile(fmt.Sprintf("%s/%s", harborDir, harborYamlName), []byte(strHarborYaml), 0600)
-		if err != nil {
-			err = fmt.Errorf("create harbor.yml error: %s", err.Error())
-			return err
-		}
-
-		harborPrepareName := "prepare"
-		_ = os.Rename(fmt.Sprintf("%s/harbor", installConfig.RootDir), harborDir)
-		bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s/%s", pkg.DirInstallScripts, harborInstallerDir, harborPrepareName))
-		if err != nil {
-			err = fmt.Errorf("create prepare error: %s", err.Error())
-			return err
-		}
-		strHarborPrepare, err := pkg.ParseTplFromVals(vals, string(bs))
-		if err != nil {
-			err = fmt.Errorf("create prepare error: %s", err.Error())
-			return err
-		}
-		err = os.WriteFile(fmt.Sprintf("%s/%s", harborDir, harborPrepareName), []byte(strHarborPrepare), 0700)
-		if err != nil {
-			err = fmt.Errorf("create prepare error: %s", err.Error())
-			return err
-		}
-
-		_ = os.Chmod(fmt.Sprintf("%s/common.sh", harborDir), 0700)
-		_ = os.Chmod(fmt.Sprintf("%s/install.sh", harborDir), 0700)
-		_ = os.Chmod(fmt.Sprintf("%s/prepare", harborDir), 0700)
-	}
-
-	////////////////////////////////////////////////////
-
-	// create dory docker-compose.yaml
-	doryDir := fmt.Sprintf("%s/%s", outputDir, installConfig.Dory.Namespace)
-	_ = os.RemoveAll(doryDir)
-	_ = os.MkdirAll(doryDir, 0700)
-	dockerComposeDir := "dory"
-	dockerComposeName := "docker-compose.yaml"
-	bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/%s/%s", pkg.DirInstallScripts, dockerComposeDir, dockerComposeName))
-	if err != nil {
-		err = fmt.Errorf("create dory docker-compose.yaml error: %s", err.Error())
-		return err
-	}
-	strCompose, err := pkg.ParseTplFromVals(vals, string(bs))
-	if err != nil {
-		err = fmt.Errorf("create dory docker-compose.yaml error: %s", err.Error())
-		return err
-	}
-	err = os.WriteFile(fmt.Sprintf("%s/%s", doryDir, dockerComposeName), []byte(strCompose), 0600)
-	if err != nil {
-		err = fmt.Errorf("create dory docker-compose.yaml error: %s", err.Error())
-		return err
-	}
-
-	// create dory-engine config files
-	err = o.DoryCreateConfig(installConfig, outputDir)
-	if err != nil {
-		return err
-	}
-
-	// create nginx-gitlab config files
-	err = o.DoryCreateNginxGitlabConfig(installConfig, outputDir)
-	if err != nil {
-		return err
-	}
-
-	// create docker certificates and config
-	err = o.DoryCreateDockerCertsConfig(installConfig, outputDir)
-	if err != nil {
-		return err
-	}
-
-	// create openldap certificates
-	err = o.DoryCreateOpenldapCertsConfig(installConfig, outputDir)
-	if err != nil {
-		return err
-	}
-
-	//////////////////////////////////////////////////
-
-	// create project-data-pod in kubernetes
-	err = o.DoryCreateKubernetesDataPod(installConfig, outputDir)
-	if err != nil {
-		return err
-	}
-
-	//////////////////////////////////////////////////
-
-	readmeDockerConfigName := "README-1-docker-config.md"
-	err = o.DoryCreateReadme(installConfig, outputDir, readmeDockerConfigName)
-	if err != nil {
-		return err
-	}
-
-	readmeDockerInstallName := "README-0-docker-install.md"
-	err = o.DoryCreateReadme(installConfig, outputDir, readmeDockerInstallName)
-	if err != nil {
-		return err
-	}
-
-	log.Warning(fmt.Sprintf("all scripts and config files located at: %s", outputDir))
-	log.Warning(fmt.Sprintf("change your work directory to %s", outputDir))
-	log.Warning(fmt.Sprintf("1. please follow %s to install dory by manual", readmeDockerInstallName))
-	log.Warning(fmt.Sprintf("2. please follow %s to config dory by manual after install", readmeDockerConfigName))
-	log.Warning(fmt.Sprintf("3. if install fail, please follow %s to stop all dory services and install again", readmeDockerResetName))
-
-	return err
-}
-
 func (o *OptionsInstallScript) ScriptWithKubernetes(installConfig pkg.InstallConfig) error {
 	var err error
 	bs := []byte{}
 
-	vals, err := installConfig.UnmarshalMapValues()
-	if err != nil {
-		return err
-	}
+	vals := o.Param.Vals
+
 	vals["versionDoryEngine"] = pkg.VersionDoryEngine
 	vals["versionDoryFrontend"] = pkg.VersionDoryFrontend
 
 	outputDir := o.OutputDir
 	_ = os.MkdirAll(outputDir, 0700)
 
-	readmeKubernetesResetName := "README-2-kubernetes-reset.md"
+	readmeKubernetesResetName := "README-2-reset.md"
 	defer o.DoryCreateReadme(installConfig, outputDir, readmeKubernetesResetName)
 
 	if installConfig.Dory.ImageRepo.Internal.Hostname != "" {
@@ -685,20 +509,38 @@ func (o *OptionsInstallScript) ScriptWithKubernetes(installConfig pkg.InstallCon
 		harborInstallDir := fmt.Sprintf("%s/%s", outputDir, installConfig.Dory.ImageRepo.Internal.Namespace)
 		_ = os.MkdirAll(harborInstallDir, 0700)
 		vals["currentNamespace"] = installConfig.Dory.ImageRepo.Internal.Namespace
-		step01NamespacePvName := "step01-namespace-pv.yaml"
-		bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/kubernetes/%s", pkg.DirInstallScripts, step01NamespacePvName))
+
+		step01NamespaceName := "step01-namespace.yaml"
+		bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/kubernetes/%s", pkg.DirInstallScripts, step01NamespaceName))
 		if err != nil {
-			err = fmt.Errorf("create harbor namespace and pv pvc error: %s", err.Error())
+			err = fmt.Errorf("create harbor namespace error: %s", err.Error())
 			return err
 		}
-		strStep01NamespacePv, err := pkg.ParseTplFromVals(vals, string(bs))
+		strStep01Namespace, err := pkg.ParseTplFromVals(vals, string(bs))
 		if err != nil {
-			err = fmt.Errorf("create harbor namespace and pv pvc error: %s", err.Error())
+			err = fmt.Errorf("create harbor namespace error: %s", err.Error())
 			return err
 		}
-		err = os.WriteFile(fmt.Sprintf("%s/%s", harborInstallDir, step01NamespacePvName), []byte(strStep01NamespacePv), 0600)
+		err = os.WriteFile(fmt.Sprintf("%s/%s", harborInstallDir, step01NamespaceName), []byte(strStep01Namespace), 0600)
 		if err != nil {
-			err = fmt.Errorf("create harbor namespace and pv pvc error: %s", err.Error())
+			err = fmt.Errorf("create harbor namespace error: %s", err.Error())
+			return err
+		}
+
+		step01PvName := "step01-pv.yaml"
+		bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/kubernetes/%s", pkg.DirInstallScripts, step01PvName))
+		if err != nil {
+			err = fmt.Errorf("create harbor pv error: %s", err.Error())
+			return err
+		}
+		strStep01Pv, err := pkg.ParseTplFromVals(vals, string(bs))
+		if err != nil {
+			err = fmt.Errorf("create harbor pv error: %s", err.Error())
+			return err
+		}
+		err = os.WriteFile(fmt.Sprintf("%s/%s", harborInstallDir, step01PvName), []byte(strStep01Pv), 0600)
+		if err != nil {
+			err = fmt.Errorf("create harbor pv error: %s", err.Error())
 			return err
 		}
 
@@ -726,20 +568,38 @@ func (o *OptionsInstallScript) ScriptWithKubernetes(installConfig pkg.InstallCon
 	doryInstallDir := fmt.Sprintf("%s/%s", outputDir, installConfig.Dory.Namespace)
 	_ = os.MkdirAll(doryInstallDir, 0700)
 	vals["currentNamespace"] = installConfig.Dory.Namespace
-	step01NamespacePvName := "step01-namespace-pv.yaml"
-	bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/kubernetes/%s", pkg.DirInstallScripts, step01NamespacePvName))
+
+	step01NamespaceName := "step01-namespace.yaml"
+	bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/kubernetes/%s", pkg.DirInstallScripts, step01NamespaceName))
 	if err != nil {
-		err = fmt.Errorf("create dory namespace and pv pvc error: %s", err.Error())
+		err = fmt.Errorf("create dory namespace error: %s", err.Error())
 		return err
 	}
-	strStep01NamespacePv, err := pkg.ParseTplFromVals(vals, string(bs))
+	strStep01Namespace, err := pkg.ParseTplFromVals(vals, string(bs))
 	if err != nil {
-		err = fmt.Errorf("create dory namespace and pv pvc error: %s", err.Error())
+		err = fmt.Errorf("create dory namespace error: %s", err.Error())
 		return err
 	}
-	err = os.WriteFile(fmt.Sprintf("%s/%s", doryInstallDir, step01NamespacePvName), []byte(strStep01NamespacePv), 0600)
+	err = os.WriteFile(fmt.Sprintf("%s/%s", doryInstallDir, step01NamespaceName), []byte(strStep01Namespace), 0600)
 	if err != nil {
-		err = fmt.Errorf("create dory namespace and pv pvc error: %s", err.Error())
+		err = fmt.Errorf("create dory namespace error: %s", err.Error())
+		return err
+	}
+
+	step01PvName := "step01-pv.yaml"
+	bs, err = pkg.FsInstallScripts.ReadFile(fmt.Sprintf("%s/kubernetes/%s", pkg.DirInstallScripts, step01PvName))
+	if err != nil {
+		err = fmt.Errorf("create dory pv error: %s", err.Error())
+		return err
+	}
+	strStep01Pv, err := pkg.ParseTplFromVals(vals, string(bs))
+	if err != nil {
+		err = fmt.Errorf("create dory pv error: %s", err.Error())
+		return err
+	}
+	err = os.WriteFile(fmt.Sprintf("%s/%s", doryInstallDir, step01PvName), []byte(strStep01Pv), 0600)
+	if err != nil {
+		err = fmt.Errorf("create dory pv error: %s", err.Error())
 		return err
 	}
 
@@ -850,22 +710,42 @@ func (o *OptionsInstallScript) ScriptWithKubernetes(installConfig pkg.InstallCon
 
 	//////////////////////////////////////////////////
 
-	readmeKubernetesConfigName := "README-1-kubernetes-config.md"
-	err = o.DoryCreateReadme(installConfig, outputDir, readmeKubernetesConfigName)
-	if err != nil {
-		return err
+	fileNames := []string{
+		"create-dory-files.sh",
+		"deploy-dory.sh",
+		"pods-ready.sh",
+		"restart-dory.sh",
+		"README-0-install.md",
+		"README-1-config.md",
+	}
+	if installConfig.Dory.ImageRepo.Internal.Hostname != "" {
+		fileNames = append(fileNames, "push-images.sh")
+	}
+	if installConfig.Dory.ArtifactRepo.Internal.Image != "" {
+		fileNames = append(fileNames, "nexus-config.sh")
+	}
+	if installConfig.Dory.ScanCodeRepo.Internal.Image != "" {
+		fileNames = append(fileNames, "sonarqube-config.sh")
+	}
+	if installConfig.Dory.GitRepo.Internal.Image != "" && installConfig.Dory.GitRepo.Type == "gitea" {
+		fileNames = append(fileNames, "gitea-config.py")
+	}
+	if installConfig.Dory.GitRepo.Internal.Image != "" && installConfig.Dory.GitRepo.Type == "gitlab" {
+		fileNames = append(fileNames, "gitlab-config.py")
+		fileNames = append(fileNames, "gitlab-config.sh")
 	}
 
-	readmeKubernetesInstallName := "README-0-kubernetes-install.md"
-	err = o.DoryCreateReadme(installConfig, outputDir, readmeKubernetesInstallName)
-	if err != nil {
-		return err
+	for _, name := range fileNames {
+		err = o.DoryCreateReadme(installConfig, outputDir, name)
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Warning(fmt.Sprintf("all scripts and config files located at: %s", outputDir))
-	log.Warning(fmt.Sprintf("change your work directory to %s", outputDir))
-	log.Warning(fmt.Sprintf("1. please follow %s to install dory by manual", readmeKubernetesInstallName))
-	log.Warning(fmt.Sprintf("2. please follow %s to config dory by manual after install", readmeKubernetesConfigName))
-	log.Warning(fmt.Sprintf("3. if install fail, please follow %s to stop all dory services and install again", readmeKubernetesResetName))
+	log.Warning(fmt.Sprintf("change current work directory to readme: cd %s", outputDir))
+	log.Warning(fmt.Sprintf("1. please follow README-0-install.md to install and config dory by manual"))
+	log.Warning(fmt.Sprintf("2. please follow README-1-config.md to connect dory after install"))
+	log.Warning(fmt.Sprintf("3. if install fail, please follow README-2-reset.md to stop all dory services and install again"))
 	return err
 }

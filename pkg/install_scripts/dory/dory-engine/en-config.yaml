@@ -10,8 +10,12 @@ app:
   # trivy-db image scan vulnerability library storage path, relative to the location of the dory-engine program (relative path)
   # The directory contains three vulnerability library directories: db, fanal, java-db
   trivyDbDir: dory-data/trivy
-  # The local artifact files storage patht, relative to the location of the dory-engine program (relative path)
+  # The local artifact files storage path, relative to the location of the dory-engine program (relative path)
   artifactDir: dory-data/artifacts
+  # The pipeline run logs files storage path, relative to the location of the dory-engine program (relative path)
+  runLogDir: dory-data/run-logs
+  # The audit logs files storage path, relative to the location of the dory-engine program (relative path)
+  auditLogDir: dory-data/audit-logs
   # system UID dory run with
   userID: 1000
   # restful api service port
@@ -166,6 +170,7 @@ app:
     - hostPath
     - nfs
     - rbd
+    - csi
   # tls self-signed certificates settings
   tlsCertificateSettings:
     organization: DORY
@@ -196,6 +201,20 @@ app:
   projectDataPodCheckSeconds: 3
   # project-data-pod check times
   projectDataPodCheckCount: 30
+  # how long does it take for the pipeline to automatically terminate after waiting for input? Setting it to 0 means disabling automatic termination, in seconds
+  autoAbortInputSeconds: 28800
+  # the default image repository storage quota when opening a project, in Gi
+  imageRepoStorageLimit: 20
+  # prohibit the creation of the following project namespaces
+  restrictedProjectNamespaces:
+    - kube-system
+    - default
+    - kube-node-lease
+    - kube-public
+    - traefik
+    - istio-system
+  # whether to allow the creation of project namespaces that already exist in the k8s environment
+  enableCreateExistsNamespace: false
 # smtp send mail settings
 mail:
   # smtp server host
@@ -242,7 +261,6 @@ mongodb:
   database: dorydb
 # docker executor settings
 docker:
-  {{- if eq $.installMode "kubernetes" }}
   # if docker executors self signed certificates in kubernetes secret, these settings required
   kubernetes:
     # kubernetes api server ip address
@@ -257,10 +275,6 @@ docker:
     insecure: {{ $.kubernetes.insecure }}
     # docker executors self signed certificates secret in which kubernetes namespace
     namespace: {{ $.dory.namespace | quote }}
-  {{- else if eq $.installMode "docker" }}
-  # docker executors number, if docker executors run in docker required
-  dockerNumber: {{ $.dory.docker.dockerNumber }}
-  {{- end }}
   # docker executor service name
   serviceName: {{ $.dory.docker.dockerName | quote }}
   # docker executor port
@@ -290,43 +304,22 @@ gitRepoConfigs:
   - kind: {{ $.dory.gitRepo.type }}
     # git repository id name, format like: xxx-xxx
     repoName: {{ $.dory.gitRepo.type }}-dory
-    {{- if $.dory.gitRepo.internal.image }}
     # git repository browser access url
-    viewUrl: {{ $.viewURL }}:{{ $.dory.gitRepo.internal.port }}
+    viewUrl: {{ $.gitRepoViewUrl | quote }}
     # git repository internal access url by dory
-    {{- if eq $.dory.gitRepo.type "gitea" }}
-    url: http://gitea:3000
-    {{- else if eq $.dory.gitRepo.type "gitlab" }}
-    url: http://gitlab
-    {{- end }}
+    url: {{ $.gitRepoUrl | quote }}
     # whether to enable insecure mode, if the server is https and uses a self-signed tls certificate, then please set this option to true
     insecure: false
     # git repository admin user name
-    username: "PLEASE_INPUT_BY_MANUAL"
+    username: {{ $.gitRepoUsername | quote }}
     # git repository admin user display name
-    name: "PLEASE_INPUT_BY_MANUAL"
+    name: {{ $.gitRepoName | quote }}
     # git repository admin user mail
-    mail: "PLEASE_INPUT_BY_MANUAL@example.com"
+    mail: {{ $.gitRepoMail | quote }}
     # git repository admin user password
-    password: "PLEASE_INPUT_BY_MANUAL"
+    password: {{ $.gitRepoPassword | quote }}
     # git repository admin user token
-    token: "PLEASE_INPUT_BY_MANUAL"
-    {{- else }}
-    # git repository browser access url
-    viewUrl: {{ $.dory.gitRepo.external.viewUrl }}
-    # git repository internal access url by dory
-    url: {{ $.dory.gitRepo.external.url }}
-    # git repository admin user name
-    username: {{ $.dory.gitRepo.external.username | quote }}
-    # git repository admin user display name
-    name: {{ $.dory.gitRepo.external.name | quote }}
-    # git repository admin user mail
-    mail: {{ $.dory.gitRepo.external.mail | quote }}
-    # git repository admin user password
-    password: {{ $.dory.gitRepo.external.password | quote }}
-    # git repository admin user token
-    token: {{ $.dory.gitRepo.external.token | quote }}
-    {{- end }}
+    token: {{ $.gitRepoToken | quote }}
 {{- end }}
 {{- if eq $.dory.imageRepo.type "harbor" }}
 # image repository settings, support harbor
@@ -401,9 +394,9 @@ artifactRepoConfigs:
       # apt proxy settings
       apt:
         # x86 proxy path
-        amd64: repository/apt-aliyun-focal/
+        amd64: repository/apt-aliyun/
         # arm64v8 proxy source
-        arm64v8: repository/apt-aliyun-focal-arm64/
+        arm64v8: repository/apt-aliyun/
       {{- else }}
       # maven proxy path
       maven: {{ $.dory.artifactRepo.external.proxyRepo.maven }}
@@ -697,7 +690,7 @@ dockerBuildSettings:
 # debug component docker images settings
 componentDebugEnvs:
   # debug component docker image, relative path in image repository
-  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ end }}doryengine/debug-ubuntu:v1.0.2"
+  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ end }}doryengine/debian-vnc-sshd:v1.0.0"
 
 # docker images used by pipeline step settings
 stepDockerEnvs:

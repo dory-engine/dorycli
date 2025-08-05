@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"github.com/Masterminds/sprig"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
@@ -16,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"text/template"
 	"time"
 	"unicode"
 )
@@ -104,7 +106,7 @@ func CheckRandomStringStrength(password string, length int, enableSpecialChar bo
 	var err error
 
 	if len(password) < length {
-		err = fmt.Errorf("password must at least %d charactors", length)
+		err = fmt.Errorf("password must at least %d characters", length)
 		return err
 	}
 	lowerChars := "abcdefghijklmnopqrstuvwxyz"
@@ -117,15 +119,15 @@ func CheckRandomStringStrength(password string, length int, enableSpecialChar bo
 	specialOK := strings.ContainsAny(password, specialChars)
 	for _, c := range password {
 		if c > unicode.MaxASCII {
-			err = fmt.Errorf("password can not include unicode charactors")
+			err = fmt.Errorf("password can not include unicode characters")
 			return err
 		}
 	}
 	if enableSpecialChar && !(lowerOK && upperOK && numberOK && specialOK) {
-		err = fmt.Errorf("password must include lower upper case charactors and number and special charactors")
+		err = fmt.Errorf("password must include lower upper case characters and number and special characters")
 		return err
 	} else if !enableSpecialChar && !(lowerOK && upperOK && numberOK) {
-		err = fmt.Errorf("password must include lower upper case charactors and number")
+		err = fmt.Errorf("password must include lower upper case characters and number")
 		return err
 	}
 
@@ -258,20 +260,13 @@ func RemoveMapEmptyItems(m map[string]interface{}) map[string]interface{} {
 							v3 := RemoveMapEmptyItems(vm)
 							x = append(x, v3)
 						}
-					} else if vvv.Kind() == reflect.Struct {
-						vm, ok := vv.Index(i).Interface().(map[string]interface{})
-						if ok {
-							isMap = true
-							v3 := RemoveMapEmptyItems(vm)
-							x = append(x, v3)
-						}
 					}
 				}
 				if isMap {
 					m[k] = x
 				}
 			}
-		case reflect.Struct, reflect.Map:
+		case reflect.Map:
 			v2 := RemoveMapEmptyItems(v.(map[string]interface{}))
 			if len(v2) == 0 {
 				delete(m, k)
@@ -308,7 +303,7 @@ func GetDockerImages(installConfig InstallConfig) (InstallDockerImages, error) {
 	var bs []byte
 	var dockerImages InstallDockerImages
 	// get pull container images
-	bs, err = FsInstallScripts.ReadFile(fmt.Sprintf("%s/harbor/docker-images.yaml", DirInstallScripts))
+	bs, err = FsInstallScripts.ReadFile(fmt.Sprintf("%s/dory/docker-images.yaml", DirInstallScripts))
 	if err != nil {
 		err = fmt.Errorf("get pull container images error: %s", err.Error())
 		return dockerImages, err
@@ -445,4 +440,25 @@ func Indent(s string) string {
 	}
 	str = strings.Join(arr, "\n")
 	return str
+}
+
+func ParseTplFromVals(vals interface{}, tplStr string) (string, error) {
+	errInfo := fmt.Sprintf("parse template from string error")
+	var err error
+	var strOutput string
+
+	var buf bytes.Buffer
+	gotpl, err := template.New("").Funcs(sprig.TxtFuncMap()).Parse(tplStr)
+	if err != nil {
+		err = fmt.Errorf("%s: create template error: %s", errInfo, err.Error())
+		return strOutput, err
+	}
+	err = gotpl.Execute(&buf, vals)
+	if err != nil {
+		err = fmt.Errorf("%s: parse template error: %s", errInfo, err.Error())
+		return strOutput, err
+	}
+	strOutput = buf.String()
+
+	return strOutput, err
 }

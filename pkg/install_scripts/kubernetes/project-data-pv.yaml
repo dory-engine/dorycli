@@ -1,0 +1,118 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ $.dory.namespace }}-project-data-pv
+  {{- if or $.kubernetes.pvConfigLocal.localPath $.kubernetes.pvConfigCephfs.cephPath $.kubernetes.pvConfigNfs.nfsServer }}
+  labels:
+    app: project-data
+  {{- end }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 500Gi
+  {{- if $.kubernetes.pvConfigLocal.localPath }}
+  hostPath:
+    path: {{ $.kubernetes.pvConfigLocal.localPath }}
+    type: DirectoryOrCreate
+  {{- else if $.kubernetes.pvConfigCephfs.cephPath }}
+  cephfs:
+    path: {{ $.kubernetes.pvConfigCephfs.cephPath }}
+    user: {{ $.kubernetes.pvConfigCephfs.cephUser }}
+    monitors:
+    {{- range $_, $monitor := $.kubernetes.pvConfigCephfs.cephMonitors }}
+    - {{ $monitor | quote }}
+    {{- end }}
+    secretRef:
+      name: cephfs-secret
+      namespace: {{ $.dory.namespace }}
+    readOnly: false
+  {{- else if $.kubernetes.pvConfigNfs.nfsServer }}
+  nfs:
+    path: {{ $.kubernetes.pvConfigNfs.nfsPath }}
+    server: {{ $.kubernetes.pvConfigNfs.nfsServer }}
+    readOnly: false
+  {{- else if $.kubernetes.pvConfigCsiCephfs.cephPath }}
+  csi:
+    driver: cephfs.csi.ceph.com
+    nodeStageSecretRef:
+      name: csi-cephfs-secret
+      namespace: {{ $.dory.namespace }}
+    volumeHandle: {{ $.dory.namespace }}-project-data-pv
+    volumeAttributes:
+      fsName: {{ $.kubernetes.pvConfigCsiCephfs.cephFsName }}
+      clusterID: {{ $.kubernetes.pvConfigCsiCephfs.cephClusterId }}
+      staticVolume: "true"
+      rootPath: {{ $.kubernetes.pvConfigCsiCephfs.cephPath }}
+  {{- else if $.kubernetes.pvConfigCsiNfs.nfsPath }}
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: {{ $.dory.namespace }}-project-data-pv
+    volumeAttributes:
+      server: {{ $.kubernetes.pvConfigCsiNfs.nfsServer }}
+      share: {{ $.kubernetes.pvConfigCsiNfs.nfsPath }}
+  {{- end }}
+  {{- if or $.kubernetes.pvConfigLocal.localPath $.kubernetes.pvConfigCephfs.cephPath $.kubernetes.pvConfigNfs.nfsServer }}
+  storageClassName: {{ $.dory.namespace }}-project-data-pv
+  {{- end }}
+  {{- if $.kubernetes.pvConfigCsiNfs.nfsMountOptions }}
+  mountOptions:
+    {{- range $_, $v := $.kubernetes.pvConfigCsiNfs.nfsMountOptions }}
+    - {{ $v }}
+    {{- end }}
+  {{- end }}
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+
+{{- if $.kubernetes.pvConfigCephfs.cephPath }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cephfs-secret
+  namespace: {{ $.dory.namespace }}
+data:
+  key: {{ $.kubernetes.pvConfigCephfs.cephSecret | b64enc }}
+{{- end }}
+
+{{- if $.kubernetes.pvConfigCsiCephfs.cephPath }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: csi-cephfs-secret
+  namespace: {{ $.dory.namespace }}
+stringData:
+  # Required for statically provisioned volumes
+  userID: {{ $.kubernetes.pvConfigCsiCephfs.cephUser }}
+  userKey: {{ $.kubernetes.pvConfigCsiCephfs.cephSecret }}
+  # Required for dynamically provisioned volumes
+  adminID: {{ $.kubernetes.pvConfigCsiCephfs.cephUser }}
+  adminKey: {{ $.kubernetes.pvConfigCsiCephfs.cephSecret }}
+  # Encryption passphrase
+  encryptionPassphrase: {{ randAlphaNum 24 }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: project-data-pvc
+  namespace: {{ $.dory.namespace }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Gi
+  {{- if or $.kubernetes.pvConfigLocal.localPath $.kubernetes.pvConfigCephfs.cephPath $.kubernetes.pvConfigNfs.nfsServer }}
+  selector:
+    matchLabels:
+      app: project-data
+  storageClassName: {{ $.dory.namespace }}-project-data-pv
+  {{- end }}
+  volumeMode: Filesystem
+  {{- if or $.kubernetes.pvConfigCsiCephfs.cephPath $.kubernetes.pvConfigCsiNfs.nfsPath }}
+  volumeName: {{ $.dory.namespace }}-project-data-pv
+  {{- end }}

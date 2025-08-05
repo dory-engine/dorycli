@@ -27,7 +27,6 @@ cmd_example:
     │   │   └── script # create load balancer config files and docker-compose files and kuberentes install files
     │   ├── print # print install settings YAML file
     │   ├── pull # pull and build all container images
-    │   ├── run # install Dory-Engine automatically
     │   └── script # install Dory-Engine by manual
     ├── login # login to Dory-Engine
     ├── logout # logout from Dory-Engine
@@ -44,7 +43,7 @@ cmd_example:
     └── version # show version info
 
     # install Dory-Engine
-    {{._0}} install run -o readme-install -f install-config.yaml
+    {{._0}} install run -o readme-dory -f install-dory.yaml
 cmd_admin_short:
   other: "manage configurations, admin permission required"
 cmd_admin_long:
@@ -117,6 +116,9 @@ cmd_admin_get_example:
   
     # get kubernetes environments configurations, and filter by envNames, admin permission required
     {{._10}} admin get {{._11}} test uat prod
+
+    # filter and search users which not project member and active status, admin permission required
+    {{._8}} admin get {{._9}} --filter isMember=no --filter active=yes
 cmd_console_short:
   other: "project console management, requires project maintainer permissions"
 cmd_console_long:
@@ -336,71 +338,41 @@ cmd_def_patch_example:
     # patch project pipeline definitions from file, support JSON and YAML
     {{._19}} def patch test-project1 {{._20}} --branches=develop,release -f patch.yaml
 cmd_install_short:
-  other: "install Dory-Engine in kubernetes or docker"
+  other: "install Dory-Engine in kubernetes"
 cmd_install_long:
-  other: "install Dory-Engine and relative components in kubernetes cluster or docker host"
+  other: "install Dory-Engine and relative components in kubernetes cluster"
 cmd_install_example:
   other: |-
     {{._0}} install should run on a node be able to manage kubernetes cluster
     
     ##############################
-    # please follow these steps to install Dory-Engine in kubernetes (for production recommended):
+    # please follow these steps to install Dory-Engine in kubernetes cluster:
     
     # 1. check installing Dory-Engine in kubernetes prerequisite, managed kubernetes cluster runtime is docker
-    {{._1}} install check --mode kubernetes --runtime docker
+    {{._1}} install check --runtime docker
     
     # 2. (option 1) print installing Dory-Engine in kubernetes settings YAML file, managed kubernetes cluster runtime is docker. (install Dory-Engine basic components only)
-    {{._2}} install print --mode kubernetes --runtime docker > install-config-kubernetes.yaml
+    {{._2}} install print --runtime docker > install-dory.yaml
     
     # 2. (option 2) print installing Dory-Engine in kubernetes settings YAML file, managed kubernetes cluster runtime is docker. (install all git repository, image repository, artifact repository and scan code repository)
-    {{._2}} install print --mode kubernetes --runtime docker --full > install-config-kubernetes.yaml
+    {{._2}} install print --runtime docker --full > install-dory.yaml
     
     # 3. modify installation config file by manual
-    vi install-config-kubernetes.yaml
+    vi install-dory.yaml
     
     # 4. pull and build all container images required for installing Dory-Engine
-    {{._3}} install pull -f install-config-kubernetes.yaml
+    {{._3}} install pull -f install-dory.yaml
     
-    # 5. (option 1) install Dory-Engine in kubernetes automatically
-    {{._4}} install run -o readme-install-kubernetes -f install-config-kubernetes.yaml
-    
-    # 5. (option 2) install Dory-Engine in kubernetes by manual, it will output readme files, deploy files and config files, follow the readme files to customize install Dory-Engine
-    {{._5}} install script -o readme-install-kubernetes -f install-config-kubernetes.yaml
-  
-    ##############################
-    please follow these steps to install Dory-Engine in docker (for test only):
-    
-    # 1. check installing Dory-Engine in docker prerequisite, managed kubernetes cluster runtime is docker
-    {{._6}} install check --mode docker --runtime docker
-    
-    # 2. (option 1) print installing Dory-Engine in docker settings YAML file, managed kubernetes cluster runtime is docker. (install Dory-Engine basic components only)
-    {{._7}} install print --mode docker --runtime docker > install-config-docker.yaml
-    
-    # 2. (option 2) print installing Dory-Engine in docker settings YAML file, managed kubernetes cluster runtime is docker. (install all git repository, image repository, artifact repository and scan code repository)
-    {{._7}} install print --mode docker --runtime docker --full > install-config-docker.yaml
-    
-    # 3. modify installation config file by manual
-    vi install-config-docker.yaml
-    
-    # 4. pull and build all container images required for installing Dory-Engine in docker
-    {{._8}} install pull -f install-config-docker.yaml
-    
-    # 5. (option 1) install Dory-Engine in docker automatically
-    {{._9}} install run -o readme-install-docker -f install-config-docker.yaml
-    
-    # 5. (option 2) install Dory-Engine in docker by manual, it will output readme files, deploy files and config files, follow the readme files to customize install Dory-Engine
-    {{._10}} install script -o readme-install-docker -f install-config-docker.yaml
+    # 5. manually install Dory-Engine to the kubernetes cluster, executing the command will output the installation instructions file and all deployment lists and configuration files
+    {{._4}} install script -o readme-dory -f install-dory.yaml
 cmd_install_check_short:
   other: "check install prerequisite"
 cmd_install_check_long:
-  other: "check installing Dory-Engine in kubernetes cluster or docker host prerequisite"
+  other: "check installing Dory-Engine in kubernetes cluster prerequisite"
 cmd_install_check_example:
   other: |-
     # check installing Dory-Engine in kubernetes prerequisite, managed kubernetes cluster runtime is containerd
-    {{._0}} install check --mode kubernetes --runtime containerd
-  
-    # check installing Dory-Engine in docker prerequisite, managed kubernetes cluster runtime is containerd
-    {{._1}} install check --mode docker --runtime containerd
+    {{._0}} install check --runtime containerd
 cmd_install_ha_short:
   other: "create high availability kubernetes cluster load balancer"
 cmd_install_ha_long:
@@ -446,10 +418,7 @@ cmd_install_print_long:
 cmd_install_print_example:
   other: |-
     # print installing Dory-Engine in kubernetes cluster settings YAML file, managed kubernetes cluster runtime is containerd
-    {{._0}} install print --mode kubernetes --runtime containerd
-    
-    # print installing Dory-Engine in docker host settings YAML file, managed kubernetes cluster runtime is docker
-    {{._1}} install print --mode docker --runtime docker
+    {{._0}} install print --runtime containerd
 cmd_install_pull_short:
   other: "pull and build all container images"
 cmd_install_pull_long:
@@ -460,16 +429,7 @@ cmd_install_pull_example:
     # if install nexus it will download nexus init data
   
     # pull and build all container images required for installing Dory-Engine
-    {{._0}} install pull -f install-config.yaml
-cmd_install_run_short:
-  other: "install Dory-Engine automatically"
-cmd_install_run_long:
-  other: "install Dory-Engine in kubernetes cluster or docker host automatically"
-cmd_install_run_example:
-  other: |-
-    # install Dory-Engine and all relative components in kubernetes cluster or docker host automatically
-    # readme file will save in readme-install directory
-    {{._0}} install run -o readme-install -f install-config.yaml
+    {{._0}} install pull -f install-dory.yaml
 cmd_install_script_short:
   other: "install Dory-Engine by manual"
 cmd_install_script_long:
@@ -477,10 +437,10 @@ cmd_install_script_long:
 cmd_install_script_example:
   other: |-
     # create Dory-Engine install readme file and scripts and config files
-    # readme file and scripts and config files will save in readme-install directory
-    {{._0}} install script -o readme-install -f install-config.yaml
+    # readme file and scripts and config files will save in readme-dory directory
+    {{._0}} install script -o readme-dory -f install-dory.yaml
     or
-    cat install-config.yaml | {{._1}} install script -o readme-install -f -
+    cat install-dory.yaml | {{._1}} install script -o readme-dory -f -
 cmd_login_short:
   other: "login to Dory-Engine"
 cmd_login_long:
@@ -654,9 +614,13 @@ param_admin_apply_files:
 param_admin_apply_try:
   other: "try to check input configurations only, not apply to Dory-Engine, use with --output option"
 param_admin_get_output:
-  other: "output format (options: yaml / json)"
+  other: "output format (options: yaml / json / table)"
 param_admin_get_full:
   other: "output configurations in full version, use with --output option"
+param_admin_get_filter:
+  other: "filter and search configurations"
+param_admin_get_name:
+  other: "show configuration name only"
 param_console_apply_output:
   other: "output format (options: yaml / json)"
 param_console_apply_recursive:
@@ -672,7 +636,7 @@ param_console_get_envs:
 param_console_get_branches:
   other: "filter pipeline triggers items by branch names"
 param_console_get_output:
-  other: "output format (options: yaml / json)"
+  other: "output format (options: yaml / json / table)"
 param_console_get_full:
   other: "output configurations in full version, use with --output option"
 param_console_delete_envs:
@@ -730,7 +694,7 @@ param_def_get_branches:
 param_def_get_steps:
   other: "filter project definitions by stepNames"
 param_def_get_output:
-  other: "output format (options: yaml / json)"
+  other: "output format (options: yaml / json / table)"
 param_def_get_full:
   other: "output project definitions in full version, use with --output option"
 param_def_patch_modules:
@@ -756,16 +720,12 @@ param_def_patch_output:
   other: "output format (options: yaml / json)"
 param_def_patch_full:
   other: "output project definitions in full version, use with --output option"
-param_install_check_mode:
-  other: "Dory-Engine install mode, install in kubernetes cluster or docker host, options: kubernetes, docker"
 param_install_check_runtime:
   other: "Dory-Engine managed kubernetes cluster container runtime, options: docker, containerd, crio"
 param_install_ha_script_file:
   other: "high availability kubernetes load balancer install settings YAML file"
 param_install_ha_script_output:
   other: "README, script and config files output directory"
-param_install_print_mode:
-  other: "Dory-Engine install mode, install in kubernetes cluster or docker host, options: kubernetes, docker"
 param_install_print_runtime:
   other: "Dory-Engine managed kubernetes cluster container runtime, options: docker, containerd, crio"
 param_install_print_full:
@@ -776,13 +736,11 @@ param_install_pull_force_download:
   other: "force download nexus init data"
 param_install_pull_build:
   other: "build docker image from official image"
+param_install_pull_save:
+  other: "output with save images commands"
 param_install_pull_yes:
   other: "auto input YES without prompt"
-param_install_run_file:
-  other: "Dory-Engine install settings YAML file"
-param_install_run_output:
-  other: "Dory-Engine install README, script and config files output directory"
-param_install_script_file:
+\param_install_script_file:
   other: "Dory-Engine install settings YAML file"
 param_install_script_output:
   other: "Dory-Engine install README, script and config files output directory"
@@ -799,13 +757,11 @@ param_pipeline_execute_params:
 param_pipeline_get_projects:
   other: "filters by projectNames, example: test-project1,test-project2"
 param_pipeline_get_output:
-  other: "output format (options: yaml / json)"
+  other: "output format (options: yaml / json / table)"
 param_project_execute_params:
   other: "execute project batch pipeline with request params, example: varName=varValue"
-param_project_get_team:
-  other: "filters by projectTeam"
 param_project_get_output:
-  other: "output format (options: yaml / json)"
+  other: "output format (options: yaml / json / table)"
 param_run_abort_logs:
   other: "show pipeline run logs"
 param_run_get_projects:
@@ -823,4 +779,4 @@ param_run_get_page:
 param_run_get_number:
   other: "show how many items each page"
 param_run_get_output:
-  other: "output format (options: yaml / json)"
+  other: "output format (options: yaml / json / table)"

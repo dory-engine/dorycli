@@ -403,7 +403,7 @@ deploys:
     {{- end }}
     deployLocalPort:
       - port: 2376
-    deployReplicas: {{ $.dory.docker.dockerNumber }}
+    deployReplicas: 2
     {{- if $.dory.nodeSelector }}
     nodeSelector:
       {{- range $k, $v := $.dory.nodeSelector }}

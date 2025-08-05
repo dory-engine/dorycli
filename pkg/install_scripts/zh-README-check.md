@@ -11,19 +11,19 @@
 
 ### 安装DORY核心组件 (默认安装)
 
-- cpus: 1核
-- memory: 1G
-- storage: 2G
+- cpus: 2核
+- memory: 2G
+- storage: 5G
 
 ### 安装所有可选组件 (完整安装)
 
 - cpus: 4核
 - memory: 16G
-- storage: 60G
+- storage: 50G
 
 ## 在kubernetes集群中创建管理token
 
-- [注意] 请保证本机的kubectl能够管理目标kubernetes集群
+- [注意] 请保证本机的kubectl能够管理目标kubernetes集群，支持任意版本kubernetes集群
 
 - kubernetes管理token用于dory连接kubernetes集群并发布应用，必须在dory配置文件中设置
 
@@ -73,24 +73,12 @@ yum install -y qemu
 
 - 执行qemu-user-static，让节点都能够运行x86架构和arm64架构容器镜像
 ```shell script
-{{- if or (eq $.mode "docker") (eq $.runtime "docker") }}
-docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-{{- else if eq $.runtime "containerd" }}
-nerdctl -n k8s.io run --rm --privileged multiarch/qemu-user-static --reset -p yes
-{{- else if eq $.runtime "crio" }}
-podman run --rm --privileged multiarch/qemu-user-static --reset -p yes
-{{- end }}
+{{ $.cmdRun }} --rm --privileged multiarch/qemu-user-static --reset -p yes
 ```
 
 - 验证节点是否支持运行x86架构和arm64架构容器镜像
 ```shell script
-{{- if or (eq $.mode "docker") (eq $.runtime "docker") }}
-docker run --rm -t arm64v8/alpine:latest uname -m
-{{- else if eq $.runtime "containerd" }}
-nerdctl -n k8s.io run --rm -t arm64v8/alpine:latest uname -m
-{{- else if eq $.runtime "crio" }}
-podman run --rm -t arm64v8/alpine:latest uname -m
-{{- end }}
+{{ $.cmdRun }} --rm -t arm64v8/alpine:latest uname -m
 ```
 
 {{- if eq $.runtime "containerd" }}

@@ -72,80 +72,80 @@ func CheckAdminKind(item pkg.AdminKind) error {
 	switch item.Kind {
 	case pkg.AdminCmdKinds[pkg.AdminKindUser]:
 		var spec pkg.User
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	case pkg.AdminCmdKinds[pkg.AdminKindCustomStep]:
 		var spec pkg.CustomStepConf
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	case pkg.AdminCmdKinds[pkg.AdminKindEnvK8s]:
 		var spec pkg.EnvK8s
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	case pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate]:
 		var spec pkg.ComponentTemplate
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	case pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv]:
 		var spec pkg.DockerBuildEnv
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	case pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig]:
 		var spec pkg.GitRepoConfig
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	case pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig]:
 		var spec pkg.ImageRepoConfig
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	case pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig]:
 		var spec pkg.ArtifactRepoConfig
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	case pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig]:
 		var spec pkg.ScanCodeRepoConfig
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
 		}
 	case pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook]:
 		var spec pkg.AdminWebhook
-		bs, _ := pkg.YamlIndent(item.Spec)
-		err = yaml.Unmarshal(bs, &spec)
+		bs, _ := json.Marshal(item.Spec)
+		err = json.Unmarshal(bs, &spec)
 		if err != nil {
 			err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 			return err
@@ -206,15 +206,15 @@ func GetAdminKindsFromYaml(fileName string, bs []byte) ([]pkg.AdminKind, error) 
 		}
 	}
 	for _, m := range ms {
-		b, _ := yaml.Marshal(m)
+		b, _ := json.Marshal(m)
 		var list pkg.AdminKindList
-		err = yaml.Unmarshal(b, &list)
+		err = json.Unmarshal(b, &list)
 		if err == nil {
 			if list.Kind == "list" {
 				items = append(items, list.Items...)
 			} else {
 				var item pkg.AdminKind
-				err = yaml.Unmarshal(b, &item)
+				err = json.Unmarshal(b, &item)
 				if err != nil {
 					err = fmt.Errorf("parse file %s error: %s", fileName, err.Error())
 					return items, err
@@ -225,7 +225,7 @@ func GetAdminKindsFromYaml(fileName string, bs []byte) ([]pkg.AdminKind, error) 
 			}
 		} else {
 			var item pkg.AdminKind
-			err = yaml.Unmarshal(b, &item)
+			err = json.Unmarshal(b, &item)
 			if err != nil {
 				err = fmt.Errorf("parse file %s error: %s", fileName, err.Error())
 				return items, err
@@ -297,8 +297,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 		switch item.Kind {
 		case pkg.AdminCmdKinds[pkg.AdminKindUser]:
 			var spec pkg.User
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -306,8 +306,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			item.Spec = spec
 		case pkg.AdminCmdKinds[pkg.AdminKindCustomStep]:
 			var spec pkg.CustomStepConf
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -315,8 +315,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			item.Spec = spec
 		case pkg.AdminCmdKinds[pkg.AdminKindEnvK8s]:
 			var spec pkg.EnvK8s
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -324,8 +324,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			item.Spec = spec
 		case pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate]:
 			var spec pkg.ComponentTemplate
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -333,8 +333,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			item.Spec = spec
 		case pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv]:
 			var spec pkg.DockerBuildEnv
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -342,8 +342,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			item.Spec = spec
 		case pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig]:
 			var spec pkg.GitRepoConfig
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -351,8 +351,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			item.Spec = spec
 		case pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig]:
 			var spec pkg.ImageRepoConfig
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -360,8 +360,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			item.Spec = spec
 		case pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig]:
 			var spec pkg.ArtifactRepoConfig
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -369,8 +369,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			item.Spec = spec
 		case pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig]:
 			var spec pkg.ScanCodeRepoConfig
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -378,8 +378,8 @@ func GetAdminKinds(fileName string, bs []byte) ([]pkg.AdminKind, error) {
 			item.Spec = spec
 		case pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook]:
 			var spec pkg.AdminWebhook
-			bs, _ := pkg.YamlIndent(item.Spec)
-			err = yaml.Unmarshal(bs, &spec)
+			bs, _ := json.Marshal(item.Spec)
+			err = json.Unmarshal(bs, &spec)
 			if err != nil {
 				err = fmt.Errorf("kind is %s, but spec parse error: %s\n%s", item.Kind, err.Error(), string(bs))
 				return items, err
@@ -591,6 +591,8 @@ func (o *OptionsAdminApply) Run(args []string) error {
 				case pkg.User:
 					user = v
 				}
+				// do not update user isAdmin flag
+				user.IsAdmin = false
 				param = map[string]interface{}{}
 				bs, _ = json.Marshal(user)
 				_ = json.Unmarshal(bs, &param)

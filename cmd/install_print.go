@@ -8,7 +8,6 @@ import (
 
 type OptionsInstallPrint struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
-	Mode           string `yaml:"mode" json:"mode" bson:"mode" validate:""`
 	Runtime        string `yaml:"runtime" json:"runtime" bson:"runtime" validate:""`
 	Full           bool   `yaml:"full" json:"full" bson:"full" validate:""`
 }
@@ -28,7 +27,7 @@ func NewCmdInstallPrint() *cobra.Command {
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_install_print_short")
 	msgLong := OptCommon.TransLang("cmd_install_print_long")
-	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_print_example", baseName, baseName))
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_print_example", baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -41,7 +40,6 @@ func NewCmdInstallPrint() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVar(&o.Mode, "mode", "", OptCommon.TransLang("param_install_print_mode"))
 	cmd.Flags().StringVar(&o.Runtime, "runtime", "", OptCommon.TransLang("param_install_print_runtime"))
 	cmd.Flags().BoolVarP(&o.Full, "full", "", false, OptCommon.TransLang("param_install_print_full"))
 
@@ -57,21 +55,9 @@ func (o *OptionsInstallPrint) Complete(cmd *cobra.Command) error {
 		return err
 	}
 
-	err = cmd.RegisterFlagCompletionFunc("mode", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"kubernetes", "docker"}, cobra.ShellCompDirectiveNoFileComp
-	})
-	if err != nil {
-		return err
-	}
-
 	err = cmd.RegisterFlagCompletionFunc("runtime", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"docker", "containerd", "crio"}, cobra.ShellCompDirectiveNoFileComp
 	})
-	if err != nil {
-		return err
-	}
-
-	err = cmd.MarkFlagRequired("mode")
 	if err != nil {
 		return err
 	}
@@ -92,11 +78,6 @@ func (o *OptionsInstallPrint) Validate(args []string) error {
 		return err
 	}
 
-	if o.Mode != "docker" && o.Mode != "kubernetes" {
-		err = fmt.Errorf("--mode must be docker or kubernetes")
-		return err
-	}
-
 	if o.Runtime != "docker" && o.Runtime != "containerd" && o.Runtime != "crio" {
 		err = fmt.Errorf("--runtime must be docker, containerd or crio")
 		return err
@@ -114,12 +95,10 @@ func (o *OptionsInstallPrint) Run(args []string) error {
 		return err
 	}
 	vals := map[string]interface{}{
-		"mode":          o.Mode,
-		"runtime":       o.Runtime,
-		"full":          o.Full,
-		"language":      o.Language,
-		"nexusInitData": pkg.NexusInitData,
-		"baseName":      pkg.GetCmdBaseName(),
+		"runtime":  o.Runtime,
+		"full":     o.Full,
+		"language": o.Language,
+		"baseName": pkg.GetCmdBaseName(),
 	}
 	strInstallConfig, err := pkg.ParseTplFromVals(vals, string(bs))
 	if err != nil {

@@ -692,7 +692,6 @@ func (o *OptionsCommon) GetPipelineNames() ([]string, error) {
 
 	param := map[string]interface{}{
 		"projectNames": []string{},
-		"projectTeam":  "",
 		"page":         1,
 		"perPage":      1000,
 	}

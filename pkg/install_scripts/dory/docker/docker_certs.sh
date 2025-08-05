@@ -1,9 +1,9 @@
 export DORY_DOCKER_NAME={{ $.dory.docker.dockerName }}
 export DORY_DOCKER_NAMESPACE={{ $.dory.namespace }}
 
-sudo rm -rf certs/
-mkdir -p certs/
-cd certs/
+sudo rm -rf docker-certs/
+mkdir -p docker-certs/
+cd docker-certs/
 
 openssl genrsa -out ca.key 4096
 openssl req -x509 -new -nodes -sha512 -days 3650 -subj "/CN=${DORY_DOCKER_NAME}" -key ca.key -out ca.crt
@@ -28,4 +28,4 @@ openssl x509 -req -sha512 -days 3650 -extfile v3.ext -CA ca.crt -CAkey ca.key -C
 # echo "[CMD] openssl x509 -noout -text -in tls.crt"
 # openssl x509 -noout -text -in tls.crt
 cd ..
-sudo chown -R 1000:1000 certs
+sudo chown -R 1000:1000 docker-certs

@@ -11,7 +11,6 @@ import (
 
 type OptionsInstallCheck struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
-	Mode           string `yaml:"mode" json:"mode" bson:"mode" validate:""`
 	Runtime        string `yaml:"runtime" json:"runtime" bson:"runtime" validate:""`
 }
 
@@ -30,7 +29,7 @@ func NewCmdInstallCheck() *cobra.Command {
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_install_check_short")
 	msgLong := OptCommon.TransLang("cmd_install_check_long")
-	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_check_example", baseName, baseName))
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_check_example", baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -43,7 +42,6 @@ func NewCmdInstallCheck() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVar(&o.Mode, "mode", "", OptCommon.TransLang("param_install_check_mode"))
 	cmd.Flags().StringVar(&o.Runtime, "runtime", "", OptCommon.TransLang("param_install_check_runtime"))
 
 	CheckError(o.Complete(cmd))
@@ -58,21 +56,9 @@ func (o *OptionsInstallCheck) Complete(cmd *cobra.Command) error {
 		return err
 	}
 
-	err = cmd.RegisterFlagCompletionFunc("mode", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"kubernetes", "docker"}, cobra.ShellCompDirectiveNoFileComp
-	})
-	if err != nil {
-		return err
-	}
-
 	err = cmd.RegisterFlagCompletionFunc("runtime", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"docker", "containerd", "crio"}, cobra.ShellCompDirectiveNoFileComp
 	})
-	if err != nil {
-		return err
-	}
-
-	err = cmd.MarkFlagRequired("mode")
 	if err != nil {
 		return err
 	}
@@ -90,11 +76,6 @@ func (o *OptionsInstallCheck) Validate(args []string) error {
 
 	err = o.GetOptionsCommon()
 	if err != nil {
-		return err
-	}
-
-	if o.Mode != "docker" && o.Mode != "kubernetes" {
-		err = fmt.Errorf("--mode must be docker or kubernetes")
 		return err
 	}
 
@@ -130,54 +111,26 @@ func (o *OptionsInstallCheck) Run(args []string) error {
 	}
 	log.Success("check openssl installed success")
 
-	if o.Mode == "docker" {
-		log.Info("check dockerd installed")
-		_, _, err = pkg.CommandExec(fmt.Sprintf("dockerd --version"), ".")
-		if err != nil {
-			err = fmt.Errorf("check dockerd installed error: %s", err.Error())
-			log.Error(err.Error())
-			return err
-		}
-		log.Success("check dockerd installed success")
-
-		log.Info("check docker installed")
-		_, _, err = pkg.CommandExec(fmt.Sprintf("docker version"), ".")
-		if err != nil {
-			err = fmt.Errorf("check docker installed error: %s", err.Error())
-			log.Error(err.Error())
-			return err
-		}
-		log.Success("check docker installed success")
-
-		log.Info("check docker-compose installed")
-		_, _, err = pkg.CommandExec(fmt.Sprintf("docker-compose version"), ".")
-		if err != nil {
-			err = fmt.Errorf("check docker-compose installed error: %s", err.Error())
-			log.Error(err.Error())
-			return err
-		}
-		log.Success("check docker-compose installed success")
-	} else if o.Mode == "kubernetes" {
-		log.Info("check helm v3.x installed")
-		outputHelm, _, err := pkg.CommandExec(fmt.Sprintf("helm version --template='{{.Version}}'"), ".")
-		if err != nil {
-			err = fmt.Errorf("check helm v3.x installed error: %s", err.Error())
-			log.Error(err.Error())
-			return err
-		}
-		if !strings.HasPrefix(outputHelm, "v3.") {
-			err = fmt.Errorf("check helm v3.x installed error: helm version must be v3.x")
-			log.Error(err.Error())
-			return err
-		}
-		log.Success("check helm v3.x installed success")
+	log.Info("check helm v3.x installed")
+	outputHelm, _, err := pkg.CommandExec(fmt.Sprintf("helm version --template='{{.Version}}'"), ".")
+	if err != nil {
+		err = fmt.Errorf("check helm v3.x installed error: %s", err.Error())
+		log.Error(err.Error())
+		return err
 	}
+	if !strings.HasPrefix(outputHelm, "v3.") {
+		err = fmt.Errorf("check helm v3.x installed error: helm version must be v3.x")
+		log.Error(err.Error())
+		return err
+	}
+	log.Success("check helm v3.x installed success")
 
-	var cmdImagePull, cmdImageTag string
+	var cmdImagePull, cmdImageTag, cmdRun string
 	switch o.Runtime {
 	case "docker":
 		cmdImagePull = "docker pull"
 		cmdImageTag = "docker tag"
+		cmdRun = "docker run"
 
 		log.Info("check kubernetes cluster dockerd installed")
 		_, _, err = pkg.CommandExec(fmt.Sprintf("dockerd --version"), ".")
@@ -199,6 +152,7 @@ func (o *OptionsInstallCheck) Run(args []string) error {
 	case "containerd":
 		cmdImagePull = "nerdctl -n k8s.io pull"
 		cmdImageTag = "nerdctl -n k8s.io tag"
+		cmdRun = "nerdctl -n k8s.io run"
 
 		log.Info("check kubernetes cluster containerd installed")
 		_, _, err = pkg.CommandExec(fmt.Sprintf("containerd --version"), ".")
@@ -238,6 +192,7 @@ func (o *OptionsInstallCheck) Run(args []string) error {
 	case "crio":
 		cmdImagePull = "podman pull"
 		cmdImageTag = "podman tag"
+		cmdRun = "podman run"
 
 		log.Info("check kubernetes cluster crio installed")
 		_, _, err = pkg.CommandExec(fmt.Sprintf("crio --version"), ".")
@@ -281,10 +236,10 @@ func (o *OptionsInstallCheck) Run(args []string) error {
 	}
 
 	vals := map[string]interface{}{
-		"mode":         o.Mode,
 		"runtime":      o.Runtime,
 		"cmdImagePull": cmdImagePull,
 		"cmdImageTag":  cmdImageTag,
+		"cmdRun":       cmdRun,
 	}
 	strReadme, err := pkg.ParseTplFromVals(vals, string(bs))
 	if err != nil {

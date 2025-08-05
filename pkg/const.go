@@ -1,13 +1,16 @@
 package pkg
 
-import "embed"
+import (
+	"embed"
+	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
+)
 
 const (
-	VersionDoryCli      = "v1.6.6"
-	VersionDoryEngine   = "v2.6.6"
-	VersionDoryFrontend = "v2.6.6"
-
-	NexusInitData = "nexus-data-init.tar.gz"
+	VersionDoryCli      = "v1.7.0"
+	VersionDoryEngine   = "v2.7.0"
+	VersionDoryFrontend = "v2.7.0"
 
 	ConfigDirDefault  = ".dorycli"
 	ConfigFileDefault = "config.yaml"
@@ -146,4 +149,22 @@ var (
 		AccessLevelDeveloper,
 		AccessLevelRunner,
 	}
+
+	TableRenderBorder = tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+		Settings: tw.Settings{Separators: tw.Separators{BetweenRows: tw.On}},
+	}))
+
+	TableRenderBorderNone = tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+		Borders:  tw.BorderNone,
+		Settings: tw.Settings{Separators: tw.SeparatorsNone, Lines: tw.LinesNone},
+	}))
+
+	TableCellConfig = tablewriter.WithConfig(tablewriter.Config{
+		Header: tw.CellConfig{
+			Alignment: tw.CellAlignment{Global: tw.AlignLeft},
+		},
+		Row: tw.CellConfig{
+			Alignment: tw.CellAlignment{Global: tw.AlignLeft},
+		},
+	})
 )

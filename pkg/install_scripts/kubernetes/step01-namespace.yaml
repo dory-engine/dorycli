@@ -1,0 +1,68 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $.currentNamespace }}
+  labels:
+    ns: {{ $.currentNamespace }}
+
+{{- if eq $.dory.imageRepo.type "harbor" }}
+{{- $harborDockerConfigJson := printf `{"auths": {"%s": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.imageRepoDomainName $.imageRepoUsername $.imageRepoPassword $.imageRepoEmail (printf "%s:%s" $.imageRepoUsername $.imageRepoPassword | b64enc) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $.imageRepoDomainName }}
+  namespace: {{ $.currentNamespace }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: |
+    {{ $harborDockerConfigJson | b64enc | nindent 4 }}
+{{- end }}
+
+{{- if eq $.dory.artifactRepo.type "nexus"}}
+{{- $nexusDockerhubConfigJson := printf `{"auths": {"%s:%d": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.artifactRepoIp $.artifactRepoPortHub $.artifactRepoPublicUser $.artifactRepoPublicPassword $.artifactRepoPublicEmail (printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nexus-hub
+  namespace: {{ $.currentNamespace }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: |
+    {{ $nexusDockerhubConfigJson | b64enc | nindent 4 }}
+
+{{- $nexusGcrConfigJson := printf `{"auths": {"%s:%d": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.artifactRepoIp $.artifactRepoPortGcr $.artifactRepoPublicUser $.artifactRepoPublicPassword $.artifactRepoPublicEmail (printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nexus-gcr
+  namespace: {{ $.currentNamespace }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: |
+    {{ $nexusGcrConfigJson | b64enc | nindent 4 }}
+
+{{- $nexusQuayConfigJson := printf `{"auths": {"%s:%d": {"username": "%s", "password": "%s", "email": "%s", "auth": "%s"}}}` $.artifactRepoIp $.artifactRepoPortQuay $.artifactRepoPublicUser $.artifactRepoPublicPassword $.artifactRepoPublicEmail (printf "%s:%s" $.artifactRepoPublicUser $.artifactRepoPublicPassword | b64enc) }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: nexus-quay
+  namespace: {{ $.currentNamespace }}
+type: kubernetes.io/dockerconfigjson
+data:
+  .dockerconfigjson: |
+    {{ $nexusQuayConfigJson | b64enc | nindent 4 }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-timezone
+  namespace: {{ $.currentNamespace }}
+data:
+  timezone: {{ $.kubernetes.timezone }}

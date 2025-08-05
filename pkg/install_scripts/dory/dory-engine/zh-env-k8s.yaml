@@ -123,6 +123,54 @@ pvConfigCephfs:
 #   - "192.168.0.3:6789"
 {{- end }}
 
+{{- if or $.kubernetes.pvConfigCsiNfs.nfsPath $.kubernetes.pvConfigCsiCephfs.cephPath }}
+# 假如持久化存储使用csi情况下请设置，否则请删除以下配置
+pvConfigCsi:
+  # csi存储名称，目前内置支持 csi-nfs csi-cephfs 两种csi存储
+  {{- if $.kubernetes.pvConfigCsiNfs.nfsPath }}
+  envCsiName: csi-nfs
+  {{- else if $.kubernetes.pvConfigCsiCephfs.cephPath }}
+  envCsiName: csi-cephfs
+  {{- end }}
+  # csi存储参数配置
+  {{- if $.kubernetes.pvConfigCsiNfs.nfsPath }}
+  envCsiParams: |
+    server: {{ $.kubernetes.pvConfigCsiNfs.nfsServer }}
+    share: {{ $.kubernetes.pvConfigCsiNfs.nfsPath }}
+    {{- if $.kubernetes.pvConfigCsiNfs.nfsMountOptions }}
+    mountOptions:
+    {{- range $_, $v := $.kubernetes.pvConfigCsiNfs.nfsMountOptions }}
+    - {{ $v }}
+    {{- end }}
+    {{- end }}
+  {{- else if $.kubernetes.pvConfigCsiCephfs.cephPath }}
+  envCsiParams: |
+    adminID: {{ $.kubernetes.pvConfigCsiCephfs.cephUser }}
+    adminKey: {{ $.kubernetes.pvConfigCsiCephfs.cephSecret }}
+    fsName: {{ $.kubernetes.pvConfigCsiCephfs.cephFsName }}
+    clusterID: {{ $.kubernetes.pvConfigCsiCephfs.cephClusterId }}
+    rootPath: {{ $.kubernetes.pvConfigCsiCephfs.cephPath }}
+  {{- end }}
+{{- else }}
+# # 假如持久化存储使用csi情况下请设置，否则请删除以下配置
+# pvConfigCsi:
+#   # csi模板名称，目前内置支持 csi-nfs csi-cephfs 两种csi存储
+#   envCsiName: csi-nfs
+#   # csi存储参数配置
+#   envCsiParams: |
+#     # csi-nfs情况下，参数格式如下:
+#     server: 192.168.0.1
+#     share: /data/nfs-share
+#     mountOptions:
+#       - nfsvers=4.1
+#     # csi-cephfs情况下，参数格式如下:
+#     adminID: admin
+#     adminKey: xxx
+#     fsName: your_filesystem_name
+#     clusterID: xxxx
+#     rootPath: /your_cephfs_path
+{{- end }}
+
 # 项目的deployment选择部署在什么标签的节点上，格式为（labelName: labelValue）
 projectNodeSelector: {}
 

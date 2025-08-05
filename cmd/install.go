@@ -16,7 +16,7 @@ func NewCmdInstall() *cobra.Command {
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_install_short")
 	msgLong := OptCommon.TransLang("cmd_install_long")
-	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_example", baseName, baseName, baseName, baseName, baseName, baseName, baseName, baseName, baseName, baseName, baseName))
+	msgExample := pkg.Indent(OptCommon.TransLang("cmd_install_example", baseName, baseName, baseName, baseName, baseName))
 
 	cmd := &cobra.Command{
 		Use:                   msgUse,
@@ -50,7 +50,6 @@ func NewCmdInstall() *cobra.Command {
 	cmd.AddCommand(NewCmdInstallCheck())
 	cmd.AddCommand(NewCmdInstallPrint())
 	cmd.AddCommand(NewCmdInstallPull())
-	cmd.AddCommand(NewCmdInstallRun())
 	cmd.AddCommand(NewCmdInstallScript())
 	cmd.AddCommand(NewCmdInstallHa())
 	return cmd

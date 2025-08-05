@@ -41,7 +41,7 @@
 
 ![](docs/images/architecture.png)
 
-1. 部署简单: 支持使用docker-compose或者kubernetes进行部署
+1. 部署简单: 支持kubernetes部署
 1. 扩展性强: 内置的编译、扫描、自动化测试等步骤都在docker容器中执行，可以通过自定义容器镜像支持各种编程语言编译环境和自定义步骤
 1. 上手极快: 自动接管各种代码仓库、依赖仓库、镜像仓库、扫描仓库，开发人员无需做任何配置，编译、打包、部署的流水线自动就绪
 1. 功能强大: 支持部署到多个k8s环境，支持x86/arm架构编译部署，支持gpu资源调度，支持多种灰度发布，主机环境部署，数据库脚本部署
@@ -81,7 +81,6 @@ dorycli
 │   │   └── script # 创建负载均衡器的配置文件、docker-compose文件以及高可用kubernetes集群的初始化配置文件
 │   ├── print # 打印安装配置YAML文件
 │   ├── pull # 拉取并构建相关容器镜像
-│   ├── run # 自动安装Dory-Engine
 │   └── script # 手动安装Dory-Engine
 ├── login # 登录到Dory-Engine
 ├── logout # 从Dory-Engine注销
@@ -138,52 +137,25 @@ which dorycli
 
 ```shell script
   ##############################
-  # 请根据以下步骤指引把Dory-Engine安装到kubernetes集群中 (生产用途，推荐安装方式):
+  # 请根据以下步骤指引把Dory-Engine安装到kubernetes集群中:
   
   # 1. 检查把Dory-Engine安装到kubernetes集群的前提条件，被接管的kubernetes集群的容器运行时为docker
-  dorycli install check --mode kubernetes --runtime docker
+  dorycli install check --runtime docker
   
   # 2. (选项1) 打印把Dory-Engine安装到kubernetes集群的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（快速安装模式，仅安装Dory-Engine基础组件）
-  dorycli install print --mode kubernetes --runtime docker > install-config-kubernetes.yaml
+  dorycli install print --runtime docker > install-dory.yaml
   
   # 2. (选项2) 打印把Dory-Engine安装到kubernetes集群的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（完整安装模式，同时会安装代码仓库、镜像仓库、依赖与制品仓库以及代码扫描仓库）
-  dorycli install print --mode kubernetes --runtime docker --full > install-config-kubernetes.yaml
+  dorycli install print --runtime docker --full > install-dory.yaml
   
   # 3. 根据安装配置文件说明，手工修改安装配置文件
-  vi install-config-kubernetes.yaml
+  vi install-dory.yaml
   
   # 4. 拉取并构建安装Dory-Engine所需要的容器镜像
-  dorycli install pull -f install-config-kubernetes.yaml
+  dorycli install pull -f install-dory.yaml
   
-  # 5. (选项1) 把Dory-Engine自动安装到kubernetes集群
-  dorycli install run -o readme-install-kubernetes -f install-config-kubernetes.yaml
-  
-  # 5. (选项2) 以手动的方式安装Dory-Engine到kubernetes集群，执行命令将会输出安装说明文件以及所有部署清单和配置文件，参照说明文件，以自定义方式安装Dory-Engine
-  dorycli install script -o readme-install-kubernetes -f install-config-kubernetes.yaml
-  
-  ##############################
-  # 请根据以下步骤指引把Dory-Engine安装到docker主机中 (测试用途):
-  
-  # 1. 检查把Dory-Engine安装到docker主机的前提条件，被接管的kubernetes集群的容器运行时为docker
-  dorycli install check --mode docker --runtime docker
-  
-  # 2. (选项1) 打印把Dory-Engine安装到docker主机的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（快速安装模式，仅安装Dory-Engine基础组件）
-  dorycli install print --mode docker --runtime docker > install-config-docker.yaml
-  
-  # 2. (选项2) 打印把Dory-Engine安装到kubernetes集群的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（完整安装模式，同时会安装代码仓库、镜像仓库、依赖与制品仓库以及代码扫描仓库）
-  dorycli install print --mode docker --runtime docker --full > install-config-docker.yaml
-  
-  # 3. 根据安装配置文件说明，手工修改安装配置文件
-  vi install-config-docker.yaml
-  
-  # 4. 拉取并构建安装Dory-Engine所需要的容器镜像
-  dorycli install pull -f install-config-docker.yaml
-  
-  # 5. (选项 1) 把Dory-Engine自动安装到docker主机
-  dorycli install run -o readme-install-docker -f install-config-docker.yaml
-  
-  # 5. (选项 2) 以手动的方式安装Dory-Engine到docker主机，执行命令将会输出安装说明文件以及所有部署清单和配置文件，参照说明文件，以自定义方式安装Dory-Engine
-  dorycli install script -o readme-install-docker -f install-config-docker.yaml
+  # 5. 手动方式安装Dory-Engine到kubernetes集群，执行命令将会输出安装说明文件以及所有部署清单和配置文件
+  dorycli install script -o readme-dory -f install-dory.yaml
 ```
 
 - 视频指引

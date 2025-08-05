@@ -16,6 +16,7 @@ type OptionsInstallPull struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
 	FileName       string `yaml:"fileName" json:"fileName" bson:"fileName" validate:""`
 	Build          bool   `yaml:"build" json:"build" bson:"build" validate:""`
+	Save           bool   `yaml:"save" json:"save" bson:"save" validate:""`
 	ForceDownload  bool   `yaml:"forceDownload" json:"forceDownload" bson:"forceDownload" validate:""`
 	Yes            bool   `yaml:"yes" json:"yes" bson:"yes" validate:""`
 }
@@ -51,6 +52,7 @@ func NewCmdInstallPull() *cobra.Command {
 
 	cmd.Flags().StringVarP(&o.FileName, "file", "f", "", OptCommon.TransLang("param_install_pull_file"))
 	cmd.Flags().BoolVar(&o.Build, "build", false, OptCommon.TransLang("param_install_pull_build"))
+	cmd.Flags().BoolVar(&o.Save, "save", false, OptCommon.TransLang("param_install_pull_save"))
 	cmd.Flags().BoolVar(&o.ForceDownload, "force-download", false, OptCommon.TransLang("param_install_pull_force_download"))
 	cmd.Flags().BoolVar(&o.Yes, "yes", false, OptCommon.TransLang("param_install_pull_yes"))
 
@@ -85,7 +87,6 @@ func (o *OptionsInstallPull) Validate(args []string) error {
 	return err
 }
 
-// Run executes the appropriate steps to pull a model's documentation
 func (o *OptionsInstallPull) Run(args []string) error {
 	var err error
 
@@ -110,23 +111,26 @@ func (o *OptionsInstallPull) Run(args []string) error {
 		return err
 	}
 
-	var cmdImagePull, cmdImageBuild, cmdImagePullArm64, cmdImageTag string
+	var cmdImagePull, cmdImageBuild, cmdImagePullArm64, cmdImageTag, cmdImageSave string
 	switch installConfig.Kubernetes.Runtime {
 	case "docker":
 		cmdImagePull = "docker pull"
 		cmdImageBuild = "docker build"
 		cmdImagePullArm64 = "--platform=arm64"
 		cmdImageTag = "docker tag"
+		cmdImageSave = "docker save"
 	case "containerd":
 		cmdImagePull = "nerdctl -n k8s.io pull -q"
 		cmdImageBuild = "nerdctl -n k8s.io build"
 		cmdImagePullArm64 = "--platform=arm64"
 		cmdImageTag = "nerdctl -n k8s.io tag"
+		cmdImageSave = "nerdctl -n k8s.io save"
 	case "crio":
 		cmdImagePull = "podman pull"
 		cmdImageBuild = "podman build"
 		cmdImagePullArm64 = "--arch=arm64"
 		cmdImageTag = "podman tag"
+		cmdImageSave = "podman save"
 	}
 
 	var dockerImages pkg.InstallDockerImages
@@ -219,13 +223,21 @@ func (o *OptionsInstallPull) Run(args []string) error {
 		}
 	}
 
-	if installConfig.Dory.ArtifactRepo.Type == "nexus" {
-		log.Info("nexus initial data need to download")
-		fmt.Println(fmt.Sprintf("curl -O -L https://doryengine.com/attachments/%s", pkg.NexusInitData))
-	}
-
 	if installConfig.Dory.ImageRepo.Type == "harbor" {
-		log.Info("container images need to pull")
+		fmt.Println("# container images need to pull")
+		if installConfig.Dory.ImageRepo.Internal.Version != "" {
+			imageNames := []string{}
+			imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-core:%s", installConfig.Dory.ImageRepo.Internal.Version))
+			imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-db:%s", installConfig.Dory.ImageRepo.Internal.Version))
+			imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-jobservice:%s", installConfig.Dory.ImageRepo.Internal.Version))
+			imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-portal:%s", installConfig.Dory.ImageRepo.Internal.Version))
+			imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-registryctl:%s", installConfig.Dory.ImageRepo.Internal.Version))
+			imageNames = append(imageNames, fmt.Sprintf("goharbor/redis-photon:%s", installConfig.Dory.ImageRepo.Internal.Version))
+			imageNames = append(imageNames, fmt.Sprintf("goharbor/registry-photon:%s", installConfig.Dory.ImageRepo.Internal.Version))
+			for _, imageName := range imageNames {
+				fmt.Println(fmt.Sprintf("%s %s", cmdImagePull, imageName))
+			}
+		}
 		for _, idi := range dockerImages.InstallDockerImages {
 			if o.Build {
 				fmt.Println(fmt.Sprintf("%s %s", cmdImagePull, idi.Source))
@@ -260,7 +272,7 @@ func (o *OptionsInstallPull) Run(args []string) error {
 					} else {
 						tagName = "latest"
 					}
-					fmt.Println(fmt.Sprintf("%s -t %s -f %s/%s-%s %s", cmdImageBuild, idi.Target, dockerFileDir, idi.DockerFile, tagName, dockerFileDir))
+					fmt.Println(fmt.Sprintf("%s -t %s -f %s/%s-%s %s", cmdImageBuild, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir))
 					if idi.Arm64 != "" {
 						arr := strings.Split(idi.Arm64, ":")
 						var tagName string
@@ -269,16 +281,34 @@ func (o *OptionsInstallPull) Run(args []string) error {
 						} else {
 							tagName = "latest"
 						}
-						fmt.Println(fmt.Sprintf("%s -t %s-arm64v8 -f %s/%s-%s-arm64v8 %s", cmdImageBuild, idi.Target, dockerFileDir, idi.DockerFile, tagName, dockerFileDir))
+						fmt.Println(fmt.Sprintf("%s -t %s-arm64v8 -f %s/%s-%s-arm64v8 %s", cmdImageBuild, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir))
 					}
 				}
 			}
-		} else {
+		}
+		fmt.Println()
+		if installConfig.Dory.ImageRepo.Internal.Hostname != "" {
+			fmt.Println(fmt.Sprintf("%s doryengine/alpine:3.17.2-dory %s/public/alpine:3.17.2-dory", cmdImageTag, installConfig.Dory.ImageRepo.Internal.Hostname))
+		} else if installConfig.Dory.ImageRepo.External.Hostname != "" {
+			fmt.Println(fmt.Sprintf("%s doryengine/alpine:3.17.2-dory %s/public/alpine:3.17.2-dory", cmdImageTag, installConfig.Dory.ImageRepo.External.Hostname))
+		}
+		fmt.Println()
+		if o.Save {
+			fmt.Println("# save all container images to files")
 			for _, idi := range dockerImages.InstallDockerImages {
 				if idi.Built != "" {
-					fmt.Println(fmt.Sprintf("%s %s %s", cmdImageTag, idi.Built, idi.Target))
+					saveName := strings.ReplaceAll(strings.ReplaceAll(idi.Built, "/", "_"), ":", "__")
+					fmt.Println(fmt.Sprintf("%s -o %s %s", cmdImageSave, saveName, idi.Built))
 					if idi.Arm64 != "" {
-						fmt.Println(fmt.Sprintf("%s %s-arm64v8 %s-arm64v8", cmdImageTag, idi.Built, idi.Target))
+						saveName = strings.ReplaceAll(strings.ReplaceAll(idi.Built, "/", "_"), ":", "__")
+						fmt.Println(fmt.Sprintf("%s -o %s-arm64v8 %s-arm64v8", cmdImageSave, saveName, idi.Built))
+					}
+				} else {
+					saveName := strings.ReplaceAll(strings.ReplaceAll(idi.Source, "/", "_"), ":", "__")
+					fmt.Println(fmt.Sprintf("%s -o %s %s", cmdImageSave, saveName, idi.Source))
+					if idi.Arm64 != "" {
+						saveName = strings.ReplaceAll(strings.ReplaceAll(idi.Arm64, "/", "_"), ":", "__")
+						fmt.Println(fmt.Sprintf("%s -o %s %s", cmdImageSave, saveName, idi.Arm64))
 					}
 				}
 			}
@@ -286,15 +316,8 @@ func (o *OptionsInstallPull) Run(args []string) error {
 	}
 
 	if installConfig.Dory.ImageRepo.Type == "harbor" || installConfig.Dory.ArtifactRepo.Type == "nexus" {
-		arr := []string{}
-		if installConfig.Dory.ImageRepo.Type == "harbor" {
-			arr = append(arr, "pull container images")
-		}
-		if installConfig.Dory.ArtifactRepo.Type == "nexus" {
-			arr = append(arr, "download nexus initial data")
-		}
 		if !o.Yes {
-			log.Warning(fmt.Sprintf("make sure current host can connect internet, are you sure %s now? [YES/NO]", strings.Join(arr, " and ")))
+			log.Warning(fmt.Sprintf("make sure current host can connect internet, are you sure run above commands automatically now? [YES/NO]"))
 			reader := bufio.NewReader(os.Stdin)
 			userInput, _ := reader.ReadString('\n')
 			userInput = strings.Trim(userInput, "\n")
@@ -304,36 +327,25 @@ func (o *OptionsInstallPull) Run(args []string) error {
 			}
 		}
 
-		var isDownloadNexus bool
-		if installConfig.Dory.ArtifactRepo.Type == "nexus" {
-			fi, err := os.Stat(pkg.NexusInitData)
-			if err == nil {
-				if !fi.IsDir() {
-					if o.ForceDownload {
-						isDownloadNexus = true
-					}
-				} else {
-					_ = os.RemoveAll(pkg.NexusInitData)
-					isDownloadNexus = true
-				}
-			} else {
-				isDownloadNexus = true
-			}
-		}
-		baseName := pkg.GetCmdBaseName()
-		if isDownloadNexus {
-			log.Info(fmt.Sprintf("start to download nexus initial data"))
-			_, _, err = pkg.CommandExec(fmt.Sprintf("curl -O -L https://doryengine.com/attachments/%s", pkg.NexusInitData), ".")
-			if err != nil {
-				err = fmt.Errorf("download nexus initial data error: %s", err.Error())
-				return err
-			}
-			log.Info(fmt.Sprintf("download nexus initial data %s success", pkg.NexusInitData))
-			log.Info(fmt.Sprintf("if run '%s install run [options]' or '%s install script [options]' command, make sure run this command at %s file's directory", baseName, baseName, pkg.NexusInitData))
-		}
-
 		if installConfig.Dory.ImageRepo.Type == "harbor" {
 			log.Info("pull container images begin")
+			if installConfig.Dory.ImageRepo.Internal.Version != "" {
+				imageNames := []string{}
+				imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-core:%s", installConfig.Dory.ImageRepo.Internal.Version))
+				imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-db:%s", installConfig.Dory.ImageRepo.Internal.Version))
+				imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-jobservice:%s", installConfig.Dory.ImageRepo.Internal.Version))
+				imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-portal:%s", installConfig.Dory.ImageRepo.Internal.Version))
+				imageNames = append(imageNames, fmt.Sprintf("goharbor/harbor-registryctl:%s", installConfig.Dory.ImageRepo.Internal.Version))
+				imageNames = append(imageNames, fmt.Sprintf("goharbor/redis-photon:%s", installConfig.Dory.ImageRepo.Internal.Version))
+				imageNames = append(imageNames, fmt.Sprintf("goharbor/registry-photon:%s", installConfig.Dory.ImageRepo.Internal.Version))
+				for _, imageName := range imageNames {
+					_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s", cmdImagePull, imageName), ".")
+					if err != nil {
+						err = fmt.Errorf("pull container image %s error: %s", imageName, err.Error())
+						return err
+					}
+				}
+			}
 			for i, idi := range dockerImages.InstallDockerImages {
 				imageName := idi.Source
 				imageNameArm64 := idi.Arm64
@@ -362,7 +374,7 @@ func (o *OptionsInstallPull) Run(args []string) error {
 						} else {
 							tagName = "latest"
 						}
-						_, _, err = pkg.CommandExec(fmt.Sprintf("%s -t %s -f %s/%s-%s %s", cmdImageBuild, idi.Target, dockerFileDir, idi.DockerFile, tagName, dockerFileDir), ".")
+						_, _, err = pkg.CommandExec(fmt.Sprintf("%s -t %s -f %s/%s-%s %s", cmdImageBuild, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir), ".")
 						if err != nil {
 							err = fmt.Errorf("build container image %s error: %s", idi.Source, err.Error())
 							return err
@@ -375,30 +387,28 @@ func (o *OptionsInstallPull) Run(args []string) error {
 							} else {
 								tagName = "latest"
 							}
-							_, _, err = pkg.CommandExec(fmt.Sprintf("%s -t %s-arm64v8 -f %s/%s-%s-arm64v8 %s", cmdImageBuild, idi.Target, dockerFileDir, idi.DockerFile, tagName, dockerFileDir), ".")
+							_, _, err = pkg.CommandExec(fmt.Sprintf("%s -t %s-arm64v8 -f %s/%s-%s-arm64v8 %s", cmdImageBuild, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir), ".")
 							if err != nil {
 								err = fmt.Errorf("build container image %s error: %s", idi.Arm64, err.Error())
 								return err
 							}
 						}
 					}
-				} else {
-					if idi.Built != "" {
-						_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s %s", cmdImageTag, idi.Built, idi.Target), ".")
-						if err != nil {
-							err = fmt.Errorf("tag container image %s error: %s", idi.Source, err.Error())
-							return err
-						}
-						if idi.Arm64 != "" {
-							_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s-arm64v8 %s-arm64v8", cmdImageTag, idi.Built, idi.Target), ".")
-							if err != nil {
-								err = fmt.Errorf("tag container image %s error: %s", idi.Source, err.Error())
-								return err
-							}
-						}
-					}
 				}
 				log.Success(fmt.Sprintf("# progress: %d/%d %s", i+1, len(dockerImages.InstallDockerImages), idi.Target))
+			}
+			if installConfig.Dory.ImageRepo.Internal.Hostname != "" {
+				_, _, err = pkg.CommandExec(fmt.Sprintf("%s doryengine/alpine:3.17.2-dory %s/public/alpine:3.17.2-dory", cmdImageTag, installConfig.Dory.ImageRepo.Internal.Hostname), ".")
+				if err != nil {
+					err = fmt.Errorf("tag container image doryengine/alpine:3.17.2-dory error: %s", err.Error())
+					return err
+				}
+			} else if installConfig.Dory.ImageRepo.External.Hostname != "" {
+				_, _, err = pkg.CommandExec(fmt.Sprintf("%s doryengine/alpine:3.17.2-dory %s/public/alpine:3.17.2-dory", cmdImageTag, installConfig.Dory.ImageRepo.External.Hostname), ".")
+				if err != nil {
+					err = fmt.Errorf("tag container image doryengine/alpine:3.17.2-dory error: %s", err.Error())
+					return err
+				}
 			}
 			log.Success(fmt.Sprintf("pull and build container images success"))
 		}

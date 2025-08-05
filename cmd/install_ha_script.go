@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/dory-engine/dorycli/pkg"
 	"github.com/spf13/cobra"
@@ -145,9 +146,9 @@ func (o *OptionsInstallHaScript) Run(args []string) error {
 		return err
 	}
 
-	bs, _ = yaml.Marshal(kubernetesHaCluster)
+	bs, _ = json.Marshal(kubernetesHaCluster)
 	vals := map[string]interface{}{}
-	_ = yaml.Unmarshal(bs, &vals)
+	_ = json.Unmarshal(bs, &vals)
 
 	outputDir := o.OutputDir
 	_ = os.MkdirAll(outputDir, 0700)
@@ -186,9 +187,9 @@ func (o *OptionsInstallHaScript) Run(args []string) error {
 				return err
 			}
 		}
-		bs, _ = yaml.Marshal(host)
+		bs, _ = json.Marshal(host)
 		v := map[string]interface{}{}
-		_ = yaml.Unmarshal(bs, &v)
+		_ = json.Unmarshal(bs, &v)
 		vals["host"] = v
 
 		fileName = "keepalived/keepalived.conf"

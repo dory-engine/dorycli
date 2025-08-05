@@ -8,17 +8,21 @@ import (
 	"github.com/spf13/cobra"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
 type OptionsAdminGet struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
-	Full           bool   `yaml:"full" json:"full" bson:"full" validate:""`
-	Output         string `yaml:"output" json:"output" bson:"output" validate:""`
+	Filter         []string `yaml:"filter" json:"filter" bson:"filter" validate:""`
+	Name           bool     `yaml:"name" json:"name" bson:"name" validate:""`
+	Full           bool     `yaml:"full" json:"full" bson:"full" validate:""`
+	Output         string   `yaml:"output" json:"output" bson:"output" validate:""`
 	Param          struct {
-		Kinds     []string `yaml:"kinds" json:"kinds" bson:"kinds" validate:""`
-		ItemNames []string `yaml:"itemNames" json:"itemNames" bson:"itemNames" validate:""`
-		IsAllKind bool     `yaml:"isAllKind" json:"isAllKind" bson:"isAllKind" validate:""`
+		Kinds     []string               `yaml:"kinds" json:"kinds" bson:"kinds" validate:""`
+		ItemNames []string               `yaml:"itemNames" json:"itemNames" bson:"itemNames" validate:""`
+		IsAllKind bool                   `yaml:"isAllKind" json:"isAllKind" bson:"isAllKind" validate:""`
+		Filters   map[string]interface{} `yaml:"filters" json:"filters" bson:"filters" validate:""`
 	}
 }
 
@@ -52,6 +56,8 @@ func NewCmdAdminGet() *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_admin_get_output"))
 	cmd.Flags().BoolVar(&o.Full, "full", false, OptCommon.TransLang("param_admin_get_full"))
+	cmd.Flags().StringSliceVar(&o.Filter, "filter", []string{}, OptCommon.TransLang("param_admin_get_filter"))
+	cmd.Flags().BoolVar(&o.Name, "name", false, OptCommon.TransLang("param_admin_get_name"))
 
 	CheckError(o.Complete(cmd))
 	return cmd
@@ -124,7 +130,7 @@ func (o *OptionsAdminGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -187,16 +193,50 @@ func (o *OptionsAdminGet) Validate(args []string) error {
 	}
 
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" {
-			err = fmt.Errorf("--output must be yaml or json")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
+			err = fmt.Errorf("--output must be yaml or json or table")
 			return err
 		}
 	}
+
+	o.Param.Filters = map[string]interface{}{}
+	for _, s := range o.Filter {
+		var k, v string
+		idx := strings.Index(s, "=")
+		if idx > 0 {
+			k = s[:idx]
+			v = s[idx+1:]
+			k = strings.Trim(k, " ")
+			v = strings.Trim(v, " ")
+			if v == "true" {
+				o.Param.Filters[k] = true
+			} else if v == "false" {
+				o.Param.Filters[k] = false
+			} else {
+				i, err := strconv.Atoi(v)
+				if err == nil {
+					o.Param.Filters[k] = i
+				} else {
+					o.Param.Filters[k] = v
+				}
+			}
+		}
+	}
+
 	return err
 }
 
 func (o *OptionsAdminGet) Run(args []string) error {
 	var err error
+
+	var table *tablewriter.Table
+	var tableRender, tableCellConfig tablewriter.Option
+	if o.Output == "table" {
+		tableRender = pkg.TableRenderBorder
+	} else {
+		tableRender = pkg.TableRenderBorderNone
+	}
+	tableCellConfig = pkg.TableCellConfig
 
 	bs, _ := pkg.YamlIndent(o)
 	log.Debug(fmt.Sprintf("command options:\n%s", string(bs)))
@@ -323,6 +363,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			"page":     1,
 			"perPage":  1000,
 		}
+		for k, v := range o.Param.Filters {
+			param[k] = v
+		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/users"), http.MethodPost, "", param, false)
 		if err != nil {
 			return err
@@ -385,6 +428,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			"page":            1,
 			"perPage":         1000,
 		}
+		for k, v := range o.Param.Filters {
+			param[k] = v
+		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/customStepConfs"), http.MethodPost, "", param, false)
 		if err != nil {
 			return err
@@ -415,6 +461,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			"envNames": o.Param.ItemNames,
 			"page":     1,
 			"perPage":  1000,
+		}
+		for k, v := range o.Param.Filters {
+			param[k] = v
 		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/envs"), http.MethodPost, "", param, false)
 		if err != nil {
@@ -447,6 +496,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		param := map[string]interface{}{
 			"page":    1,
 			"perPage": 1000,
+		}
+		for k, v := range o.Param.Filters {
+			param[k] = v
 		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/componentTemplates"), http.MethodPost, "", param, false)
 		if err != nil {
@@ -488,6 +540,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		param := map[string]interface{}{
 			"page":    1,
 			"perPage": 1000,
+		}
+		for k, v := range o.Param.Filters {
+			param[k] = v
 		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/dockerBuildEnvs"), http.MethodPost, "", param, false)
 		if err != nil {
@@ -531,6 +586,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			"page":    1,
 			"perPage": 1000,
 		}
+		for k, v := range o.Param.Filters {
+			param[k] = v
+		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/repoConfigs"), http.MethodPost, "", param, false)
 		if err != nil {
 			return err
@@ -572,6 +630,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			"types":   []string{"imageRepoConfig"},
 			"page":    1,
 			"perPage": 1000,
+		}
+		for k, v := range o.Param.Filters {
+			param[k] = v
 		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/repoConfigs"), http.MethodPost, "", param, false)
 		if err != nil {
@@ -615,6 +676,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			"page":    1,
 			"perPage": 1000,
 		}
+		for k, v := range o.Param.Filters {
+			param[k] = v
+		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/repoConfigs"), http.MethodPost, "", param, false)
 		if err != nil {
 			return err
@@ -657,6 +721,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			"page":    1,
 			"perPage": 1000,
 		}
+		for k, v := range o.Param.Filters {
+			param[k] = v
+		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/repoConfigs"), http.MethodPost, "", param, false)
 		if err != nil {
 			return err
@@ -695,6 +762,9 @@ func (o *OptionsAdminGet) Run(args []string) error {
 	awFilters := []pkg.AdminWebhook{}
 	if foundKindAw {
 		param := map[string]interface{}{}
+		for k, v := range o.Param.Filters {
+			param[k] = v
+		}
 		result, _, err := o.QueryAPI(fmt.Sprintf("api/admin/adminWebhooks"), http.MethodGet, "", param, false)
 		if err != nil {
 			return err
@@ -759,25 +829,24 @@ func (o *OptionsAdminGet) Run(args []string) error {
 				for _, up := range item.UserProjects {
 					ups = append(ups, fmt.Sprintf("%s:%s", up.ProjectName, up.AccessLevel))
 				}
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindUser], item.Username), item.Name, item.Mail, fmt.Sprintf("%v", item.IsAdmin), fmt.Sprintf("%v", item.IsActive), strings.Join(ups, "\n"), item.TenantCode, strings.Join(item.TenantAdmins, ",")}
+				dataRow := []string{}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindUser], item.Username)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindUser], item.Username), item.Name, item.Mail, fmt.Sprintf("%v", item.IsAdmin), fmt.Sprintf("%v", item.IsActive), strings.Join(ups, "\n"), item.TenantCode, strings.Join(item.TenantAdmins, ",")}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Username", "Name", "Mail", "Admin", "Active", "Projects", "TenantCode", "TenantAdmins"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"Username"}
+			} else {
+				dataHeader = []string{"Username", "Name", "Mail", "Admin", "Active", "Projects", "TenantCode", "TenantAdmins"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()
@@ -786,25 +855,25 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(stepFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range stepFilters {
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindCustomStep], item.CustomStepName), item.TenantCode, item.CustomStepActionDesc, fmt.Sprintf("%v", item.IsEnvDiff), strings.Join(item.ProjectNames, ","), item.ParamInputYamlDef}
+				dataRow := []string{}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindCustomStep], item.CustomStepName)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindCustomStep], item.CustomStepName), item.TenantCode, item.CustomStepActionDesc, fmt.Sprintf("%v", item.IsEnvDiff), strings.Join(item.ProjectNames, ","), item.ParamInputYamlDef}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Name", "TenantCode", "Desc", "EnvDiff", "Projects", "Input"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "TenantCode", "Desc", "EnvDiff", "Projects", "Input"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
+			table.Render()
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()
@@ -814,25 +883,24 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range envFilters {
 				arches := strings.Join(item.Arches, ",")
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindEnvK8s], item.EnvName), item.EnvArch, item.TenantCode, item.EnvDesc, fmt.Sprintf("https://%s:%d", item.Host, item.Port), arches, item.ResourceVersion.IngressVersion, item.ResourceVersion.HpaVersion, item.ResourceVersion.IstioVersion}
+				dataRow := []string{}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindEnvK8s], item.EnvName)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindEnvK8s], item.EnvName), item.EnvArch, item.TenantCode, item.EnvDesc, fmt.Sprintf("https://%s:%d", item.Host, item.Port), arches, item.ResourceVersion.IngressVersion, item.ResourceVersion.HpaVersion, item.ResourceVersion.IstioVersion}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Name", "Arch", "TenantCode", "Desc", "Host", "Arches", "Ingress", "Hpa", "Istio"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "Arch", "TenantCode", "Desc", "Host", "Arches", "Ingress", "Hpa", "Istio"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()
@@ -842,24 +910,23 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range ctFilters {
 				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate], item.ComponentTemplateName), item.TenantCode, item.ComponentTemplateDesc, item.DeploySpecStatic.DeployImage, fmt.Sprintf("%d", item.DeploySpecStatic.DeployReplicas)}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate], item.ComponentTemplateName)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate], item.ComponentTemplateName), item.TenantCode, item.ComponentTemplateDesc, item.DeploySpecStatic.DeployImage, fmt.Sprintf("%d", item.DeploySpecStatic.DeployReplicas)}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Name", "TenantCode", "Desc", "Image", "Replicas"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "TenantCode", "Desc", "Image", "Replicas"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()
@@ -868,25 +935,24 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(dbeFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range dbeFilters {
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv], item.BuildEnvName), item.TenantCode, item.Image, strings.Join(item.BuildArches, ",")}
+				dataRow := []string{}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv], item.BuildEnvName)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv], item.BuildEnvName), item.TenantCode, item.Image, strings.Join(item.BuildArches, ",")}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Name", "TenantCode", "Image", "Arches"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "TenantCode", "Image", "Arches"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()
@@ -895,25 +961,24 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(grcFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range grcFilters {
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
+				dataRow := []string{}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig], item.RepoName)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Name", "TenantCode", "Kind", "ViewUrl"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "TenantCode", "Kind", "ViewUrl"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()
@@ -922,25 +987,24 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(ircFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range ircFilters {
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.Hostname}
+				dataRow := []string{}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig], item.RepoName)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.Hostname}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Name", "TenantCode", "Kind", "Hostname"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "TenantCode", "Kind", "Hostname"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()
@@ -949,25 +1013,24 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(arcFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range arcFilters {
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
+				dataRow := []string{}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig], item.RepoName)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Name", "TenantCode", "Kind", "ViewUrl"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "TenantCode", "Kind", "ViewUrl"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()
@@ -976,25 +1039,24 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(scrcFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range scrcFilters {
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
+				dataRow := []string{}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig], item.RepoName)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"Name", "TenantCode", "Kind", "ViewUrl"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "TenantCode", "Kind", "ViewUrl"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()
@@ -1003,25 +1065,24 @@ func (o *OptionsAdminGet) Run(args []string) error {
 		if len(awFilters) > 0 {
 			dataRows := [][]string{}
 			for _, item := range awFilters {
-				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook], item.AdminWebhookID), item.AdminAction, item.TenantCode, item.WebhookUrl, item.WebhookMethod}
+				dataRow := []string{}
+				if o.Name {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook], item.AdminWebhookID)}
+				} else {
+					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook], item.AdminWebhookID), item.AdminAction, item.TenantCode, item.WebhookUrl, item.WebhookMethod}
+				}
 				dataRows = append(dataRows, dataRow)
 			}
 
-			dataHeader := []string{"ID", "AdminAction", "TenantCode", "Url", "Method"}
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader(dataHeader)
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(dataRows)
+			dataHeader := []string{}
+			if o.Name {
+				dataHeader = []string{"ID"}
+			} else {
+				dataHeader = []string{"ID", "AdminAction", "TenantCode", "Url", "Method"}
+			}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(dataRows)
 			table.Render()
 			fmt.Println("------------")
 			fmt.Println()

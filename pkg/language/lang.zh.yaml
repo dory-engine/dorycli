@@ -27,7 +27,6 @@ cmd_example:
     │   │   └── script # 创建负载均衡器的配置文件、docker-compose文件以及高可用kubernetes集群的初始化配置文件
     │   ├── print # 打印安装配置YAML文件
     │   ├── pull # 拉取并构建相关容器镜像
-    │   ├── run # 自动安装Dory-Engine
     │   └── script # 手动安装Dory-Engine
     ├── login # 登录到Dory-Engine
     ├── logout # 从Dory-Engine注销
@@ -44,14 +43,14 @@ cmd_example:
     └── version # 显示版本信息
 
     # 安装 Dory-Engine
-    {{._0}} install run -o readme-install -f install-config.yaml
+    {{._0}} install run -o readme-dory -f install-dory.yaml
 cmd_admin_short:
   other: "配置项管理，需要管理员权限"
 cmd_admin_long:
-  other: "管理Dory-Engine中的配置项，包括：用户、自定义步骤、kubernetes环境、组件模板、构建环境、仓库配置、管理webhook，需要管理员权限"
+  other: "管理Dory-Engine中的配置项，包括: 用户、自定义步骤、kubernetes环境、组件模板、构建环境、仓库配置、管理webhook，需要管理员权限"
 cmd_admin_example:
   other: |-
-    # 获取所有配置项信息，包括：用户、自定义步骤、kubernetes环境、组件模板、构建环境、仓库配置、管理webhook，需要管理员权限
+    # 获取所有配置项信息，包括: 用户、自定义步骤、kubernetes环境、组件模板、构建环境、仓库配置、管理webhook，需要管理员权限
     {{._0}} admin get {{._1}}
 
     # 把文件或者目录中的配置参数应用到Dory-Engine的配置项中，需要管理员权限
@@ -65,7 +64,7 @@ cmd_admin_apply_long:
   other: "把文件、目录、stdin中的配置参数应用到Dory-Engine的配置项中，需要管理员权限"
 cmd_admin_apply_example:
   other: |-
-    # 支持的配置项类型：组件模板、kubernetes环境、自定义步骤、用户、构建环境、代码仓库配置、镜像仓库配置、制品仓库配置、代码扫描仓库配置、管理webhook
+    # 支持的配置项类型: 组件模板、kubernetes环境、自定义步骤、用户、构建环境、代码仓库配置、镜像仓库配置、制品仓库配置、代码扫描仓库配置、管理webhook
     # 将会自动更新或者创建配置项
     # 支持JSON或者YAML格式
     # 支持同时应用多种不同的配置项
@@ -117,13 +116,16 @@ cmd_admin_get_example:
     
     # 获取特定kubernetes环境信息，需要管理员权限
     {{._10}} admin get {{._11}} test uat prod
+
+    # 过滤查找非项目成员并且为激活状态的用户，需要管理员权限
+    {{._8}} admin get {{._9}} --filter isMember=no --filter active=yes
 cmd_console_short:
   other: "项目控制台管理，需要项目维护者权限"
 cmd_console_long:
-  other: "管理项目的相关配置信息，包括：项目成员、流水线、流水线触发器、项目主机、项目数据库、调试组件、项目组件等，需要项目维护者权限"
+  other: "管理项目的相关配置信息，包括: 项目成员、流水线、流水线触发器、项目主机、项目数据库、调试组件、项目组件等，需要项目维护者权限"
 cmd_console_example:
   other: |-
-    # 获取test-project1所有项目配置信息，包括：项目成员、流水线、流水线触发器、项目主机、项目数据库、调试组件、项目组件等，需要项目维护者权限
+    # 获取test-project1所有项目配置信息，包括: 项目成员、流水线、流水线触发器、项目主机、项目数据库、调试组件、项目组件等，需要项目维护者权限
     {{._0}} console get test-prject1 {{._1}}
 
     # 把文件或者目录中的配置参数应用到项目配置信息中，需要项目维护者权限
@@ -137,7 +139,7 @@ cmd_console_apply_long:
   other: "把文件、目录、stdin中的配置参数应用到项目配置信息中，需要项目维护者权限"
 cmd_console_apply_example:
   other: |-
-    # 支持的项目配置信息类型：项目成员、流水线、流水线触发器、项目主机、项目数据库、调试组件、项目组件等
+    # 支持的项目配置信息类型: 项目成员、流水线、流水线触发器、项目主机、项目数据库、调试组件、项目组件等
     # 将会自动更新或者创建项目配置信息
     # 支持JSON或者YAML格式
     # 支持同时应用多种不同的项目配置信息
@@ -336,71 +338,41 @@ cmd_def_patch_example:
     # 从文件读取配置参数来更新流水线定义的多个配置，支持JSON和YAML格式
     {{._19}} def patch test-project1 {{._20}} --branches=develop,release -f patch.yaml
 cmd_install_short:
-  other: "把Dory-Engine安装在kubernetes集群或者docker主机上"
+  other: "把Dory-Engine安装在kubernetes集群"
 cmd_install_long:
-  other: "把Dory-Engine以及相关组件安装在kubernetes集群或者docker主机上"
+  other: "把Dory-Engine以及相关组件安装在kubernetes集群上"
 cmd_install_example:
   other: |-
     {{._0}} 需要在一台可以管理kubernetes集群的节点上运行安装程序
     
     ##############################
-    # 请根据以下步骤指引把Dory-Engine安装到kubernetes集群中 (生产用途，推荐安装方式):
+    # 请根据以下步骤指引把Dory-Engine安装到kubernetes集群中:
     
     # 1. 检查把Dory-Engine安装到kubernetes集群的前提条件，被接管的kubernetes集群的容器运行时为docker
-    {{._1}} install check --mode kubernetes --runtime docker
+    {{._1}} install check --runtime docker
     
     # 2. (选项1) 打印把Dory-Engine安装到kubernetes集群的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（快速安装模式，仅安装Dory-Engine基础组件）
-    {{._2}} install print --mode kubernetes --runtime docker > install-config-kubernetes.yaml
+    {{._2}} install print --runtime docker > install-dory.yaml
     
     # 2. (选项2) 打印把Dory-Engine安装到kubernetes集群的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（完整安装模式，同时会安装代码仓库、镜像仓库、依赖与制品仓库以及代码扫描仓库）
-    {{._2}} install print --mode kubernetes --runtime docker --full > install-config-kubernetes.yaml
+    {{._2}} install print --runtime docker --full > install-dory.yaml
     
     # 3. 根据安装配置文件说明，手工修改安装配置文件
-    vi install-config-kubernetes.yaml
+    vi install-dory.yaml
     
     # 4. 拉取并构建安装Dory-Engine所需要的容器镜像
-    {{._3}} install pull -f install-config-kubernetes.yaml
+    {{._3}} install pull -f install-dory.yaml
     
-    # 5. (选项1) 把Dory-Engine自动安装到kubernetes集群
-    {{._4}} install run -o readme-install-kubernetes -f install-config-kubernetes.yaml
-    
-    # 5. (选项2) 以手动的方式安装Dory-Engine到kubernetes集群，执行命令将会输出安装说明文件以及所有部署清单和配置文件，参照说明文件，以自定义方式安装Dory-Engine
-    {{._5}} install script -o readme-install-kubernetes -f install-config-kubernetes.yaml
-    
-    ##############################
-    # 请根据以下步骤指引把Dory-Engine安装到docker主机中 (测试用途):
-    
-    # 1. 检查把Dory-Engine安装到docker主机的前提条件，被接管的kubernetes集群的容器运行时为docker
-    {{._6}} install check --mode docker --runtime docker
-    
-    # 2. (选项1) 打印把Dory-Engine安装到docker主机的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（快速安装模式，仅安装Dory-Engine基础组件）
-    {{._7}} install print --mode docker --runtime docker > install-config-docker.yaml
-    
-    # 2. (选项2) 打印把Dory-Engine安装到kubernetes集群的YAML安装配置文件，被接管的kubernetes集群的容器运行时为docker（完整安装模式，同时会安装代码仓库、镜像仓库、依赖与制品仓库以及代码扫描仓库）
-    {{._7}} install print --mode docker --runtime docker --full > install-config-docker.yaml
-    
-    # 3. 根据安装配置文件说明，手工修改安装配置文件
-    vi install-config-docker.yaml
-    
-    # 4. 拉取并构建安装Dory-Engine所需要的容器镜像
-    {{._8}} install pull -f install-config-docker.yaml
-    
-    # 5. (选项 1) 把Dory-Engine自动安装到docker主机
-    {{._9}} install run -o readme-install-docker -f install-config-docker.yaml
-    
-    # 5. (选项 2) 以手动的方式安装Dory-Engine到docker主机，执行命令将会输出安装说明文件以及所有部署清单和配置文件，参照说明文件，以自定义方式安装Dory-Engine
-    {{._10}} install script -o readme-install-docker -f install-config-docker.yaml
+    # 5. 手动方式安装Dory-Engine到kubernetes集群，执行命令将会输出安装说明文件以及所有部署清单和配置文件
+    {{._4}} install script -o readme-dory -f install-dory.yaml
 cmd_install_check_short:
   other: "检查安装的前提条件"
 cmd_install_check_long:
-  other: "检查把Dory-Engine安装到kubernetes集群或者docker主机的前提条件"
+  other: "检查把Dory-Engine安装到kubernetes集群的前提条件"
 cmd_install_check_example:
   other: |-
     # 检查把Dory-Engine安装到kubernetes集群的前提条件，被接管的kubernetes集群的容器运行时为containerd
-    {{._0}} install check --mode kubernetes --runtime containerd
-    
-    # 检查把Dory-Engine安装到docker主机的前提条件，被接管的kubernetes集群的容器运行时为containerd
-    {{._1}} install check --mode docker --runtime containerd
+    {{._0}} install check --runtime containerd
 cmd_install_ha_short:
   other: "创建高可用kubernetes集群的负载均衡器"
 cmd_install_ha_long:
@@ -446,10 +418,7 @@ cmd_install_print_long:
 cmd_install_print_example:
   other: |-
     # 打印把Dory-Engine安装在kubernetes集群中的安装配置YAML文件，被接管的kubernetes集群的容器运行时为containerd
-    {{._0}} install print --mode kubernetes --runtime containerd
-    
-    # 打印把Dory-Engine安装在docker主机中的安装配置YAML文件，被接管的kubernetes集群的容器运行时为docker
-    {{._1}} install print --mode docker --runtime docker
+    {{._0}} install print --runtime containerd
 cmd_install_pull_short:
   other: "拉取并构建相关容器镜像"
 cmd_install_pull_long:
@@ -460,16 +429,7 @@ cmd_install_pull_example:
     # 假如安装nexus作为依赖与制品仓库，将会下载nexus的初始配置数据
     
     # 拉取并构建Dory-Engine安装所必须的所有容器镜像
-    {{._0}} install pull -f install-config.yaml
-cmd_install_run_short:
-  other: "自动安装Dory-Engine"
-cmd_install_run_long:
-  other: "自动安装Dory-Engine到kubernetes集群或者docker主机中"
-cmd_install_run_example:
-  other: |-
-    # 自动安装Dory-Engine以及相关组件到kubernetes集群或者docker主机中
-    # 安装说明文件将会保存在readme-install目录
-    {{._0}} install run -o readme-install -f install-config.yaml
+    {{._0}} install pull -f install-dory.yaml
 cmd_install_script_short:
   other: "手动安装Dory-Engine"
 cmd_install_script_long:
@@ -477,10 +437,10 @@ cmd_install_script_long:
 cmd_install_script_example:
   other: |-
     # 创建Dory-Engine的安装说明、脚本、配置文件
-    # 安装说明、脚本、配置文件将会保存在readme-install目录
-    {{._0}} install script -o readme-install -f install-config.yaml
+    # 安装说明、脚本、配置文件将会保存在readme-dory目录
+    {{._0}} install script -o readme-dory -f install-dory.yaml
     或者
-    cat install-config.yaml | {{._1}} install script -o readme-install -f -
+    cat install-dory.yaml | {{._1}} install script -o readme-dory -f -
 cmd_login_short:
   other: "登录到Dory-Engine"
 cmd_login_long:
@@ -634,7 +594,7 @@ cmd_version_example:
 param_config:
   other: "{{._0}}的配置文件config.yaml的路径，也可以通过系统环境变量 {{._1}} 设置 (默认为$HOME/{{._2}}/{{._3}})"
 param_server_url:
-  other: "Dory-Engine的访问URL，例子：https://dory.example.com:8080"
+  other: "Dory-Engine的访问URL，例子: https://dory.example.com:8080"
 param_insecure:
   other: "假如设置为true，将会忽略SSL证书校验，将会使用非安全模式连接HTTPS服务端"
 param_timeout:
@@ -642,9 +602,9 @@ param_timeout:
 param_token:
   other: "Dory-Engine的访问token"
 param_language:
-  other: "语言设置 (选项：zh / en)"
+  other: "语言设置 (选项: zh / en)"
 param_admin_apply_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json)"
 param_admin_apply_recursive:
   other: "当使用 -f 或者 --files 参数的时候，假如参数是目录，那么递归检索所有子目录"
 param_admin_apply_full:
@@ -654,11 +614,15 @@ param_admin_apply_files:
 param_admin_apply_try:
   other: "仅尝试检查配置项，并不应用到Dory-Engine中，与 --output 选项配合使用"
 param_admin_get_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json / table)"
 param_admin_get_full:
   other: "完整输出配置项的所有参数，与 --output 选项配合使用"
+param_admin_get_filter:
+  other: "过滤搜索特定配置项"
+param_admin_get_name:
+  other: "只显示配置项名字"
 param_console_apply_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json)"
 param_console_apply_recursive:
   other: "当使用 -f 或者 --files 参数的时候，假如参数是目录，那么递归检索所有子目录"
 param_console_apply_full:
@@ -672,7 +636,7 @@ param_console_get_envs:
 param_console_get_branches:
   other: "使用分支名过滤流水线触发器"
 param_console_get_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json / table)"
 param_console_get_full:
   other: "完整输出配置项的所有参数，与 --output 选项配合使用"
 param_console_delete_envs:
@@ -680,13 +644,13 @@ param_console_delete_envs:
 param_console_delete_branches:
   other: "通过步骤名过滤配置项，kind为 {{._0}} 情况下必填"
 param_console_delete_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json)"
 param_console_delete_full:
   other: "完整输出配置项的所有参数，与 --output 选项配合使用"
 param_console_delete_try:
   other: "仅尝试检查配置项，并不应用到Dory-Engine中，与 --output 选项配合使用"
 param_def_apply_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json)"
 param_def_apply_recursive:
   other: "当使用 -f 或者 --files 参数的时候，假如参数是目录，那么递归检索所有子目录"
 param_def_apply_full:
@@ -704,7 +668,7 @@ param_def_clone_modules:
 param_def_clone_to_envs:
   other: "把模块复制到哪个环境"
 param_def_clone_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json)"
 param_def_clone_full:
   other: "完整输出项目定义的所有参数，与 --output 选项配合使用"
 param_def_clone_try:
@@ -716,7 +680,7 @@ param_def_delete_envs:
 param_def_delete_steps:
   other: "通过步骤名过滤项目定义，kind为 {{._0}} 情况下必填"
 param_def_delete_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json)"
 param_def_delete_full:
   other: "完整输出项目定义的所有参数，与 --output 选项配合使用"
 param_def_delete_try:
@@ -730,7 +694,7 @@ param_def_get_branches:
 param_def_get_steps:
   other: "使用步骤名过滤项目定义"
 param_def_get_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json / table)"
 param_def_get_full:
   other: "完整输出项目定义的所有参数，与 --output 选项配合使用"
 param_def_patch_modules:
@@ -743,7 +707,7 @@ param_def_patch_step:
   other: "过滤步骤名并打补丁，kind为 {{._0}} 情况下必填"
 param_def_patch_patch:
   other: |-
-    JSON格式补丁操作设置，例子：[{"action": "update", "path": "paramInputYaml", "value": "path: Tests"}]
+    JSON格式补丁操作设置，例子: [{"action": "update", "path": "paramInputYaml", "value": "path: Tests"}]
 param_def_patch_file:
   other: "项目定义的补丁文件名，支持 *.json *.yaml *.yml 后缀的文件"
 param_def_patch_enable_execute:
@@ -753,21 +717,17 @@ param_def_patch_disable_execute:
 param_def_patch_try:
   other: "仅尝试检查项目定义，并不应用到Dory-Engine中，与 --output 选项配合使用"
 param_def_patch_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json)"
 param_def_patch_full:
   other: "完整输出项目定义的所有参数，与 --output 选项配合使用"
-param_install_check_mode:
-  other: "Dory-Engine的安装模式，安装在kubernetes集群中或者docker主机中，选项：kubernetes, docker"
 param_install_check_runtime:
-  other: "Dory-Engine接管的kubernetes集群的容器运行时，选项：docker, containerd, crio"
+  other: "Dory-Engine接管的kubernetes集群的容器运行时，选项: docker, containerd, crio"
 param_install_ha_script_file:
   other: "高可用kubernetes集群负载均衡器安装配置YAML文件"
 param_install_ha_script_output:
   other: "说明文档，脚本和配置文件的输出目录"
-param_install_print_mode:
-  other: "Dory-Engine的安装模式，安装在kubernetes集群中或者docker主机中，选项：kubernetes, docker"
 param_install_print_runtime:
-  other: "Dory-Engine接管的kubernetes集群的容器运行时，选项：docker, containerd, crio"
+  other: "Dory-Engine接管的kubernetes集群的容器运行时，选项: docker, containerd, crio"
 param_install_print_full:
   other: "安装Dory-Engine以及所有可选择的仓库工具。包括代码仓库、制品仓库、镜像仓库、代码扫描仓库"
 param_install_pull_file:
@@ -776,12 +736,10 @@ param_install_pull_force_download:
   other: "强制下载nexus初始化安装数据"
 param_install_pull_build:
   other: "使用官方镜像构建目标镜像"
+param_install_pull_save:
+  other: "输出保存镜像命令"
 param_install_pull_yes:
   other: "不显示提示，直接输入YES确认"
-param_install_run_file:
-  other: "Dory-Engine安装配置YAML文件"
-param_install_run_output:
-  other: "Dory-Engine安装说明文件、脚本、配置文件输出目录"
 param_install_script_file:
   other: "Dory-Engine安装配置YAML文件"
 param_install_script_output:
@@ -793,34 +751,32 @@ param_login_password:
 param_login_expire_days:
   other: "Dory-Engine的token将会在多少天后到期"
 param_pipeline_execute_batch:
-  other: "流水线界面不提示等待输入，通过批处理自动输入参数，批处理参数使用::分割，例子：develop::test::inputCheckDeploy::tp1-gin-demo,tp1-go-demo"
+  other: "流水线界面不提示等待输入，通过批处理自动输入参数，批处理参数使用::分割，例子: develop::test::inputCheckDeploy::tp1-gin-demo,tp1-go-demo"
 param_pipeline_execute_params:
-  other: "执行流水线并带上请求参数，例子：varName=varValue"
+  other: "执行流水线并带上请求参数，例子: varName=varValue"
 param_pipeline_get_projects:
-  other: "过滤项目名，例如：test-project1,test-project2"
+  other: "过滤项目名，例如: test-project1,test-project2"
 param_pipeline_get_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json / table)"
 param_project_execute_params:
-  other: "执行项目批处理流水线并带上请求参数，例子：varName=varValue"
-param_project_get_team:
-  other: "过滤项目团队"
+  other: "执行项目批处理流水线并带上请求参数，例子: varName=varValue"
 param_project_get_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json / table)"
 param_run_abort_logs:
   other: "显示流水线运行日志"
 param_run_get_projects:
-  other: "按照项目名称过滤，例如：test-project1,test-project2"
+  other: "按照项目名称过滤，例如: test-project1,test-project2"
 param_run_get_pipelines:
-  other: "按照流水线名称过滤，例如：test-project1-develop,test-project2-ops"
+  other: "按照流水线名称过滤，例如: test-project1-develop,test-project2-ops"
 param_run_get_statuses:
-  other: "按照流水线运行状态过滤，例如：SUCCESS,FAIL (选项：SUCCESS / FAIL / ABORT / RUNNING / INPUT)"
+  other: "按照流水线运行状态过滤，例如: SUCCESS,FAIL (选项: SUCCESS / FAIL / ABORT / RUNNING / INPUT)"
 param_run_get_start:
-  other: "按照流水线运行开始时间过滤，例如：2022-01-01"
+  other: "按照流水线运行开始时间过滤，例如: 2022-01-01"
 param_run_get_end:
-  other: "按照流水线运行结束时间过滤，例如：2022-01-31"
+  other: "按照流水线运行结束时间过滤，例如: 2022-01-31"
 param_run_get_page:
   other: "显示第几页"
 param_run_get_number:
   other: "每页显示项目数"
 param_run_get_output:
-  other: "输出格式 (选项：yaml / json)"
+  other: "输出格式 (选项: yaml / json / table)"

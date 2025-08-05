@@ -12,6 +12,10 @@ app:
   trivyDbDir: dory-data/trivy
   # 各项目的本地制品文件存放路径，相对于dory-engine程序的位置(相对路径)
   artifactDir: dory-data/artifacts
+  # 流水线运行日志存放目录(相对路径)
+  runLogDir: dory-data/run-logs
+  # 审计日志存放目录(相对路径)
+  auditLogDir: dory-data/audit-logs
   # 应用使用什么uid运行
   userID: 1000
   # 应用的restful服务端口
@@ -166,6 +170,7 @@ app:
     - hostPath
     - nfs
     - rbd
+    - csi
   # tls自签名证书配置
   tlsCertificateSettings:
     organization: DORY
@@ -196,6 +201,20 @@ app:
   projectDataPodCheckSeconds: 3
   # project-data-pod 检查次数
   projectDataPodCheckCount: 30
+  # 流水线等待输入超过多长时间自动终止，设置为0表示禁用自动终止，单位秒
+  autoAbortInputSeconds: 28800
+  # 开通项目的时候默认镜像仓库存储配额，单位Gi
+  imageRepoStorageLimit: 20
+  # 禁止创建以下项目名字空间
+  restrictedProjectNamespaces:
+    - kube-system
+    - default
+    - kube-node-lease
+    - kube-public
+    - traefik
+    - istio-system
+  # 是否允许创建k8s环境已经存在的项目名字空间
+  enableCreateExistsNamespace: false
 # smtp发送邮件设置
 mail:
   # smtp服务器地址
@@ -242,7 +261,6 @@ mongodb:
   database: dorydb
 # docker executor 配置
 docker:
-  {{- if eq $.installMode "kubernetes" }}
   # 假如 docker executor 自签名证书存放在kubernetes的secret情况下，必须设置
   kubernetes:
     # kubernetes环境的 apiserver 地址
@@ -257,10 +275,6 @@ docker:
     insecure: {{ $.kubernetes.insecure }}
     # docker executor 证书存放的名字空间
     namespace: {{ $.dory.namespace | quote }}
-  {{- else if eq $.installMode "docker" }}
-  # docker executor 的数量，docker executor 部署在docker中请设置(选填)
-  dockerNumber: {{ $.dory.docker.dockerNumber }}
-  {{- end }}
   # docker executor 的服务名
   serviceName: {{ $.dory.docker.dockerName | quote }}
   # docker executor 的端口
@@ -290,43 +304,22 @@ gitRepoConfigs:
   - kind: {{ $.dory.gitRepo.type }}
     # 代码仓库名字标识，用于项目配置关联对应代码仓库名字，格式例如: xxx-xxx
     repoName: {{ $.dory.gitRepo.type }}-dory
-    {{- if $.dory.gitRepo.internal.image }}
     # 代码仓库浏览器查看url
-    viewUrl: {{ $.viewURL }}:{{ $.dory.gitRepo.internal.port }}
+    viewUrl: {{ $.gitRepoViewUrl | quote }}
     # 代码仓库的地址，dory访问该仓库的地址
-    {{- if eq $.dory.gitRepo.type "gitea" }}
-    url: http://gitea:3000
-    {{- else if eq $.dory.gitRepo.type "gitlab" }}
-    url: http://gitlab
-    {{- end }}
+    url: {{ $.gitRepoUrl | quote }}
     # 是否开启insecure模式，假如服务端为https，并且使用自签名的tls证书，那么请设置本选项为true
     insecure: false
     # 代码仓库管理员账号
-    username: "PLEASE_INPUT_BY_MANUAL"
+    username: {{ $.gitRepoUsername | quote }}
     # 代码仓库管理员显示名
-    name: "PLEASE_INPUT_BY_MANUAL"
+    name: {{ $.gitRepoName | quote }}
     # 代码仓库管理员显示mail
-    mail: "PLEASE_INPUT_BY_MANUAL@example.com"
+    mail: {{ $.gitRepoMail | quote }}
     # 代码仓库管理员密码
-    password: "PLEASE_INPUT_BY_MANUAL"
+    password: {{ $.gitRepoPassword | quote }}
     # 代码仓库管理员token
-    token: "PLEASE_INPUT_BY_MANUAL"
-    {{- else }}
-    # 代码仓库浏览器查看url
-    viewUrl: {{ $.dory.gitRepo.external.viewUrl }}
-    # 代码仓库的地址，dory访问该仓库的地址
-    url: {{ $.dory.gitRepo.external.url }}
-    # 代码仓库管理员账号
-    username: {{ $.dory.gitRepo.external.username | quote }}
-    # 代码仓库管理员显示名
-    name: {{ $.dory.gitRepo.external.name | quote }}
-    # 代码仓库管理员显示mail
-    mail: {{ $.dory.gitRepo.external.mail | quote }}
-    # 代码仓库管理员密码
-    password: {{ $.dory.gitRepo.external.password | quote }}
-    # 代码仓库管理员token
-    token: {{ $.dory.gitRepo.external.token | quote }}
-    {{- end }}
+    token: {{ $.gitRepoToken | quote }}
 {{- end }}
 {{- if eq $.dory.imageRepo.type "harbor" }}
 # 镜像仓库配置，支持harbor
@@ -401,9 +394,9 @@ artifactRepoConfigs:
       # apt 源代理设置
       apt:
         # x86代理源
-        amd64: repository/apt-aliyun-focal/
+        amd64: repository/apt-aliyun/
         # arm64v8代理源
-        arm64v8: repository/apt-aliyun-focal-arm64/
+        arm64v8: repository/apt-aliyun/
       {{- else }}
       # maven第三方开源依赖的仓库相对路径
       maven: {{ $.dory.artifactRepo.external.proxyRepo.maven }}
@@ -697,7 +690,7 @@ dockerBuildSettings:
 # 调试容器docker镜像设置
 componentDebugEnvs:
   # 调试容器镜像地址
-  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ end }}doryengine/debug-ubuntu:v1.0.2"
+  debugImage: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/hub/{{ end }}doryengine/debian-vnc-sshd:v1.0.0"
 
 # 流水线各个步骤使用的docker镜像设置
 stepDockerEnvs:

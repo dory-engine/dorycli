@@ -13,7 +13,6 @@ import (
 
 type OptionsProjectGet struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
-	ProjectTeam    string `yaml:"projectTeam" json:"projectTeam" bson:"projectTeam" validate:""`
 	Output         string `yaml:"output" json:"output" bson:"output" validate:""`
 	Param          struct {
 		ProjectNames []string `yaml:"projectNames" json:"projectNames" bson:"projectNames" validate:""`
@@ -48,7 +47,6 @@ func NewCmdProjectGet() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
-	cmd.Flags().StringVar(&o.ProjectTeam, "team", "", OptCommon.TransLang("param_project_get_team"))
 	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_project_get_output"))
 
 	CheckError(o.Complete(cmd))
@@ -76,7 +74,7 @@ func (o *OptionsProjectGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -105,8 +103,8 @@ func (o *OptionsProjectGet) Validate(args []string) error {
 	}
 
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" {
-			err = fmt.Errorf("--output must be yaml or json")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
+			err = fmt.Errorf("--output must be yaml or json or table")
 			return err
 		}
 	}
@@ -116,12 +114,20 @@ func (o *OptionsProjectGet) Validate(args []string) error {
 func (o *OptionsProjectGet) Run(args []string) error {
 	var err error
 
+	var table *tablewriter.Table
+	var tableRender, tableCellConfig tablewriter.Option
+	if o.Output == "table" {
+		tableRender = pkg.TableRenderBorder
+	} else {
+		tableRender = pkg.TableRenderBorderNone
+	}
+	tableCellConfig = pkg.TableCellConfig
+
 	bs, _ := pkg.YamlIndent(o)
 	log.Debug(fmt.Sprintf("command options:\n%s", string(bs)))
 
 	param := map[string]interface{}{
 		"projectNames": o.Param.ProjectNames,
-		"projectTeam":  o.ProjectTeam,
 		"page":         1,
 		"perPage":      1000,
 	}
@@ -159,6 +165,7 @@ func (o *OptionsProjectGet) Run(args []string) error {
 			for _, project := range projects {
 				projectName := project.ProjectInfo.ProjectName
 				projectShortName := project.ProjectInfo.ProjectShortName
+				projectDesc := project.ProjectInfo.ProjectDesc
 				projectEnvs := []string{}
 				for _, pnp := range project.ProjectNodePorts {
 					nodePorts := []string{}
@@ -171,33 +178,29 @@ func (o *OptionsProjectGet) Run(args []string) error {
 				projectEnvNames := strings.Join(projectEnvs, "\n")
 				pipelines := []string{}
 				for _, pp := range project.Pipelines {
-					pipelines = append(pipelines, pp.PipelineName)
+					p := fmt.Sprintf("%s:%d/%d/%d", pp.PipelineName, pp.SuccessCount, pp.FailCount, pp.AbortCount)
+					pipelines = append(pipelines, p)
 				}
 				pipelineNames := strings.Join(pipelines, "\n")
 
-				opsBatches := []string{}
-				for _, obd := range project.OpsBatchDefs {
-					opsBatches = append(opsBatches, obd.OpsBatchName)
+				builds := []string{}
+				for mt, mds := range project.Modules {
+					if mt == "build" {
+						for _, module := range mds {
+							builds = append(builds, module.ModuleName)
+						}
+						break
+					}
 				}
-				opsBatchNames := strings.Join(opsBatches, "\n")
+				buildNames := strings.Join(builds, "\n")
 
-				data = append(data, []string{projectName, projectShortName, projectEnvNames, project.TenantCode, pipelineNames, opsBatchNames})
+				data = append(data, []string{projectName, projectShortName, projectDesc, projectEnvNames, pipelineNames, buildNames})
 			}
 
-			table := tablewriter.NewWriter(os.Stdout)
-			table.SetHeader([]string{"Name", "ShortName", "EnvNames", "TenantCode", "Pipelines", "Batches"})
-			table.SetAutoWrapText(false)
-			table.SetAutoFormatHeaders(true)
-			table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-			table.SetAlignment(tablewriter.ALIGN_LEFT)
-			table.SetCenterSeparator("")
-			table.SetColumnSeparator("")
-			table.SetRowSeparator("")
-			table.SetHeaderLine(false)
-			table.SetBorder(false)
-			table.SetTablePadding("\t")
-			table.SetNoWhiteSpace(true)
-			table.AppendBulk(data)
+			dataHeader := []string{"Name", "ShortName", "Desc", "EnvNames", "Pipelines", "BuildNames"}
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			table.Header(dataHeader)
+			table.Bulk(data)
 			table.Render()
 		}
 	}
