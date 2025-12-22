@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dory-engine/dorycli/pkg"
+	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 
 type OptionsProjectGet struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
+	IgnoreDemo     bool   `yaml:"ignoreDemo" json:"ignoreDemo" bson:"ignoreDemo" validate:""`
 	Output         string `yaml:"output" json:"output" bson:"output" validate:""`
 	Param          struct {
 		ProjectNames []string `yaml:"projectNames" json:"projectNames" bson:"projectNames" validate:""`
@@ -29,7 +31,7 @@ func NewCmdProjectGet() *cobra.Command {
 	o := NewOptionsProjectGet()
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf("get [projectName] ...")
+	msgUse := fmt.Sprintf("get [projectName] ... [--output=json|yaml|table]")
 
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_project_get_short")
@@ -47,6 +49,7 @@ func NewCmdProjectGet() *cobra.Command {
 			CheckError(o.Run(args))
 		},
 	}
+	cmd.Flags().BoolVar(&o.IgnoreDemo, "ignore-demo", false, OptCommon.TransLang("param_project_get_ignore_demo"))
 	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_project_get_output"))
 
 	CheckError(o.Complete(cmd))
@@ -74,7 +77,7 @@ func (o *OptionsProjectGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table", "name"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -103,8 +106,8 @@ func (o *OptionsProjectGet) Validate(args []string) error {
 	}
 
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
-			err = fmt.Errorf("--output must be yaml or json or table")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" && o.Output != "name" {
+			err = fmt.Errorf("--output must be yaml / json / table / name")
 			return err
 		}
 	}
@@ -160,6 +163,10 @@ func (o *OptionsProjectGet) Run(args []string) error {
 		case "yaml":
 			bs, _ = pkg.YamlIndent(dataOutput)
 			fmt.Println(string(bs))
+		case "name":
+			for _, project := range projects {
+				fmt.Println(project.ProjectInfo.ProjectName)
+			}
 		default:
 			data := [][]string{}
 			for _, project := range projects {
@@ -187,7 +194,29 @@ func (o *OptionsProjectGet) Run(args []string) error {
 				for mt, mds := range project.Modules {
 					if mt == "build" {
 						for _, module := range mds {
-							builds = append(builds, module.ModuleName)
+							if o.IgnoreDemo {
+								demoModules := []string{
+									fmt.Sprintf("%s-gin-demo", project.ProjectInfo.ProjectShortName),
+									fmt.Sprintf("%s-go-demo", project.ProjectInfo.ProjectShortName),
+									fmt.Sprintf("%s-gradle-demo", project.ProjectInfo.ProjectShortName),
+									fmt.Sprintf("%s-node-demo", project.ProjectInfo.ProjectShortName),
+									fmt.Sprintf("%s-python-demo", project.ProjectInfo.ProjectShortName),
+									fmt.Sprintf("%s-spring-demo", project.ProjectInfo.ProjectShortName),
+									fmt.Sprintf("%s-vue-demo", project.ProjectInfo.ProjectShortName),
+								}
+								var found bool
+								for _, demoModule := range demoModules {
+									if module.ModuleName == demoModule {
+										found = true
+										break
+									}
+								}
+								if !found {
+									builds = append(builds, module.ModuleName)
+								}
+							} else {
+								builds = append(builds, module.ModuleName)
+							}
 						}
 						break
 					}
@@ -198,7 +227,8 @@ func (o *OptionsProjectGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{"Name", "ShortName", "Desc", "EnvNames", "Pipelines", "BuildNames"}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(data)
 			table.Render()

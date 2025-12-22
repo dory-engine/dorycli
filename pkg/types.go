@@ -525,7 +525,6 @@ type BuildDef struct {
 	BuildPath          string   `yaml:"buildPath" json:"buildPath" bson:"buildPath" validate:"required"`
 	BuildEnv           string   `yaml:"buildEnv" json:"buildEnv" bson:"buildEnv" validate:"required"`
 	BuildCmds          []string `yaml:"buildCmds" json:"buildCmds" bson:"buildCmds" validate:"required,dive"`
-	BuildChecks        []string `yaml:"buildChecks" json:"buildChecks" bson:"buildChecks" validate:"required,dive"`
 	BuildCaches        []string `yaml:"buildCaches" json:"buildCaches" bson:"buildCaches" validate:""`
 	SonarExtraSettings []string `yaml:"sonarExtraSettings" json:"sonarExtraSettings" bson:"sonarExtraSettings" validate:""`
 	IsPatch            bool     `yaml:"isPatch" json:"isPatch" bson:"isPatch" validate:""`
@@ -608,8 +607,14 @@ type DeployLocalPort struct {
 		DomainName     string `yaml:"domainName" json:"domainName" bson:"domainName" validate:""`
 		PathPrefix     string `yaml:"pathPrefix" json:"pathPrefix" bson:"pathPrefix" validate:""`
 		CertSelfSigned bool   `yaml:"certSelfSigned" json:"certSelfSigned" bson:"certSelfSigned" validate:""`
+		CertBranch     string `yaml:"certBranch" json:"certBranch" bson:"certBranch" validate:""`
 		CertPath       string `yaml:"certPath" json:"certPath" bson:"certPath" validate:""`
 	} `yaml:"ingress" json:"ingress" bson:"ingress" validate:""`
+}
+
+type DeployLoadBalancer struct {
+	Port     int    `yaml:"port" json:"port" bson:"port" validate:"required"`
+	Protocol string `yaml:"protocol" json:"protocol" bson:"protocol" validate:"omitempty,oneof=HTTP TCP UDP SCTP"`
 }
 
 type DeployVolume struct {
@@ -649,17 +654,18 @@ type DeployContainerDef struct {
 		Labels      []NameValue `yaml:"labels" json:"labels" bson:"labels" validate:"dive"`
 		Annotations []NameValue `yaml:"annotations" json:"annotations" bson:"annotations" validate:"dive"`
 	} `yaml:"deployMeta" json:"deployMeta" bson:"deployMeta" validate:""`
-	DeploySessionAffinityTimeoutSeconds int               `yaml:"deploySessionAffinityTimeoutSeconds" json:"deploySessionAffinityTimeoutSeconds" bson:"deploySessionAffinityTimeoutSeconds" validate:""`
-	DeployNodePorts                     []DeployNodePort  `yaml:"deployNodePorts" json:"deployNodePorts" bson:"deployNodePorts" validate:"dive"`
-	DeployLocalPorts                    []DeployLocalPort `yaml:"deployLocalPorts" json:"deployLocalPorts" bson:"deployLocalPorts" validate:"dive"`
-	DeployReplicas                      int               `yaml:"deployReplicas" json:"deployReplicas" bson:"deployReplicas" validate:"required"`
-	HpaConfig                           HpaConfig         `yaml:"hpaConfig" json:"hpaConfig" bson:"hpaConfig" validate:""`
-	DeployEnvs                          []string          `yaml:"deployEnvs" json:"deployEnvs" bson:"deployEnvs" validate:""`
-	DeployCommand                       string            `yaml:"deployCommand" json:"deployCommand" bson:"deployCommand" validate:""`
-	DeployCmds                          []string          `yaml:"deployCmds" json:"deployCmds" bson:"deployCmds" validate:""`
-	DeployArgs                          []string          `yaml:"deployArgs" json:"deployArgs" bson:"deployArgs" validate:""`
-	DeployResources                     QuotaPod          `yaml:"deployResources" json:"deployResources" bson:"deployResources" validate:""`
-	DeployVolumes                       []DeployVolume    `yaml:"deployVolumes" json:"deployVolumes" bson:"deployVolumes" validate:"dive"`
+	DeploySessionAffinityTimeoutSeconds int                  `yaml:"deploySessionAffinityTimeoutSeconds" json:"deploySessionAffinityTimeoutSeconds" bson:"deploySessionAffinityTimeoutSeconds" validate:""`
+	DeployNodePorts                     []DeployNodePort     `yaml:"deployNodePorts" json:"deployNodePorts" bson:"deployNodePorts" validate:"dive"`
+	DeployLocalPorts                    []DeployLocalPort    `yaml:"deployLocalPorts" json:"deployLocalPorts" bson:"deployLocalPorts" validate:"dive"`
+	DeployLoadBalancers                 []DeployLoadBalancer `yaml:"deployLoadBalancers" json:"deployLoadBalancers" bson:"deployLoadBalancers" validate:"dive"`
+	DeployReplicas                      int                  `yaml:"deployReplicas" json:"deployReplicas" bson:"deployReplicas" validate:"required"`
+	HpaConfig                           HpaConfig            `yaml:"hpaConfig" json:"hpaConfig" bson:"hpaConfig" validate:""`
+	DeployEnvs                          []string             `yaml:"deployEnvs" json:"deployEnvs" bson:"deployEnvs" validate:""`
+	DeployCommand                       string               `yaml:"deployCommand" json:"deployCommand" bson:"deployCommand" validate:""`
+	DeployCmds                          []string             `yaml:"deployCmds" json:"deployCmds" bson:"deployCmds" validate:""`
+	DeployArgs                          []string             `yaml:"deployArgs" json:"deployArgs" bson:"deployArgs" validate:""`
+	DeployResources                     QuotaPod             `yaml:"deployResources" json:"deployResources" bson:"deployResources" validate:""`
+	DeployVolumes                       []DeployVolume       `yaml:"deployVolumes" json:"deployVolumes" bson:"deployVolumes" validate:"dive"`
 	DeployHealthCheck                   struct {
 		CheckPort              int           `yaml:"checkPort" json:"checkPort" bson:"checkPort" validate:""`
 		Exec                   string        `yaml:"exec" json:"exec" bson:"exec" validate:""`
@@ -1426,31 +1432,18 @@ type DeploySpecStatic struct {
 		Labels      []NameValue `yaml:"labels" json:"labels" bson:"labels" validate:"dive"`
 		Annotations []NameValue `yaml:"annotations" json:"annotations" bson:"annotations" validate:"dive"`
 	} `yaml:"deployMeta" json:"deployMeta" bson:"deployMeta" validate:""`
-	DeploySessionAffinityTimeoutSeconds int `yaml:"deploySessionAffinityTimeoutSeconds" json:"deploySessionAffinityTimeoutSeconds" bson:"deploySessionAffinityTimeoutSeconds" validate:""`
-	DeployNodePorts                     []struct {
-		Port     int    `yaml:"port" json:"port" bson:"port" validate:"required"`
-		NodePort int    `yaml:"nodePort" json:"nodePort" bson:"nodePort" validate:"required"`
-		Protocol string `yaml:"protocol" json:"protocol" bson:"protocol" validate:"omitempty,oneof=HTTP TCP UDP SCTP"`
-	} `yaml:"deployNodePorts" json:"deployNodePorts" bson:"deployNodePorts" validate:"dive"`
-	DeployLocalPorts []struct {
-		Port     int    `yaml:"port" json:"port" bson:"port" validate:"required"`
-		Protocol string `yaml:"protocol" json:"protocol" bson:"protocol" validate:"omitempty,oneof=HTTP TCP UDP SCTP"`
-		Ingress  struct {
-			DomainName     string `yaml:"domainName" json:"domainName" bson:"domainName" validate:""`
-			PathPrefix     string `yaml:"pathPrefix" json:"pathPrefix" bson:"pathPrefix" validate:""`
-			CertSelfSigned bool   `yaml:"certSelfSigned" json:"certSelfSigned" bson:"certSelfSigned" validate:""`
-			CertBranch     string `yaml:"certBranch" json:"certBranch" bson:"certBranch" validate:""`
-			CertPath       string `yaml:"certPath" json:"certPath" bson:"certPath" validate:""`
-		} `yaml:"ingress" json:"ingress" bson:"ingress" validate:""`
-	} `yaml:"deployLocalPorts" json:"deployLocalPorts" bson:"deployLocalPorts" validate:"dive"`
-	DeployReplicas  int       `yaml:"deployReplicas" json:"deployReplicas" bson:"deployReplicas" validate:"required"`
-	HpaConfig       HpaConfig `yaml:"hpaConfig" json:"hpaConfig" bson:"hpaConfig" validate:""`
-	DeployEnvs      []string  `yaml:"deployEnvs" json:"deployEnvs" bson:"deployEnvs" validate:""`
-	DeployCommand   string    `yaml:"deployCommand" json:"deployCommand" bson:"deployCommand" validate:""`
-	DeployCmds      []string  `yaml:"deployCmds" json:"deployCmds" bson:"deployCmds" validate:""`
-	DeployArgs      []string  `yaml:"deployArgs" json:"deployArgs" bson:"deployArgs" validate:""`
-	DeployResources QuotaPod  `yaml:"deployResources" json:"deployResources" bson:"deployResources" validate:""`
-	DeployVolumes   []struct {
+	DeploySessionAffinityTimeoutSeconds int                  `yaml:"deploySessionAffinityTimeoutSeconds" json:"deploySessionAffinityTimeoutSeconds" bson:"deploySessionAffinityTimeoutSeconds" validate:""`
+	DeployNodePorts                     []DeployNodePort     `yaml:"deployNodePorts" json:"deployNodePorts" bson:"deployNodePorts" validate:"dive"`
+	DeployLocalPorts                    []DeployLocalPort    `yaml:"deployLocalPorts" json:"deployLocalPorts" bson:"deployLocalPorts" validate:"dive"`
+	DeployLoadBalancers                 []DeployLoadBalancer `yaml:"deployLoadBalancers" json:"deployLoadBalancers" bson:"deployLoadBalancers" validate:"dive"`
+	DeployReplicas                      int                  `yaml:"deployReplicas" json:"deployReplicas" bson:"deployReplicas" validate:"required"`
+	HpaConfig                           HpaConfig            `yaml:"hpaConfig" json:"hpaConfig" bson:"hpaConfig" validate:""`
+	DeployEnvs                          []string             `yaml:"deployEnvs" json:"deployEnvs" bson:"deployEnvs" validate:""`
+	DeployCommand                       string               `yaml:"deployCommand" json:"deployCommand" bson:"deployCommand" validate:""`
+	DeployCmds                          []string             `yaml:"deployCmds" json:"deployCmds" bson:"deployCmds" validate:""`
+	DeployArgs                          []string             `yaml:"deployArgs" json:"deployArgs" bson:"deployArgs" validate:""`
+	DeployResources                     QuotaPod             `yaml:"deployResources" json:"deployResources" bson:"deployResources" validate:""`
+	DeployVolumes                       []struct {
 		PathInPod string `yaml:"pathInPod" json:"pathInPod" bson:"pathInPod" validate:"required"`
 		PathInPv  string `yaml:"pathInPv" json:"pathInPv" bson:"pathInPv" validate:"required"`
 		Pvc       string `yaml:"pvc" json:"pvc" bson:"pvc" validate:""`

@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	VersionDoryCli      = "v1.7.0"
-	VersionDoryEngine   = "v2.7.0"
-	VersionDoryFrontend = "v2.7.0"
+	VersionDoryCli      = "v1.7.1"
+	VersionDoryEngine   = "v2.7.1"
+	VersionDoryFrontend = "v2.7.1"
 
 	ConfigDirDefault  = ".dorycli"
 	ConfigFileDefault = "config.yaml"

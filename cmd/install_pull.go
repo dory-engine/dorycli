@@ -111,26 +111,29 @@ func (o *OptionsInstallPull) Run(args []string) error {
 		return err
 	}
 
-	var cmdImagePull, cmdImageBuild, cmdImagePullArm64, cmdImageTag, cmdImageSave string
+	var cmdImagePull, cmdImageBuild, cmdArgsAmd64, cmdArgsArm64, cmdImageTag, cmdImageSave string
 	switch installConfig.Kubernetes.Runtime {
 	case "docker":
 		cmdImagePull = "docker pull"
 		cmdImageBuild = "docker build"
-		cmdImagePullArm64 = "--platform=arm64"
 		cmdImageTag = "docker tag"
 		cmdImageSave = "docker save"
+		cmdArgsAmd64 = "--platform=amd64"
+		cmdArgsArm64 = "--platform=arm64"
 	case "containerd":
 		cmdImagePull = "nerdctl -n k8s.io pull -q"
 		cmdImageBuild = "nerdctl -n k8s.io build"
-		cmdImagePullArm64 = "--platform=arm64"
 		cmdImageTag = "nerdctl -n k8s.io tag"
 		cmdImageSave = "nerdctl -n k8s.io save"
+		cmdArgsAmd64 = "--platform=amd64"
+		cmdArgsArm64 = "--platform=arm64"
 	case "crio":
 		cmdImagePull = "podman pull"
 		cmdImageBuild = "podman build"
-		cmdImagePullArm64 = "--arch=arm64"
 		cmdImageTag = "podman tag"
 		cmdImageSave = "podman save"
+		cmdArgsAmd64 = "--arch=amd64"
+		cmdArgsArm64 = "--arch=arm64"
 	}
 
 	var dockerImages pkg.InstallDockerImages
@@ -235,26 +238,26 @@ func (o *OptionsInstallPull) Run(args []string) error {
 			imageNames = append(imageNames, fmt.Sprintf("goharbor/redis-photon:%s", installConfig.Dory.ImageRepo.Internal.Version))
 			imageNames = append(imageNames, fmt.Sprintf("goharbor/registry-photon:%s", installConfig.Dory.ImageRepo.Internal.Version))
 			for _, imageName := range imageNames {
-				fmt.Println(fmt.Sprintf("%s %s", cmdImagePull, imageName))
+				fmt.Println(fmt.Sprintf("%s %s %s", cmdImagePull, cmdArgsAmd64, imageName))
 			}
 		}
 		for _, idi := range dockerImages.InstallDockerImages {
 			if o.Build {
-				fmt.Println(fmt.Sprintf("%s %s", cmdImagePull, idi.Source))
+				fmt.Println(fmt.Sprintf("%s %s %s", cmdImagePull, cmdArgsAmd64, idi.Source))
 				if idi.Arm64 != "" {
-					fmt.Println(fmt.Sprintf("%s %s %s", cmdImagePull, cmdImagePullArm64, idi.Arm64))
+					fmt.Println(fmt.Sprintf("%s %s %s", cmdImagePull, cmdArgsArm64, idi.Arm64))
 				}
 			} else {
 				if idi.Built != "" {
-					fmt.Println(fmt.Sprintf("%s %s", cmdImagePull, idi.Built))
+					fmt.Println(fmt.Sprintf("%s %s %s", cmdImagePull, cmdArgsAmd64, idi.Built))
 				} else {
-					fmt.Println(fmt.Sprintf("%s %s", cmdImagePull, idi.Source))
+					fmt.Println(fmt.Sprintf("%s %s %s", cmdImagePull, cmdArgsAmd64, idi.Source))
 				}
 				if idi.Arm64 != "" {
 					if idi.Built != "" {
-						fmt.Println(fmt.Sprintf("%s %s %s-arm64v8", cmdImagePull, cmdImagePullArm64, idi.Built))
+						fmt.Println(fmt.Sprintf("%s %s %s-arm64v8", cmdImagePull, cmdArgsArm64, idi.Built))
 					} else {
-						fmt.Println(fmt.Sprintf("%s %s %s", cmdImagePull, cmdImagePullArm64, idi.Arm64))
+						fmt.Println(fmt.Sprintf("%s %s %s", cmdImagePull, cmdArgsArm64, idi.Arm64))
 					}
 				}
 			}
@@ -272,7 +275,7 @@ func (o *OptionsInstallPull) Run(args []string) error {
 					} else {
 						tagName = "latest"
 					}
-					fmt.Println(fmt.Sprintf("%s -t %s -f %s/%s-%s %s", cmdImageBuild, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir))
+					fmt.Println(fmt.Sprintf("%s %s -t %s -f %s/%s-%s %s", cmdImageBuild, cmdArgsAmd64, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir))
 					if idi.Arm64 != "" {
 						arr := strings.Split(idi.Arm64, ":")
 						var tagName string
@@ -281,7 +284,7 @@ func (o *OptionsInstallPull) Run(args []string) error {
 						} else {
 							tagName = "latest"
 						}
-						fmt.Println(fmt.Sprintf("%s -t %s-arm64v8 -f %s/%s-%s-arm64v8 %s", cmdImageBuild, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir))
+						fmt.Println(fmt.Sprintf("%s %s -t %s-arm64v8 -f %s/%s-%s-arm64v8 %s", cmdImageBuild, cmdArgsArm64, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir))
 					}
 				}
 			}
@@ -339,7 +342,7 @@ func (o *OptionsInstallPull) Run(args []string) error {
 				imageNames = append(imageNames, fmt.Sprintf("goharbor/redis-photon:%s", installConfig.Dory.ImageRepo.Internal.Version))
 				imageNames = append(imageNames, fmt.Sprintf("goharbor/registry-photon:%s", installConfig.Dory.ImageRepo.Internal.Version))
 				for _, imageName := range imageNames {
-					_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s", cmdImagePull, imageName), ".")
+					_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s %s", cmdImagePull, cmdArgsAmd64, imageName), ".")
 					if err != nil {
 						err = fmt.Errorf("pull container image %s error: %s", imageName, err.Error())
 						return err
@@ -353,13 +356,13 @@ func (o *OptionsInstallPull) Run(args []string) error {
 					imageName = idi.Built
 					imageNameArm64 = fmt.Sprintf("%s-arm64v8", idi.Built)
 				}
-				_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s", cmdImagePull, imageName), ".")
+				_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s %s", cmdImagePull, cmdArgsAmd64, imageName), ".")
 				if err != nil {
 					err = fmt.Errorf("pull container image %s error: %s", imageName, err.Error())
 					return err
 				}
 				if idi.Arm64 != "" {
-					_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s %s", cmdImagePull, cmdImagePullArm64, imageNameArm64), ".")
+					_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s %s", cmdImagePull, cmdArgsArm64, imageNameArm64), ".")
 					if err != nil {
 						err = fmt.Errorf("pull container image %s error: %s", imageNameArm64, err.Error())
 						return err
@@ -374,7 +377,7 @@ func (o *OptionsInstallPull) Run(args []string) error {
 						} else {
 							tagName = "latest"
 						}
-						_, _, err = pkg.CommandExec(fmt.Sprintf("%s -t %s -f %s/%s-%s %s", cmdImageBuild, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir), ".")
+						_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s -t %s -f %s/%s-%s %s", cmdImageBuild, cmdArgsAmd64, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir), ".")
 						if err != nil {
 							err = fmt.Errorf("build container image %s error: %s", idi.Source, err.Error())
 							return err
@@ -387,7 +390,7 @@ func (o *OptionsInstallPull) Run(args []string) error {
 							} else {
 								tagName = "latest"
 							}
-							_, _, err = pkg.CommandExec(fmt.Sprintf("%s -t %s-arm64v8 -f %s/%s-%s-arm64v8 %s", cmdImageBuild, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir), ".")
+							_, _, err = pkg.CommandExec(fmt.Sprintf("%s %s -t %s-arm64v8 -f %s/%s-%s-arm64v8 %s", cmdImageBuild, cmdArgsArm64, idi.Built, dockerFileDir, idi.DockerFile, tagName, dockerFileDir), ".")
 							if err != nil {
 								err = fmt.Errorf("build container image %s error: %s", idi.Arm64, err.Error())
 								return err

@@ -16,8 +16,8 @@ cd /project-data
 
 ```shell script
 # 下载trivy漏洞库
-{{ $.cmdRun }} --rm -v trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-db-only
-{{ $.cmdRun }} --rm -v trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-java-db-only
+{{ $.cmdRun }} --rm -v $PWD/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-db-only
+{{ $.cmdRun }} --rm -v $PWD/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-java-db-only
 
 # 把trivy漏洞库上传到kubernetes共享存储
 kubectl -n {{ $.dory.namespace }} cp trivy project-data-pod-0:/project-data/{{ $.dory.namespace }}/dory-engine/dory-data/

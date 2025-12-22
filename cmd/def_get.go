@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dory-engine/dorycli/pkg"
+	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -43,7 +44,7 @@ func NewCmdDefGet() *cobra.Command {
 	sort.Strings(defCmdKinds)
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`get [projectName] [kind],[kind]... [--output=json|yaml] [--modules=moduleName1,moduleName2] [--envs=envName1,envName2] [--branches=branchName1,branchName2] [--steps=stepName1,stepName2]`)
+	msgUse := fmt.Sprintf(`get [projectName] [kind],[kind]... [--output=json|yaml|table|name] [--modules=moduleName1,moduleName2] [--envs=envName1,envName2] [--branches=branchName1,branchName2] [--steps=stepName1,stepName2]`)
 
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_def_get_short")
@@ -293,7 +294,7 @@ func (o *OptionsDefGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table", "name"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -363,8 +364,8 @@ func (o *OptionsDefGet) Validate(args []string) error {
 	o.Param.ProjectName = projectName
 
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
-			err = fmt.Errorf("--output must be yaml or json or table")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" && o.Output != "name" {
+			err = fmt.Errorf("--output must be yaml / json / table / name")
 			return err
 		}
 	}
@@ -749,9 +750,7 @@ func (o *OptionsDefGet) Run(args []string) error {
 		if len(project.ProjectDef.DockerIgnoreDefs) > 0 {
 			defKind := defKindProject
 			defKind.Kind = pkg.DefCmdKinds[pkg.DefKindDockerIgnore]
-			for _, def := range project.ProjectDef.DockerIgnoreDefs {
-				defKind.Items = append(defKind.Items, def)
-			}
+			defKind.Items = append(defKind.Items, strings.Join(project.ProjectDef.DockerIgnoreDefs, "\n"))
 			defKinds = append(defKinds, defKind)
 		}
 
@@ -921,32 +920,65 @@ func (o *OptionsDefGet) Run(args []string) error {
 				items := []pkg.BuildDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.BuildName), item.BuildEnv, item.BuildPath, fmt.Sprintf("%d", item.BuildPhaseID), strings.Join(item.BuildCmds, "\n"), strings.Join(item.SonarExtraSettings, "\n")}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.BuildName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.BuildName), item.BuildEnv, item.BuildPath, fmt.Sprintf("%d", item.BuildPhaseID), strings.Join(item.BuildCmds, "\n"), strings.Join(item.SonarExtraSettings, "\n")}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Env", "Path", "PhaseID", "Cmds", "SonarSettings"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Env", "Path", "PhaseID", "Cmds", "SonarSettings"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindPackage]:
 				items := []pkg.PackageDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.PackageName), strings.Join(item.RelatedBuilds, "\n"), item.DockerFile}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.PackageName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.PackageName), strings.Join(item.RelatedBuilds, "\n"), item.DockerFile}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Builds", "Dockerfile"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Builds", "Dockerfile"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindArtifact]:
 				items := []pkg.ArtifactDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.ArtifactName), strings.Join(item.RelatedBuilds, "\n"), strings.Join(item.Artifacts, "\n")}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.ArtifactName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.ArtifactName), strings.Join(item.RelatedBuilds, "\n"), strings.Join(item.Artifacts, "\n")}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Builds", "Artifacts"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Builds", "Artifacts"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindDeployContainer]:
 				items := []pkg.DeployContainerDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
 					var ports []string
 					for _, p := range item.DeployLocalPorts {
+						if p.Protocol == "" {
+							p.Protocol = "TCP"
+						}
+						ports = append(ports, fmt.Sprintf("%d/%s", p.Port, p.Protocol))
+					}
+					for _, p := range item.DeployLoadBalancers {
 						if p.Protocol == "" {
 							p.Protocol = "TCP"
 						}
@@ -963,34 +995,70 @@ func (o *OptionsDefGet) Run(args []string) error {
 					for _, ds := range item.DependServices {
 						dependServices = append(dependServices, fmt.Sprintf("%s:%d", ds.DependName, ds.DependPort))
 					}
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.DeployName), defKind.Metadata.Labels["envName"], item.RelatedPackage, fmt.Sprintf("%d", item.DeployReplicas), strings.Join(ports, ","), strings.Join(dependServices, "\n")}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.DeployName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.DeployName), defKind.Metadata.Labels["envName"], item.RelatedPackage, fmt.Sprintf("%d", item.DeployReplicas), strings.Join(ports, ","), strings.Join(dependServices, "\n")}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Env", "Package", "Replicas", "Ports", "Depends"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Env", "Package", "Replicas", "Ports", "Depends"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindDeployArtifact]:
 				items := []pkg.DeployArtifactDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.DeployArtifactName), defKind.Metadata.Labels["envName"], item.RelatedArtifact, item.Hosts, item.Tasks}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.DeployArtifactName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.DeployArtifactName), defKind.Metadata.Labels["envName"], item.RelatedArtifact, item.Hosts, item.Tasks}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Env", "Artifact", "Hosts", "Tasks"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Env", "Artifact", "Hosts", "Tasks"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindIstio]:
 				items := []pkg.IstioDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.DeployName), defKind.Metadata.Labels["envName"], fmt.Sprintf("%d", item.Port), item.Protocol, fmt.Sprintf("%v", item.HttpSettings.Gateway.MatchDefault)}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.DeployName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.DeployName), defKind.Metadata.Labels["envName"], fmt.Sprintf("%d", item.Port), item.Protocol, fmt.Sprintf("%v", item.HttpSettings.Gateway.MatchDefault)}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Env", "Port", "Protocol", "Gateway"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Env", "Port", "Protocol", "Gateway"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindIstioGateway]:
 				items := []pkg.IstioGatewayDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s", defKind.Kind), defKind.Metadata.Labels["envName"], item.HostDefault, item.HostNew, item.SourceSubsetHeader}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s", defKind.Kind)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s", defKind.Kind), defKind.Metadata.Labels["envName"], item.HostDefault, item.HostNew, item.SourceSubsetHeader}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Env", "Default", "New", "Header"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Env", "Default", "New", "Header"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindCustomStep]:
 				items := []pkg.CustomStepModuleDef{}
 				_ = json.Unmarshal(bs, &items)
@@ -1001,10 +1069,19 @@ func (o *OptionsDefGet) Run(args []string) error {
 					}
 				}
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.ModuleName), defKind.Metadata.Labels["stepName"], envName, defKind.Metadata.Labels["enableMode"], strings.Join(item.RelatedStepModules, "\n"), fmt.Sprintf("%v", item.ManualEnable), item.ParamInputYaml}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.ModuleName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.ModuleName), defKind.Metadata.Labels["stepName"], envName, defKind.Metadata.Labels["enableMode"], strings.Join(item.RelatedStepModules, "\n"), fmt.Sprintf("%v", item.ManualEnable), item.ParamInputYaml}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "StepName", "Env", "EnableMode", "RelateModules", "ManualEnable", "Params"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "StepName", "Env", "EnableMode", "RelateModules", "ManualEnable", "Params"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindPipeline]:
 				items := []pkg.PipelineDef{}
 				_ = json.Unmarshal(bs, &items)
@@ -1016,41 +1093,77 @@ func (o *OptionsDefGet) Run(args []string) error {
 					}
 					envs := strings.Split(defKind.Metadata.Annotations["envs"], ",")
 					envProductions := strings.Split(defKind.Metadata.Annotations["envProductions"], ",")
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, defKind.Metadata.Labels["branchName"]), item.PipelineArch, strings.Join(envs, "\n"), strings.Join(envProductions, "\n"), fmt.Sprintf("%v", item.IsAutoDetectBuild), fmt.Sprintf("%v", item.IsQueue), strings.Join(builds, "\n")}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, defKind.Metadata.Labels["branchName"])}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, defKind.Metadata.Labels["branchName"]), item.PipelineArch, strings.Join(envs, "\n"), strings.Join(envProductions, "\n"), fmt.Sprintf("%v", item.IsAutoDetectBuild), fmt.Sprintf("%v", item.IsQueue), strings.Join(builds, "\n")}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Arch", "Envs", "EnvProds", "AutoDetect", "Queue", "Builds"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Arch", "Envs", "EnvProds", "AutoDetect", "Queue", "Builds"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindDockerIgnore]:
 				items := []string{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{defKind.Kind, item}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{defKind.Kind}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{defKind.Kind, item}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Value"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Value"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindCustomOps]:
 				items := []pkg.CustomOpsDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.CustomOpsName), item.CustomOpsDesc, strings.Join(item.CustomOpsSteps, "\n")}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.CustomOpsName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.CustomOpsName), item.CustomOpsDesc, strings.Join(item.CustomOpsSteps, "\n")}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Desc", "Steps"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Desc", "Steps"}
+				}
 			case pkg.DefCmdKinds[pkg.DefKindOpsBatch]:
 				items := []pkg.OpsBatchDef{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.OpsBatchName), item.OpsBatchDesc, strings.Join(item.Batches, "\n")}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.OpsBatchName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", defKind.Kind, item.OpsBatchName), item.OpsBatchDesc, strings.Join(item.Batches, "\n")}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Desc", "Steps"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Desc", "Steps"}
+				}
 			}
 
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 

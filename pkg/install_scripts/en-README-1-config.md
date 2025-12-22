@@ -16,8 +16,8 @@ cd /project-data
 
 ```shell
 # download trivy vulnerabilities database
-{{ $.cmdRun }} --rm -v trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-db-only
-{{ $.cmdRun }} --rm -v trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-java-db-only
+{{ $.cmdRun }} --rm -v $PWD/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-db-only
+{{ $.cmdRun }} --rm -v $PWD/trivy:/root/.cache/trivy aquasec/trivy:0.37.2 image --download-java-db-only
 
 # copy trivy vulnerabilities database to kubernetes shared storage
 kubectl -n {{ $.dory.namespace }} cp trivy project-data-pod-0:/project-data/{{ $.dory.namespace }}/dory-engine/dory-data/

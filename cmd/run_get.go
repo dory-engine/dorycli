@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dory-engine/dorycli/pkg"
+	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -39,7 +40,7 @@ func NewCmdRunGet() *cobra.Command {
 	o := NewOptionsRunGet()
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf("get [runName]")
+	msgUse := fmt.Sprintf("get [runName] [--output=json|yaml|table|name]")
 
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_run_get_short")
@@ -143,7 +144,7 @@ func (o *OptionsRunGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table", "name"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -252,8 +253,8 @@ func (o *OptionsRunGet) Validate(args []string) error {
 	}
 
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
-			err = fmt.Errorf("--output must be yaml or json or table")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" && o.Output != "name" {
+			err = fmt.Errorf("--output must be yaml / json / table / name")
 			return err
 		}
 	}
@@ -315,11 +316,21 @@ func (o *OptionsRunGet) Run(args []string) error {
 		default:
 			data := [][]string{}
 			for _, run := range runs {
-				data = append(data, []string{run.RunName, run.PipelineArch, run.StartUser, run.Status.StartTime, run.Status.Result, run.Status.Duration})
+				if o.Output == "name" {
+					data = append(data, []string{run.RunName})
+				} else {
+					data = append(data, []string{run.RunName, run.PipelineArch, run.StartUser, run.Status.StartTime, run.Status.Result, run.Status.Duration})
+				}
+			}
+			var dataHeader []string
+			if o.Output == "name" {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "Arch", "StartUser", "StartTime", "Status", "Duration"}
 			}
 
-			dataHeader := []string{"Name", "Arch", "StartUser", "StartTime", "Status", "Duration"}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(data)
 			table.Render()

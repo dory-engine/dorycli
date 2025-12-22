@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dory-engine/dorycli/pkg"
+	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -31,7 +32,7 @@ func NewCmdPipelineGet() *cobra.Command {
 	o := NewOptionsPipelineGet()
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf("get [pipelineName] ...")
+	msgUse := fmt.Sprintf("get [pipelineName] ... [--output=json|yaml|table|name]")
 
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_pipeline_get_short")
@@ -87,7 +88,7 @@ func (o *OptionsPipelineGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table", "name"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -129,8 +130,8 @@ func (o *OptionsPipelineGet) Validate(args []string) error {
 		}
 	}
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
-			err = fmt.Errorf("--output must be yaml or json or table")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" && o.Output != "name" {
+			err = fmt.Errorf("--output must be yaml / json / table / name")
 			return err
 		}
 	}
@@ -218,11 +219,20 @@ func (o *OptionsPipelineGet) Run(args []string) error {
 						statusResult = fmt.Sprintf("%s [%s]", statusResult, pipeline.Status.Result)
 					}
 				}
-				data = append(data, []string{pipelineName, branchName, envs, envProds, successCount, failCount, abortCount, statusResult})
+				if o.Output == "name" {
+					data = append(data, []string{pipelineName})
+				} else {
+					data = append(data, []string{pipelineName, branchName, envs, envProds, successCount, failCount, abortCount, statusResult})
+				}
 			}
-
-			dataHeader := []string{"Name", "Branch", "Envs", "EnvProds", "Success", "Fail", "Abort", "LastRun"}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			var dataHeader []string
+			if o.Output == "name" {
+				dataHeader = []string{"Name"}
+			} else {
+				dataHeader = []string{"Name", "Branch", "Envs", "EnvProds", "Success", "Fail", "Abort", "LastRun"}
+			}
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(data)
 			table.Render()

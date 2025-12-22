@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dory-engine/dorycli/pkg"
+	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"os"
@@ -34,7 +35,7 @@ func NewCmdConsoleGet() *cobra.Command {
 	o := NewOptionsConsoleGet()
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`get [projectName] [kind],[kind]... [--envs=envName1,envName2] [--branches=branch1,branch2] [itemName1] [itemName2]... [--output=json|yaml]`)
+	msgUse := fmt.Sprintf(`get [projectName] [kind],[kind]... [--envs=envName1,envName2] [--branches=branch1,branch2] [itemName1] [itemName2]... [--output=json|yaml|table|name]`)
 
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_console_get_short")
@@ -232,7 +233,7 @@ func (o *OptionsConsoleGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table", "name"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -310,8 +311,8 @@ func (o *OptionsConsoleGet) Validate(args []string) error {
 	o.Param.ProjectName = projectName
 
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
-			err = fmt.Errorf("--output must be yaml or json or table")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" && o.Output != "name" {
+			err = fmt.Errorf("--output must be yaml / json / table / name")
 			return err
 		}
 	}
@@ -582,65 +583,128 @@ func (o *OptionsConsoleGet) Run(args []string) error {
 				items := []pkg.ProjectMember{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.Username), item.AccessLevel, strings.Join(item.DisablePipelines, ","), strings.Join(item.DisableRepoSecrets, ","), strings.Join(item.DisableProjectDefs, ",")}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.Username)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.Username), item.AccessLevel, strings.Join(item.DisablePipelines, ","), strings.Join(item.DisableRepoSecrets, ","), strings.Join(item.DisableProjectDefs, ",")}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "AccessLevel", "DisablePipelines", "DisableRepoSecrets", "DisableProjectDefs"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "AccessLevel", "DisablePipelines", "DisableRepoSecrets", "DisableProjectDefs"}
+				}
 			case pkg.ConsoleCmdKinds[pkg.ConsoleKindPipeline]:
 				items := []pkg.ProjectPipeline{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s-%s", consoleKind.Kind, consoleKind.Metadata.ProjectName, item.BranchName), strings.Join(item.Envs, ","), strings.Join(item.EnvProductions, ","), fmt.Sprintf("%v", item.IsDefault), fmt.Sprintf("%v", item.WebhookPushEvent)}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s-%s", consoleKind.Kind, consoleKind.Metadata.ProjectName, item.BranchName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s-%s", consoleKind.Kind, consoleKind.Metadata.ProjectName, item.BranchName), strings.Join(item.Envs, ","), strings.Join(item.EnvProductions, ","), fmt.Sprintf("%v", item.IsDefault), fmt.Sprintf("%v", item.WebhookPushEvent)}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "TestEnvs", "ProdEnvs", "IsDefault", "WebhookPushEvent"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "TestEnvs", "ProdEnvs", "IsDefault", "WebhookPushEvent"}
+				}
 			case pkg.ConsoleCmdKinds[pkg.ConsoleKindPipelineTrigger]:
 				items := []pkg.PipelineTrigger{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.StepAction), fmt.Sprintf("%s-%s", consoleKind.Metadata.ProjectName, consoleKind.Metadata.BranchName), strings.Join(item.StatusResults, ","), fmt.Sprintf("%v", item.Enable), fmt.Sprintf("%v", item.BeforeExecute)}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.StepAction)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.StepAction), fmt.Sprintf("%s-%s", consoleKind.Metadata.ProjectName, consoleKind.Metadata.BranchName), strings.Join(item.StatusResults, ","), fmt.Sprintf("%v", item.Enable), fmt.Sprintf("%v", item.BeforeExecute)}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Pipeline", "StatusResults", "Enable", "BeforeExecute"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Pipeline", "StatusResults", "Enable", "BeforeExecute"}
+				}
 			case pkg.ConsoleCmdKinds[pkg.ConsoleKindHost]:
 				items := []pkg.Host{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.HostName), consoleKind.Metadata.EnvName, fmt.Sprintf("%s:%d", item.HostAddr, item.HostPort), item.HostUser, strings.Join(item.Groups, ",")}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.HostName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.HostName), consoleKind.Metadata.EnvName, fmt.Sprintf("%s:%d", item.HostAddr, item.HostPort), item.HostUser, strings.Join(item.Groups, ",")}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Env", "Address", "User", "Groups"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Env", "Address", "User", "Groups"}
+				}
 			case pkg.ConsoleCmdKinds[pkg.ConsoleKindDatabase]:
 				items := []pkg.Database{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.DbName), consoleKind.Metadata.EnvName, item.DbUrl, item.DbUser}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.DbName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.DbName), consoleKind.Metadata.EnvName, item.DbUrl, item.DbUser}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Env", "URL", "User"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Env", "URL", "User"}
+				}
 			case pkg.ConsoleCmdKinds[pkg.ConsoleKindComponent]:
 				items := []pkg.Component{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.ComponentName), consoleKind.Metadata.EnvName, item.ComponentDesc, item.Arch, item.DeploySpecStatic.DeployImage}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.ComponentName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, item.ComponentName), consoleKind.Metadata.EnvName, item.ComponentDesc, item.Arch, item.DeploySpecStatic.DeployImage}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Env", "Desc", "Arch", "Image"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Env", "Desc", "Arch", "Image"}
+				}
 			case pkg.ConsoleCmdKinds[pkg.ConsoleKindDebugComponent]:
 				items := []pkg.ComponentDebug{}
 				_ = json.Unmarshal(bs, &items)
 				for _, item := range items {
-					dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, consoleKind.Metadata.EnvName), consoleKind.Metadata.EnvName, item.DeploySpecDebug.DebugQuota.CpuLimit, item.DeploySpecDebug.DebugQuota.MemoryLimit}
-					dataRows = append(dataRows, dataRow)
+					if o.Output == "name" {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, consoleKind.Metadata.EnvName)}
+						dataRows = append(dataRows, dataRow)
+					} else {
+						dataRow := []string{fmt.Sprintf("%s/%s", consoleKind.Kind, consoleKind.Metadata.EnvName), consoleKind.Metadata.EnvName, item.DeploySpecDebug.DebugQuota.CpuLimit, item.DeploySpecDebug.DebugQuota.MemoryLimit}
+						dataRows = append(dataRows, dataRow)
+					}
 				}
-				dataHeader = []string{"Name", "Env", "CPU", "MEM"}
+				if o.Output == "name" {
+					dataHeader = []string{"Name"}
+				} else {
+					dataHeader = []string{"Name", "Env", "CPU", "MEM"}
+				}
 			}
 
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 	}

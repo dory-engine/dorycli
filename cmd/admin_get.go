@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dory-engine/dorycli/pkg"
+	"github.com/mattn/go-runewidth"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"net/http"
@@ -15,7 +16,6 @@ import (
 type OptionsAdminGet struct {
 	*OptionsCommon `yaml:"optionsCommon" json:"optionsCommon" bson:"optionsCommon" validate:""`
 	Filter         []string `yaml:"filter" json:"filter" bson:"filter" validate:""`
-	Name           bool     `yaml:"name" json:"name" bson:"name" validate:""`
 	Full           bool     `yaml:"full" json:"full" bson:"full" validate:""`
 	Output         string   `yaml:"output" json:"output" bson:"output" validate:""`
 	Param          struct {
@@ -36,7 +36,7 @@ func NewCmdAdminGet() *cobra.Command {
 	o := NewOptionsAdminGet()
 
 	baseName := pkg.GetCmdBaseName()
-	msgUse := fmt.Sprintf(`get [kind],[kind]... [itemName1] [itemName2]... [--output=json|yaml]`)
+	msgUse := fmt.Sprintf(`get [kind],[kind]... [itemName1] [itemName2]... [--output=json|yaml|table|name]`)
 
 	_ = OptCommon.GetOptionsCommon()
 	msgShort := OptCommon.TransLang("cmd_admin_get_short")
@@ -57,7 +57,6 @@ func NewCmdAdminGet() *cobra.Command {
 	cmd.Flags().StringVarP(&o.Output, "output", "o", "", OptCommon.TransLang("param_admin_get_output"))
 	cmd.Flags().BoolVar(&o.Full, "full", false, OptCommon.TransLang("param_admin_get_full"))
 	cmd.Flags().StringSliceVar(&o.Filter, "filter", []string{}, OptCommon.TransLang("param_admin_get_filter"))
-	cmd.Flags().BoolVar(&o.Name, "name", false, OptCommon.TransLang("param_admin_get_name"))
 
 	CheckError(o.Complete(cmd))
 	return cmd
@@ -130,7 +129,7 @@ func (o *OptionsAdminGet) Complete(cmd *cobra.Command) error {
 	}
 
 	err = cmd.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"json", "yaml", "table"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"json", "yaml", "table", "name"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	if err != nil {
 		return err
@@ -193,8 +192,8 @@ func (o *OptionsAdminGet) Validate(args []string) error {
 	}
 
 	if o.Output != "" {
-		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" {
-			err = fmt.Errorf("--output must be yaml or json or table")
+		if o.Output != "yaml" && o.Output != "json" && o.Output != "table" && o.Output != "name" {
+			err = fmt.Errorf("--output must be yaml / json / table / name")
 			return err
 		}
 	}
@@ -830,7 +829,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 					ups = append(ups, fmt.Sprintf("%s:%s", up.ProjectName, up.AccessLevel))
 				}
 				dataRow := []string{}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindUser], item.Username)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindUser], item.Username), item.Name, item.Mail, fmt.Sprintf("%v", item.IsAdmin), fmt.Sprintf("%v", item.IsActive), strings.Join(ups, "\n"), item.TenantCode, strings.Join(item.TenantAdmins, ",")}
@@ -839,16 +838,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"Username"}
 			} else {
 				dataHeader = []string{"Username", "Name", "Mail", "Admin", "Active", "Projects", "TenantCode", "TenantAdmins"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 
@@ -856,7 +855,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range stepFilters {
 				dataRow := []string{}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindCustomStep], item.CustomStepName)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindCustomStep], item.CustomStepName), item.TenantCode, item.CustomStepActionDesc, fmt.Sprintf("%v", item.IsEnvDiff), strings.Join(item.ProjectNames, ","), item.ParamInputYamlDef}
@@ -865,17 +864,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"Name"}
 			} else {
 				dataHeader = []string{"Name", "TenantCode", "Desc", "EnvDiff", "Projects", "Input"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 
@@ -884,7 +882,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			for _, item := range envFilters {
 				arches := strings.Join(item.Arches, ",")
 				dataRow := []string{}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindEnvK8s], item.EnvName)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindEnvK8s], item.EnvName), item.EnvArch, item.TenantCode, item.EnvDesc, fmt.Sprintf("https://%s:%d", item.Host, item.Port), arches, item.ResourceVersion.IngressVersion, item.ResourceVersion.HpaVersion, item.ResourceVersion.IstioVersion}
@@ -893,16 +891,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"Name"}
 			} else {
 				dataHeader = []string{"Name", "Arch", "TenantCode", "Desc", "Host", "Arches", "Ingress", "Hpa", "Istio"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 
@@ -910,7 +908,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range ctFilters {
 				dataRow := []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate], item.ComponentTemplateName), item.TenantCode, item.ComponentTemplateDesc, item.DeploySpecStatic.DeployImage, fmt.Sprintf("%d", item.DeploySpecStatic.DeployReplicas)}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate], item.ComponentTemplateName)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindComponentTemplate], item.ComponentTemplateName), item.TenantCode, item.ComponentTemplateDesc, item.DeploySpecStatic.DeployImage, fmt.Sprintf("%d", item.DeploySpecStatic.DeployReplicas)}
@@ -919,16 +917,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"Name"}
 			} else {
 				dataHeader = []string{"Name", "TenantCode", "Desc", "Image", "Replicas"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 
@@ -936,7 +934,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range dbeFilters {
 				dataRow := []string{}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv], item.BuildEnvName)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindDockerBuildEnv], item.BuildEnvName), item.TenantCode, item.Image, strings.Join(item.BuildArches, ",")}
@@ -945,16 +943,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"Name"}
 			} else {
 				dataHeader = []string{"Name", "TenantCode", "Image", "Arches"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 
@@ -962,7 +960,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range grcFilters {
 				dataRow := []string{}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig], item.RepoName)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindGitRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
@@ -971,16 +969,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"Name"}
 			} else {
 				dataHeader = []string{"Name", "TenantCode", "Kind", "ViewUrl"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 
@@ -988,7 +986,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range ircFilters {
 				dataRow := []string{}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig], item.RepoName)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindImageRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.Hostname}
@@ -997,16 +995,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"Name"}
 			} else {
 				dataHeader = []string{"Name", "TenantCode", "Kind", "Hostname"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 
@@ -1014,7 +1012,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range arcFilters {
 				dataRow := []string{}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig], item.RepoName)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindArtifactRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
@@ -1023,16 +1021,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"Name"}
 			} else {
 				dataHeader = []string{"Name", "TenantCode", "Kind", "ViewUrl"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 
@@ -1040,7 +1038,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range scrcFilters {
 				dataRow := []string{}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig], item.RepoName)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindScanCodeRepoConfig], item.RepoName), item.TenantCode, item.Kind, item.ViewUrl}
@@ -1049,16 +1047,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"Name"}
 			} else {
 				dataHeader = []string{"Name", "TenantCode", "Kind", "ViewUrl"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 
@@ -1066,7 +1064,7 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			dataRows := [][]string{}
 			for _, item := range awFilters {
 				dataRow := []string{}
-				if o.Name {
+				if o.Output == "name" {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook], item.AdminWebhookID)}
 				} else {
 					dataRow = []string{fmt.Sprintf("%s/%s", pkg.AdminCmdKinds[pkg.AdminKindAdminWebhook], item.AdminWebhookID), item.AdminAction, item.TenantCode, item.WebhookUrl, item.WebhookMethod}
@@ -1075,16 +1073,16 @@ func (o *OptionsAdminGet) Run(args []string) error {
 			}
 
 			dataHeader := []string{}
-			if o.Name {
+			if o.Output == "name" {
 				dataHeader = []string{"ID"}
 			} else {
 				dataHeader = []string{"ID", "AdminAction", "TenantCode", "Url", "Method"}
 			}
-			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig)
+			runewidth.DefaultCondition.EastAsianWidth = false
+			table = tablewriter.NewTable(os.Stdout, tableRender, tableCellConfig, tablewriter.WithCondition(runewidth.DefaultCondition))
 			table.Header(dataHeader)
 			table.Bulk(dataRows)
 			table.Render()
-			fmt.Println("------------")
 			fmt.Println()
 		}
 	}

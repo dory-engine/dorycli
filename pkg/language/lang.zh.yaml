@@ -209,8 +209,8 @@ cmd_def_example:
     # 删除模块构建定义
     {{._5}} def delete test-project1 {{._6}} --modules=tp1-gin-demo,tp1-node-demo
     
-    # 通过打补丁方式修改模块部署定义中的buildChecks命令参数
-    {{._7}} def patch test-project1 {{._8}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'
+    # 通过打补丁方式修改模块部署定义中的buildCmds命令参数
+    {{._7}} def patch test-project1 {{._8}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildCmds", "value": ["ls -alh"]}]'
 cmd_def_apply_short:
   other: "应用项目定义配置项"
 cmd_def_apply_long:
@@ -298,8 +298,8 @@ cmd_def_patch_example:
     # 打印当前需要打补丁的模块构建定义的模块详情，并输出为YAML格式
     {{._1}} def patch test-project1 {{._2}} --modules=tp1-go-demo,tp1-gin-demo -o yaml
     
-    # 通过补丁方式更新tp1-gin-demo,tp1-go-demo两个模块构建定义的buildChecks命令
-    {{._3}} def patch test-project1 {{._4}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'
+    # 通过补丁方式更新tp1-gin-demo,tp1-go-demo两个模块构建定义的buildCmds命令
+    {{._3}} def patch test-project1 {{._4}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildCmds", "value": ["ls -alh"]}]'
     
     # 通过补丁方式清除tp1-gin-demo,tp1-go-demo两个模块容器部署定义在test环境的deployResources设置
     {{._5}} def patch test-project1 {{._6}} --modules=tp1-go-demo,tp1-gin-demo --envs=test --patch='[{"action": "delete", "path": "deployResources"}]'
@@ -614,13 +614,11 @@ param_admin_apply_files:
 param_admin_apply_try:
   other: "仅尝试检查配置项，并不应用到Dory-Engine中，与 --output 选项配合使用"
 param_admin_get_output:
-  other: "输出格式 (选项: yaml / json / table)"
+  other: "输出格式 (选项: yaml / json / table / name)"
 param_admin_get_full:
   other: "完整输出配置项的所有参数，与 --output 选项配合使用"
 param_admin_get_filter:
   other: "过滤搜索特定配置项"
-param_admin_get_name:
-  other: "只显示配置项名字"
 param_console_apply_output:
   other: "输出格式 (选项: yaml / json)"
 param_console_apply_recursive:
@@ -636,7 +634,7 @@ param_console_get_envs:
 param_console_get_branches:
   other: "使用分支名过滤流水线触发器"
 param_console_get_output:
-  other: "输出格式 (选项: yaml / json / table)"
+  other: "输出格式 (选项: yaml / json / table / name)"
 param_console_get_full:
   other: "完整输出配置项的所有参数，与 --output 选项配合使用"
 param_console_delete_envs:
@@ -694,7 +692,7 @@ param_def_get_branches:
 param_def_get_steps:
   other: "使用步骤名过滤项目定义"
 param_def_get_output:
-  other: "输出格式 (选项: yaml / json / table)"
+  other: "输出格式 (选项: yaml / json / table / name)"
 param_def_get_full:
   other: "完整输出项目定义的所有参数，与 --output 选项配合使用"
 param_def_patch_modules:
@@ -757,11 +755,13 @@ param_pipeline_execute_params:
 param_pipeline_get_projects:
   other: "过滤项目名，例如: test-project1,test-project2"
 param_pipeline_get_output:
-  other: "输出格式 (选项: yaml / json / table)"
+  other: "输出格式 (选项: yaml / json / table / name)"
 param_project_execute_params:
   other: "执行项目批处理流水线并带上请求参数，例子: varName=varValue"
+param_project_get_ignore_demo:
+  other: "不显示项目的demo模块"
 param_project_get_output:
-  other: "输出格式 (选项: yaml / json / table)"
+  other: "输出格式 (选项: yaml / json / table / name)"
 param_run_abort_logs:
   other: "显示流水线运行日志"
 param_run_get_projects:
@@ -779,4 +779,4 @@ param_run_get_page:
 param_run_get_number:
   other: "每页显示项目数"
 param_run_get_output:
-  other: "输出格式 (选项: yaml / json / table)"
+  other: "输出格式 (选项: yaml / json / table / name)"

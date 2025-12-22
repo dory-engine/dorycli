@@ -547,7 +547,7 @@ dockerBuildSettings:
       # 例如go语言，需要装载容器中的/go/pkg作为缓存
       mountExtraCacheDirs: []
       # 执行构建命令前执行什么命令
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "java -version", "mvn --version", "cat /etc/os-release"]
       # 执行检查命令后执行什么命令
       commandsAfterCheck: []
     - buildEnvName: maven-jdk17
@@ -556,7 +556,7 @@ dockerBuildSettings:
       mountHomeDir: true
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "java -version", "mvn --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: maven-jdk11
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.6-openjdk-11-dory"
@@ -564,7 +564,7 @@ dockerBuildSettings:
       mountHomeDir: true
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "java -version", "mvn --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: maven-jdk8
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}maven:3.8.6-openjdk-8-dory"
@@ -572,7 +572,7 @@ dockerBuildSettings:
       mountHomeDir: true
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "java -version", "mvn --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: npm-node20
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:20.5.1-alpine3.18-dory"
@@ -580,7 +580,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "node --version", "npm --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: npm-node18
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:18.17.1-alpine3.18-dory"
@@ -588,7 +588,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "node --version", "npm --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: npm-node16
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}node:16.20.2-alpine3.18-dory"
@@ -596,7 +596,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "node --version", "npm --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: go-1.20
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}golang:1.20.0-alpine3.17-dory"
@@ -604,7 +604,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: ["/go/pkg"]
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "go version", "gcc --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: go-1.18
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}golang:1.18.10-alpine3.17-dory"
@@ -612,7 +612,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: ["/go/pkg"]
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "go version", "gcc --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: python-3.11
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}python:3.11.2-alpine3.17-dory"
@@ -620,7 +620,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "python --version", "pip --version", "gcc --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: python-3.10
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}python:3.10.10-alpine3.17-dory"
@@ -628,7 +628,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "python --version", "pip --version", "gcc --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk21
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:8.12.0-jdk21-corretto-dory"
@@ -636,7 +636,7 @@ dockerBuildSettings:
       mountHomeDir: true
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "java -version", "gradle --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk17
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk17-dory"
@@ -644,7 +644,7 @@ dockerBuildSettings:
       mountHomeDir: true
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "java -version", "gradle --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk11
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk11-dory"
@@ -652,7 +652,7 @@ dockerBuildSettings:
       mountHomeDir: true
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "java -version", "gradle --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: gradle-jdk8
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}gradle:7.6.0-jdk8-dory"
@@ -660,7 +660,7 @@ dockerBuildSettings:
       mountHomeDir: true
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "java -version", "gradle --version", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: alpine-3.17
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.17.2-dory"
@@ -668,7 +668,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: alpine-3.16
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}alpine:3.16.4-dory"
@@ -676,7 +676,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "cat /etc/os-release"]
       commandsAfterCheck: []
     - buildEnvName: ansible-2.12
       image: "{{ if eq $.dory.imageRepo.type "harbor" }}{{ $.imageRepoDomainName }}/public/{{ else }}doryengine/{{ end }}ansible:2.12.2-alpine-dory"
@@ -684,7 +684,7 @@ dockerBuildSettings:
       mountHomeDir: false
       enableProxy: false
       mountExtraCacheDirs: []
-      commandsBeforeBuild: ["pwd", "ls -al"]
+      commandsBeforeBuild: ["set -x", "pwd", "ls -alh", "ansible --version", "python --version", "cat /etc/os-release"]
       commandsAfterCheck: []
 
 # 调试容器docker镜像设置

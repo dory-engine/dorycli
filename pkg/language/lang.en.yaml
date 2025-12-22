@@ -209,8 +209,8 @@ cmd_def_example:
     # delete modules from project build definitions
     {{._5}} def delete test-project1 {{._6}} --modules=tp1-gin-demo,tp1-node-demo
   
-    # patch project build modules definitions, update tp1-gin-demo,tp1-go-demo buildChecks commands
-    {{._7}} def patch test-project1 {{._8}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'
+    # patch project build modules definitions, update tp1-gin-demo,tp1-go-demo buildCmds commands
+    {{._7}} def patch test-project1 {{._8}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildCmds", "value": ["ls -alh"]}]'
 cmd_def_apply_short:
   other: "apply project definitions"
 cmd_def_apply_long:
@@ -298,8 +298,8 @@ cmd_def_patch_example:
     # print current project build modules definitions for patched
     {{._1}} def patch test-project1 {{._2}} --modules=tp1-go-demo,tp1-gin-demo -o yaml
   
-    # patch project build modules definitions, update tp1-gin-demo,tp1-go-demo buildChecks commands
-    {{._3}} def patch test-project1 {{._4}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildChecks", "value": ["ls -alh"]}]'
+    # patch project build modules definitions, update tp1-gin-demo,tp1-go-demo buildCmds commands
+    {{._3}} def patch test-project1 {{._4}} --modules=tp1-go-demo,tp1-gin-demo --patch='[{"action": "update", "path": "buildCmds", "value": ["ls -alh"]}]'
   
     # patch project deploy modules definitions, delete test environment tp1-go-demo,tp1-gin-demo deployResources settings
     {{._5}} def patch test-project1 {{._6}} --modules=tp1-go-demo,tp1-gin-demo --envs=test --patch='[{"action": "delete", "path": "deployResources"}]'
@@ -614,13 +614,11 @@ param_admin_apply_files:
 param_admin_apply_try:
   other: "try to check input configurations only, not apply to Dory-Engine, use with --output option"
 param_admin_get_output:
-  other: "output format (options: yaml / json / table)"
+  other: "output format (options: yaml / json / table / name)"
 param_admin_get_full:
   other: "output configurations in full version, use with --output option"
 param_admin_get_filter:
   other: "filter and search configurations"
-param_admin_get_name:
-  other: "show configuration name only"
 param_console_apply_output:
   other: "output format (options: yaml / json)"
 param_console_apply_recursive:
@@ -636,7 +634,7 @@ param_console_get_envs:
 param_console_get_branches:
   other: "filter pipeline triggers items by branch names"
 param_console_get_output:
-  other: "output format (options: yaml / json / table)"
+  other: "output format (options: yaml / json / table / name)"
 param_console_get_full:
   other: "output configurations in full version, use with --output option"
 param_console_delete_envs:
@@ -694,7 +692,7 @@ param_def_get_branches:
 param_def_get_steps:
   other: "filter project definitions by stepNames"
 param_def_get_output:
-  other: "output format (options: yaml / json / table)"
+  other: "output format (options: yaml / json / table / name)"
 param_def_get_full:
   other: "output project definitions in full version, use with --output option"
 param_def_patch_modules:
@@ -757,11 +755,13 @@ param_pipeline_execute_params:
 param_pipeline_get_projects:
   other: "filters by projectNames, example: test-project1,test-project2"
 param_pipeline_get_output:
-  other: "output format (options: yaml / json / table)"
+  other: "output format (options: yaml / json / table / name)"
 param_project_execute_params:
   other: "execute project batch pipeline with request params, example: varName=varValue"
+param_project_get_ignore_demo:
+  other: "ignore project demo modules"
 param_project_get_output:
-  other: "output format (options: yaml / json / table)"
+  other: "output format (options: yaml / json / table / name)"
 param_run_abort_logs:
   other: "show pipeline run logs"
 param_run_get_projects:
@@ -779,4 +779,4 @@ param_run_get_page:
 param_run_get_number:
   other: "show how many items each page"
 param_run_get_output:
-  other: "output format (options: yaml / json / table)"
+  other: "output format (options: yaml / json / table / name)"
